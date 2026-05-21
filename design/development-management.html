@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>项目管理平台 — 开发管理</title>
+  <style>
+    :root {
+      --background: oklch(98% 0.005 250);
+      --surface: oklch(100% 0 0);
+      --foreground: oklch(22% 0.02 240);
+      --muted: oklch(50% 0.018 240);
+      --border: oklch(90% 0.008 240);
+      --accent: oklch(58% 0.16 145);
+      --accent-hover: oklch(52% 0.14 145);
+      --success: oklch(70% 0.18 140);
+      --warning: oklch(80% 0.15 70);
+      --danger: oklch(60% 0.22 25);
+      --font-family: system-ui, -apple-system, sans-serif;
+      --font-mono: monospace;
+      --shadow-ambient: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.10);
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--background);
+      color: var(--foreground);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      grid-template-rows: 56px 1fr;
+      grid-template-areas:
+        "header header"
+        "sidebar main";
+      height: 100vh;
+      overflow: hidden
+    }
+
+    .h {
+      grid-area: header;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-ambient);
+      z-index: 30
+    }
+
+    .hs {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .hl {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px
+    }
+
+    .ht {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--foreground)
+    }
+
+    .hse {
+      flex: 1;
+      max-width: 420px;
+      margin: 0 24px;
+      position: relative
+    }
+
+    .hse input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--background);
+      color: var(--foreground);
+      font: 13px/1.4 var(--font-family);
+      transition: border-color .2s, box-shadow .2s
+    }
+
+    .hse input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px oklch(58% 0.16 145 / 12%)
+    }
+
+    .hse::before {
+      content: "🔍";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      opacity: .5
+    }
+
+    .ha {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer
+    }
+
+    .side {
+      grid-area: sidebar;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      overflow-y: auto
+    }
+
+    .nav {
+      list-style: none;
+      margin: 0;
+      padding: 0
+    }
+
+    .nav li {
+      margin-bottom: 2px
+    }
+
+    .nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all .15s;
+      position: relative
+    }
+
+    .nav a:hover {
+      background: rgba(0, 0, 0, .04);
+      color: var(--foreground)
+    }
+
+    .nav a.on {
+      background: oklch(58% 0.16 145 / 8%);
+      color: var(--accent);
+      font-weight: 600
+    }
+
+    .nav a.on::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 4px;
+      bottom: 4px;
+      width: 3px;
+      background: var(--accent);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0
+    }
+
+    .ni {
+      font-size: 13px;
+      opacity: .6;
+      width: 20px;
+      text-align: center
+    }
+
+    .st {
+      padding: 16px 12px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em
+    }
+
+    .main {
+      grid-area: main;
+      padding: 32px;
+      overflow-y: auto
+    }
+
+    .ph {
+      margin-bottom: 20px
+    }
+
+    .pt {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--foreground);
+      letter-spacing: -.021em;
+      margin-bottom: 4px
+    }
+
+    .bc {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    .bc a {
+      color: var(--accent);
+      text-decoration: none
+    }
+
+    .tb {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: var(--background);
+      border-radius: var(--radius-md);
+      width: fit-content;
+      margin-bottom: 20px
+    }
+
+    .tbb {
+      padding: 8px 16px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all .2s
+    }
+
+    .tbb:hover {
+      color: var(--foreground)
+    }
+
+    .tbb.on {
+      background: var(--surface);
+      color: var(--foreground);
+      box-shadow: var(--shadow-card)
+    }
+
+    .tp {
+      display: none
+    }
+
+    .tp.on {
+      display: block
+    }
+
+    .srch {
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .srch input {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      color: var(--foreground);
+      font: 13px/1.4 var(--font-family);
+      width: 240px;
+      transition: border-color .2s
+    }
+
+    .srch input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px oklch(58% 0.16 145 / 12%)
+    }
+
+    .hhd {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px
+    }
+
+    .hhd h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--foreground)
+    }
+
+    .krow {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px
+    }
+
+    .kcard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-card)
+    }
+
+    .klbl {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 8px
+    }
+
+    .kval {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--foreground);
+      font-family: var(--font-mono);
+      line-height: 1;
+      margin-bottom: 8px
+    }
+
+    .ktr {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      width: fit-content
+    }
+
+    .ktr.up {
+      color: var(--success);
+      background: oklch(70% 0.18 140 / 8%)
+    }
+
+    .ktr.down {
+      color: var(--danger);
+      background: oklch(60% 0.22 25 / 8%)
+    }
+
+    .mgrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px
+    }
+
+    .mcard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+      transition: all .2s;
+      position: relative;
+      overflow: hidden
+    }
+
+    .mcard:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg)
+    }
+
+    .mcard::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+      opacity: 0;
+      transition: opacity .2s
+    }
+
+    .mcard:hover::before {
+      opacity: 1
+    }
+
+    .mhdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px
+    }
+
+    .mtit {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--foreground);
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .mico {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      background: oklch(58% 0.16 145 / 8%)
+    }
+
+    .mstat {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px
+    }
+
+    .pbar {
+      height: 6px;
+      background: rgba(0, 0, 0, .05);
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 12px 0
+    }
+
+    .pbar div {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+      border-radius: 3px
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 100px
+    }
+
+    .pill.s {
+      background: oklch(70% 0.18 140 / 10%);
+      color: var(--success);
+      border: 1px solid oklch(70% 0.18 140 / 20%)
+    }
+
+    .pill.w {
+      background: oklch(80% 0.15 70 / 10%);
+      color: var(--warning);
+      border: 1px solid oklch(80% 0.15 70 / 20%)
+    }
+
+    .pill.d {
+      background: oklch(60% 0.22 25 / 8%);
+      color: var(--danger);
+      border: 1px solid oklch(60% 0.22 25 / 15%)
+    }
+
+    .pill.i {
+      background: oklch(58% 0.16 145 / 8%);
+      color: var(--accent);
+      border: 1px solid oklch(58% 0.16 145 / 15%)
+    }
+
+    .act {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px
+    }
+
+    .qbtn {
+      padding: 8px 16px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer
+    }
+
+    .qbtn:hover {
+      background: var(--accent-hover)
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 20px
+    }
+
+    .ctit {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px
+    }
+
+    .cline {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+    .cline:last-child {
+      border-bottom: none
+    }
+
+    .cname {
+      font-size: 14px;
+      color: var(--foreground)
+    }
+
+    .cmeta {
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    .cline .pill {
+      font-size: 11px;
+      padding: 1px 8px
+    }
+
+    @media (max-width: 1024px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 56px auto 1fr
+      }
+
+      .side {
+        position: fixed;
+        left: 0;
+        top: 56px;
+        bottom: 0;
+        width: 240px;
+        transform: translateX(-100%);
+        z-index: 50;
+        transition: transform .3s
+      }
+
+      .side.open {
+        transform: translateX(0)
+      }
+
+      .main {
+        padding: 20px
+      }
+
+      .h {
+        position: sticky;
+        top: 0
+      }
+
+      .hm {
+        display: flex !important
+      }
+
+      .hm .ni::before {
+        content: "☰";
+        font-size: 20px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header class="h"><button class="hm"
+        style="display:none;margin-right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--foreground)">☰</button>
+      <div class="hs">
+        <div class="hl"><span style="font-size:12px">PM</span></div>
+        <h1 class="ht">项目管理平台</h1>
+      </div>
+      <div class="hse"><input type="search" placeholder="全局搜索..."></div>
+      <div class="ha">张</div>
+    </header>
+    <aside class="side">
+      <ul class="nav">
+        <li><a href="dashboard.html" class="nav-link"><span class="ni">🏠</span>概览面板</a></li>
+        <li><a href="project-management.html" class="nav-link"><span class="ni">📁</span>项目管理</a></li>
+        <li><a href="resource-management.html" class="nav-link"><span class="ni">👥</span>资源管理</a></li>
+        <li><a href="plan-management.html" class="nav-link"><span class="ni">📅</span>计划管理</a></li>
+        <li><a href="risk-management.html" class="nav-link"><span class="ni">⚠️</span>风险管理</a></li>
+        <li><a href="communication-management.html" class="nav-link"><span class="ni">💬</span>沟通管理</a></li>
+        <li><a href="requirements-management.html" class="nav-link"><span class="ni">📝</span>需求管理</a></li>
+        <li><a href="development-management.html" class="nav-link on"><span class="ni">💻</span>开发管理</a></li>
+        <li><a href="testing-management.html" class="nav-link"><span class="ni">🔍</span>测试管理</a></li>
+        <li><a href="config-management.html" class="nav-link"><span class="ni">⚙️</span>配置管理</a></li>
+        <li><a href="drill-management.html" class="nav-link"><span class="ni">🎯</span>演练管理</a></li>
+        <li><a href="production-management.html" class="nav-link"><span class="ni">🚀</span>投产管理</a></li>
+        <li><a href="work-management.html" class="nav-link"><span class="ni">📊</span>工作管理</a></li>
+        <li class="st">系统设置</li>
+        <li><a href="#" class="nav-link"><span class="ni">👤</span>用户管理</a></li>
+        <li><a href="#" class="nav-link"><span class="ni">🔧</span>系统管理</a></li>
+        <li><a href="#" class="nav-link"><span class="ni">❓</span>帮助中心</a></li>
+      </ul>
+    </aside>
+    <main class="main">
+      <div class="ph">
+        <div class="pt">开发管理</div>
+        <div class="bc"><a href="dashboard.html">概览面板</a><span>/</span><span>开发管理</span></div>
+      </div>
+      <div class="tb"><button class="tbb on" data-tab="tab1">开发迭代</button><button class="tbb "
+          data-tab="tab2">任务列表</button><button class="tbb " data-tab="tab3">任务统计</button></div>
+      <div class="tp on" id="tab1">
+        <div class="hhd">
+          <h2>开发迭代</h2>
+        </div>
+        <div class="krow">
+          <div class="kcard">
+            <div class="klbl">当前迭代</div>
+            <div class="kval">Sprint 8</div><span class="ktr up">↑ 1</span>
+          </div>
+          <div class="kcard">
+            <div class="klbl">已完成迭代</div>
+            <div class="kval">7</div><span class="ktr up">↑ 1</span>
+          </div>
+          <div class="kcard">
+            <div class="klbl">故事点</div>
+            <div class="kval">45</div><span class="ktr up">↑ 12</span>
+          </div>
+          <div class="kcard">
+            <div class="klbl">完成率</div>
+            <div class="kval">78%</div><span class="ktr up">↑ 5%</span>
+          </div>
+        </div>
+        <div class="mgrid">
+          <div class="mcard">
+            <div class="mhdr">
+              <div class="mtit">
+                <div class="mico">🔄</div>Sprint 8
+              </div><span class="pill w">进行中</span>
+            </div>
+            <div class="mstat">2024-03-01 ~ 2024-03-14 · Story 点：45 · 已完成：35</div>
+            <div class="pbar">
+              <div style="width:78%"></div>
+            </div>
+          </div>
+          <div class="mcard">
+            <div class="mhdr">
+              <div class="mtit">
+                <div class="mico">✅</div>Sprint 7
+              </div><span class="pill s">已完成</span>
+            </div>
+            <div class="mstat">2024-02-15 ~ 2024-02-28 · Story 点：38 · 已完成：38</div>
+            <div class="pbar">
+              <div style="width:100%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tp" id="tab2">
+        <div class="hhd">
+          <h2>任务列表</h2>
+          <div class="srch"><input type="search" placeholder="搜索任务..."></div>
+        </div>
+        <div class="card">
+          <div class="ctit">当前迭代任务</div>
+          <div class="cline"><span class="cname">TASK-1201 用户认证模块开发</span><span class="cmeta">张伟 ·
+              2024-03-01</span><span class="pill w">进行中</span></div>
+          <div class="cline"><span class="cname">TASK-1202 数据库优化</span><span class="cmeta">李明 · 2024-03-02</span><span
+              class="pill s">已完成</span></div>
+          <div class="cline"><span class="cname">TASK-1203 API 接口开发</span><span class="cmeta">王芳 ·
+              2024-03-03</span><span class="pill w">进行中</span></div>
+          <div class="cline"><span class="cname">TASK-1204 前端页面开发</span><span class="cmeta">赵强 · 2024-03-04</span><span
+              class="pill i">未开始</span></div>
+        </div>
+      </div>
+      <div class="tp" id="tab3">
+        <div class="hhd">
+          <h2>任务统计</h2>
+        </div>
+        <div class="krow">
+          <div class="kcard">
+            <div class="klbl">代码提交数</div>
+            <div class="kval">1,248</div><span class="ktr up">↑ 86</span>
+          </div>
+          <div class="kcard">
+            <div class="klbl">Bug 修复数</div>
+            <div class="kval">156</div><span class="ktr up">↑ 12</span>
+          </div>
+          <div class="kcard">
+            <div class="klbl">代码覆盖率</div>
+            <div class="kval">82%</div><span class="ktr up">↑ 3%</span>
+          </div>
+          <div class="kcard">
+            <div class="klbl">技术债务</div>
+            <div class="kval">低</div><span class="ktr up">↑ 好</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script>document.querySelectorAll('.tbb').forEach(function (b) { b.addEventListener('click', function () { document.querySelectorAll('.tbb').forEach(function (x) { x.classList.remove('on') }); document.querySelectorAll('.tp').forEach(function (x) { x.classList.remove('on') }); b.classList.add('on'); document.getElementById(b.dataset.tab).classList.add('on') }) }); document.querySelectorAll('.srch input').forEach(function (i) { i.addEventListener('input', function (e) { var t = e.target.value.toLowerCase(); var c = i.closest('.tp').querySelectorAll('.mcard, .cline'); c.forEach(function (x) { x.style.display = x.textContent.toLowerCase().indexOf(t) > -1 ? '' : 'none' }) }) });</script>
+</body>
+
+</html>

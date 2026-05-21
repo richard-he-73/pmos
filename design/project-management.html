@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目管理平台 — 项目管理</title>
+<style>
+  /* ── Tokens ── */
+  :root {
+    --bg: oklch(98% 0.005 250);
+    --surface: oklch(100% 0 0);
+    --fg: oklch(22% 0.02 240);
+    --muted: oklch(50% 0.018 240);
+    --border: oklch(90% 0.008 240);
+    --accent: oklch(58% 0.16 145);
+    --accent-hover: oklch(52% 0.14 145);
+    --danger: oklch(55% 0.18 25);
+    --warning: oklch(70% 0.12 80);
+    --success: oklch(60% 0.16 145);
+    --info: oklch(55% 0.14 250);
+    --font-display: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    --shadow-ambient: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-card: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-elevated: 0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .app {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: 60px 1fr;
+    grid-template-areas:
+      "header header"
+      "sidebar main";
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    grid-area: header;
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px) saturate(140%);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; letter-spacing: -0.2px; }
+  .logo-icon {
+    width: 32px; height: 32px; border-radius: var(--radius-md);
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+  .breadcrumb { font-size: 13px; color: var(--muted); padding-left: 12px; border-left: 1px solid var(--border); }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .search-box input {
+    width: 280px; padding: 7px 12px 7px 32px;
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    font-size: 13px; background: transparent; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .search-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    grid-area: sidebar;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 8px 0;
+    overflow-y: auto;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 20px; margin: 0 8px;
+    border-radius: var(--radius-md);
+    font-size: 13px; cursor: pointer;
+    transition: background .15s, color .15s;
+    color: var(--muted);
+  }
+  .nav-item:hover { background: var(--bg); color: var(--fg); }
+  .nav-item.active { background: var(--accent); color: #fff; font-weight: 600; }
+  .nav-icon { font-size: 14px; width: 20px; text-align: center; }
+  .sidebar-section { font-size: 11px; font-weight: 600; color: var(--muted); padding: 16px 20px 6px; text-transform: uppercase; letter-spacing: .06em; }
+
+  /* ── Main ── */
+  .main { grid-area: main; padding: 24px 28px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+
+  /* ── Tabs ── */
+  .tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+  .tab-btn { padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: color .15s, border-color .15s; }
+  .tab-btn:hover { color: var(--fg); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; animation: fadeIn .3s ease; }
+  .tab-panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── KPI Row ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+  @media (max-width: 1280px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 768px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+  .kpi-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 16px; position: relative; overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .kpi-card.accent::before { background: var(--accent); }
+  .kpi-card.success::before { background: var(--success); }
+  .kpi-card.warning::before { background: var(--warning); }
+  .kpi-card.danger::before { background: var(--danger); }
+  .kpi-card.info::before { background: var(--info); }
+  .kpi-card.muted::before { background: var(--muted); }
+  .kpi-label { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  .kpi-value { font-family: var(--font-mono); font-size: 28px; font-weight: 700; line-height: 1.2; }
+  .kpi-trend { font-size: 11px; margin-top: 6px; font-weight: 600; }
+  .trend-up { color: var(--success); }
+  .trend-down { color: var(--danger); }
+
+  /* ── Project Cards ── */
+  .project-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 1280px) { .project-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 768px) { .project-grid { grid-template-columns: 1fr; } }
+  .project-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 20px; cursor: pointer;
+    box-shadow: var(--shadow-card);
+    transition: box-shadow .2s, transform .15s;
+  }
+  .project-card:hover { box-shadow: var(--shadow-elevated); transform: translateY(-2px); }
+  .project-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .project-name { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
+  .project-client { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .project-status { display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; }
+  .project-status.进行中 { background: oklch(95% 0.05 145); color: oklch(45% 0.10 145); }
+  .project-status.正常 { background: oklch(95% 0.03 240); color: oklch(50% 0.08 240); }
+  .project-status.即将完成 { background: oklch(95% 0.05 170); color: oklch(45% 0.10 170); }
+  .project-progress { margin: 12px 0 8px; }
+  .project-progress-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+  .progress-bar { height: 6px; background: oklch(92% 0.01 240); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width .8s ease-out; }
+  .project-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .project-detail { max-height: 0; overflow: hidden; transition: max-height .3s ease, opacity .3s ease; opacity: 0; margin-top: 0; }
+  .project-card.expanded .project-detail { max-height: 500px; opacity: 1; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 12px; }
+  .detail-cell { display: flex; flex-direction: column; gap: 2px; }
+  .detail-label { color: var(--muted); font-size: 11px; font-weight: 600; }
+  .detail-value { font-family: var(--font-mono); font-weight: 700; font-size: 14px; }
+
+  /* ── Gantt ── */
+  .gantt-chart { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; overflow-x: auto; }
+  .gantt-header { display: flex; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--muted); }
+  .gantt-header .gh-label { width: 140px; flex-shrink: 0; }
+  .gantt-header .gh-timeline { flex: 1; display: flex; }
+  .gh-month { flex: 1; text-align: center; }
+  .gantt-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .gantt-row:last-child { border-bottom: none; }
+  .gantt-label { width: 140px; flex-shrink: 0; font-size: 13px; font-weight: 600; }
+  .gantt-timeline { flex: 1; position: relative; height: 32px; }
+  .gantt-bar {
+    position: absolute; height: 24px; top: 4px; border-radius: var(--radius-sm);
+    font-size: 11px; font-weight: 600; color: #fff; display: flex; align-items: center; padding: 0 8px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: height .2s, top .2s, box-shadow .2s; cursor: pointer;
+  }
+  .gantt-bar:hover { height: 28px; top: 2px; box-shadow: var(--shadow-elevated); z-index: 5; }
+  .gantt-today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--danger); z-index: 10; }
+
+  /* ── Budget Chart ── */
+  .budget-overview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .budget-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; text-align: center; box-shadow: var(--shadow-card); }
+  .budget-card-value { font-family: var(--font-mono); font-size: 24px; font-weight: 700; }
+  .budget-card-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .budget-compare { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+  .bc-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .bc-row:last-child { border-bottom: none; }
+  .bc-label { width: 120px; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .bc-track { flex: 1; height: 24px; background: oklch(95% 0.01 240); border-radius: var(--radius-sm); position: relative; overflow: hidden; }
+  .bc-fill { height: 100%; border-radius: var(--radius-sm); transition: width .8s ease-out; }
+  .bc-fill.budget { background: oklch(85% 0.05 250); }
+  .bc-fill.actual { background: var(--accent); position: absolute; top: 0; left: 0; }
+  .bc-value { width: 80px; font-family: var(--font-mono); font-size: 12px; text-align: right; flex-shrink: 0; }
+
+  /* ── Milestone Timeline ── */
+  .milestone-timeline { position: relative; padding-left: 32px; }
+  .milestone-timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .milestone-item { position: relative; padding-bottom: 28px; }
+  .milestone-item:last-child { padding-bottom: 0; }
+  .milestone-dot {
+    position: absolute; left: -28px; top: 2px; width: 16px; height: 16px; border-radius: 50%;
+    border: 3px solid var(--surface); z-index: 2;
+  }
+  .milestone-dot.completed { background: var(--success); }
+  .milestone-dot.in-progress { background: var(--accent); }
+  .milestone-dot.pending { background: var(--muted); }
+  .milestone-date { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--muted); }
+  .milestone-title { font-size: 14px; font-weight: 700; margin-top: 2px; }
+  .milestone-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .milestone-status { display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; margin-top: 6px; }
+  .milestone-status.completed { background: oklch(95% 0.05 145); color: oklch(40% 0.10 145); }
+  .milestone-status.in-progress { background: oklch(95% 0.05 250); color: oklch(50% 0.10 250); }
+  .milestone-status.pending { background: oklch(95% 0.01 240); color: var(--muted); }
+
+  /* ── Section Title ── */
+  .section-title { font-size: 13px; font-weight: 700; color: var(--fg); display: flex; align-items: center; gap: 8px; margin-bottom: 16px; letter-spacing: -0.2px; }
+  .section-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+  /* ── Footer ── */
+  .page-footer { border-top: 1px solid var(--border); padding: 16px 0; margin-top: auto; display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+
+  /* ── Misc ── */
+  @media (max-width: 640px) { .page-footer { flex-direction: column; gap: 4px; text-align: center; } }
+
+  .tab-search {display:flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg);max-width:260px;width:100%;transition:border-color .2s,box-shadow .2s}
+  .tab-search:focus-within {border-color:var(--accent);box-shadow:0 0 0 3px oklch(58% .16 145 / .12)}
+  .tab-search input {border:none;outline:none;background:transparent;color:var(--fg);font:13px/1.4 var(--font-body);width:100%}
+  .tab-search input::placeholder {color:var(--muted)}
+
+  /* ── Project Card Actions ── */
+  .card-actions { display: flex; gap: 6px; opacity: 0; transition: opacity .2s; }
+  .project-card:hover .card-actions { opacity: 1; }
+  .card-btn { padding: 4px 10px; font-size: 11px; border: 1px solid var(--border); background: var(--surface); color: var(--fg); border-radius: var(--radius-sm); cursor: pointer; transition: all .15s; }
+  .card-btn:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); }
+  .card-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: oklch(95% 0.03 25); }
+
+  /* ── Modal ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(2px); }
+  .modal-overlay.active { display: flex; animation: fadeIn .2s ease; }
+  .modal { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-elevated); width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; animation: slideUp .25s ease; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .modal-title { font-size: 15px; font-weight: 700; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); padding: 0; width: 28px; height: 28px; border-radius: var(--radius-sm); }
+  .modal-close:hover { background: var(--bg); color: var(--fg); }
+  .modal-body { padding: 20px; }
+  .modal-footer { display: flex; gap: 12px; justify-content: flex-end; padding: 16px 20px; border-top: 1px solid var(--border); }
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--fg); }
+  .form-input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 13px; background: var(--bg); transition: border-color .2s; }
+  .form-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px oklch(58% .16 145 / .12); }
+  .btn { padding: 8px 16px; font-size: 13px; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; border: none; transition: all .15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-secondary { background: var(--bg); color: var(--fg); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--surface); }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-icon">PM</div>
+        项目管理平台
+      </div>
+      <span class="breadcrumb">项目管理</span>
+    </div>
+    <div class="header-right">
+      <div class="search-box"><input type="text" placeholder="搜索项目、任务、人员…"></div>
+      <div class="user-avatar" title="管理员">管</div>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <div class="nav-item"><span class="nav-icon">◈</span><span>概览面板</span></div>
+    <div class="nav-item active"><span class="nav-icon">🗂</span><span>项目管理</span></div>
+    <div class="nav-item"><span class="nav-icon">👥</span><span>资源管理</span></div>
+    <div class="nav-item"><span class="nav-icon">📅</span><span>计划管理</span></div>
+    <div class="nav-item"><span class="nav-icon">⚡</span><span>风险管理</span></div>
+    <div class="nav-item"><span class="nav-icon">💬</span><span>沟通管理</span></div>
+    <div class="nav-item"><span class="nav-icon">📝</span><span>需求管理</span></div>
+    <div class="nav-item"><span class="nav-icon">🔧</span><span>开发管理</span></div>
+    <div class="nav-item"><span class="nav-icon">🧪</span><span>测试管理</span></div>
+    <div class="nav-item"><span class="nav-icon">⚙️</span><span>配置管理</span></div>
+    <div class="nav-item"><span class="nav-icon">🎯</span><span>演练管理</span></div>
+    <div class="nav-item"><span class="nav-icon">🚀</span><span>投产管理</span></div>
+    <div class="nav-item"><span class="nav-icon">📋</span><span>工作管理</span></div>
+    <div class="sidebar-section">系统</div>
+    <div class="nav-item"><span class="nav-icon">🔐</span><span>用户管理</span></div>
+    <div class="nav-item"><span class="nav-icon">🔧</span><span>系统设置</span></div>
+    <div class="nav-item"><span class="nav-icon">❓</span><span>帮助中心</span></div>
+  </aside>
+
+  <main class="main">
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="board">项目看板</button>
+      <button class="tab-btn" data-tab="gantt">甘特图</button>
+      <button class="tab-btn" data-tab="budget">预算分析</button>
+      <button class="tab-btn" data-tab="milestone">里程碑</button>
+    </div>
+
+    <!-- Tab: Board -->
+    <div class="tab-panel active" id="tab-board">
+      <div class="kpi-row">
+        <div class="kpi-card accent"><div class="kpi-label">项目总数</div><div class="kpi-value">48</div><div class="kpi-trend trend-up">▲ 12.5% 同比</div></div>
+        <div class="kpi-card success"><div class="kpi-label">进行中</div><div class="kpi-value">32</div><div class="kpi-trend trend-up">▲ 3 本周新增</div></div>
+        <div class="kpi-card info"><div class="kpi-label">已完成</div><div class="kpi-value">14</div><div class="kpi-trend trend-up">▲ 2 本月</div></div>
+        <div class="kpi-card warning"><div class="kpi-label">延期项目</div><div class="kpi-value">2</div><div class="kpi-trend trend-down">▼ 需关注</div></div>
+        <div class="kpi-card muted"><div class="kpi-label">平均进度</div><div class="kpi-value">78%</div><div class="kpi-trend trend-up">▲ 4.2% 环比</div></div>
+        <div class="kpi-card danger"><div class="kpi-label">预算使用率</div><div class="kpi-value">82%</div><div class="kpi-trend trend-down">▼ 12% 剩余</div></div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+  <div class="section-title"><span class="dot"></span>项目卡片</div>
+  <div class="tab-search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg><input type="search" id="project-search" placeholder="搜索项目 / 客户 / 负责人..." style="outline:none;background:transparent;border:none;width:100%;color:var(--fg);font:13px/1.4 var(--font-body)"></div>
+</div>
+      <div class="project-grid" id="projectGrid"></div>
+    </div>
+
+    <!-- Tab: Gantt -->
+    <div class="tab-panel" id="tab-gantt">
+      <div class="section-title"><span class="dot"></span>项目甘特图</div>
+      <div class="gantt-chart">
+        <div class="gantt-header">
+          <div class="gh-label">项目名称</div>
+          <div class="gh-timeline">
+            <div class="gh-month">2024-01</div><div class="gh-month">2024-03</div><div class="gh-month">2024-05</div>
+            <div class="gh-month">2024-07</div><div class="gh-month">2024-09</div><div class="gh-month">2024-11</div>
+            <div class="gh-month">2025-01</div><div class="gh-month">2025-03</div><div class="gh-month">2025-05</div>
+          </div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">核心系统升级</div>
+          <div class="gantt-timeline">
+            <div class="gantt-bar" style="left:0%;width:45%;background:var(--accent);'" title="2024-01 ~ 2024-12">核心系统</div>
+            <div class="gantt-today" style="left:72%"></div>
+          </div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">数据中台建设</div>
+          <div class="gantt-timeline">
+            <div class="gantt-bar" style="left:16%;width:58%;background:var(--info);'" title="2024-03 ~ 2025-06">数据中台</div>
+            <div class="gantt-today" style="left:72%"></div>
+          </div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">移动端重构</div>
+          <div class="gantt-timeline">
+            <div class="gantt-bar" style="left:41%;width:33%;background:var(--success);'" title="2024-06 ~ 2025-03">移动端</div>
+            <div class="gantt-today" style="left:72%"></div>
+          </div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">安全合规审计</div>
+          <div class="gantt-timeline">
+            <div class="gantt-bar" style="left:8%;width:41%;background:var(--warning);'" title="2024-02 ~ 2024-11">安全审计</div>
+            <div class="gantt-today" style="left:72%"></div>
+          </div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">智能客服平台</div>
+          <div class="gantt-timeline">
+            <div class="gantt-bar" style="left:58%;width:58%;background:var(--accent-hover);'" title="2024-08 ~ 2025-08">智能客服</div>
+            <div class="gantt-today" style="left:72%"></div>
+          </div>
+        </div>
+        <div class="gantt-row">
+          <div class="gantt-label">供应链数字化</div>
+          <div class="gantt-timeline">
+            <div class="gantt-bar" style="left:25%;width:37%;background:var(--accent);'" title="2024-04 ~ 2025-01">供应链</div>
+            <div class="gantt-today" style="left:72%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Budget -->
+    <div class="tab-panel" id="tab-budget">
+      <div class="section-title"><span class="dot"></span>预算概览</div>
+      <div class="budget-overview">
+        <div class="budget-card">
+          <div class="budget-card-value" style="color:var(--accent)">3,100 万</div>
+          <div class="budget-card-label">总预算</div>
+        </div>
+        <div class="budget-card">
+          <div class="budget-card-value" style="color:var(--danger)">2,095 万</div>
+          <div class="budget-card-label">已用预算</div>
+        </div>
+        <div class="budget-card">
+          <div class="budget-card-value" style="color:var(--success)">1,005 万</div>
+          <div class="budget-card-label">剩余预算</div>
+        </div>
+        <div class="budget-card">
+          <div class="budget-card-value" style="color:var(--warning)">67.6%</div>
+          <div class="budget-card-label">预算使用率</div>
+        </div>
+      </div>
+      <div class="section-title"><span class="dot"></span>项目预算对比</div>
+      <div class="budget-compare">
+        <div class="bc-row"><div class="bc-label">核心系统升级</div><div class="bc-track"><div class="bc-fill budget" style="width:85%"></div><div class="bc-fill actual" style="width:82%"></div></div><div class="bc-value">82%</div></div>
+        <div class="bc-row"><div class="bc-label">数据中台建设</div><div class="bc-track"><div class="bc-fill budget" style="width:62%"></div><div class="bc-fill actual" style="width:58%"></div></div><div class="bc-value">58%</div></div>
+        <div class="bc-row"><div class="bc-label">移动端重构</div><div class="bc-track"><div class="bc-fill budget" style="width:45%"></div><div class="bc-fill actual" style="width:38%"></div></div><div class="bc-value">38%</div></div>
+        <div class="bc-row"><div class="bc-label">安全合规审计</div><div class="bc-track"><div class="bc-fill budget" style="width:92%"></div><div class="bc-fill actual" style="width:91%"></div></div><div class="bc-value">91%</div></div>
+        <div class="bc-row"><div class="bc-label">智能客服平台</div><div class="bc-track"><div class="bc-fill budget" style="width:30%"></div><div class="bc-fill actual" style="width:25%"></div></div><div class="bc-value">25%</div></div>
+        <div class="bc-row"><div class="bc-label">供应链数字化</div><div class="bc-track"><div class="bc-fill budget" style="width:78%"></div><div class="bc-fill actual" style="width:74%"></div></div><div class="bc-value">74%</div></div>
+      </div>
+    </div>
+
+    <!-- Tab: Milestone -->
+    <div class="tab-panel" id="tab-milestone">
+      <div class="section-title"><span class="dot"></span>项目里程碑</div>
+      <div class="milestone-timeline">
+        <div class="milestone-item">
+          <div class="milestone-dot completed"></div>
+          <div class="milestone-date">2024-01-15</div>
+          <div class="milestone-title">年度项目规划启动</div>
+          <div class="milestone-desc">完成全年项目立项与资源预分配</div>
+          <span class="milestone-status completed">已完成</span>
+        </div>
+        <div class="milestone-item">
+          <div class="milestone-dot completed"></div>
+          <div class="milestone-date">2024-03-20</div>
+          <div class="milestone-title">核心系统需求评审</div>
+          <div class="milestone-desc">金融事业部需求确认，进入开发阶段</div>
+          <span class="milestone-status completed">已完成</span>
+        </div>
+        <div class="milestone-item">
+          <div class="milestone-dot completed"></div>
+          <div class="milestone-date">2024-05-10</div>
+          <div class="milestone-title">数据中台架构确定</div>
+          <div class="milestone-desc">运营中心数据架构方案评审通过</div>
+          <span class="milestone-status completed">已完成</span>
+        </div>
+        <div class="milestone-item">
+          <div class="milestone-dot in-progress"></div>
+          <div class="milestone-date">2024-06-30</div>
+          <div class="milestone-title">Q2 项目中期检查</div>
+          <div class="milestone-desc">全面评估项目进度与风险</div>
+          <span class="milestone-status in-progress">进行中</span>
+        </div>
+        <div class="milestone-item">
+          <div class="milestone-dot in-progress"></div>
+          <div class="milestone-date">2024-08-15</div>
+          <div class="milestone-title">系统安全评审</div>
+          <div class="milestone-desc">合规部全面安全审计</div>
+          <span class="milestone-status in-progress">进行中</span>
+        </div>
+        <div class="milestone-item">
+          <div class="milestone-dot in-progress"></div>
+          <div class="milestone-date">2024-10-20</div>
+          <div class="milestone-title">移动端 MVP 交付</div>
+          <div class="milestone-desc">产品部移动端重构首个可用版本</div>
+          <span class="milestone-status in-progress">进行中</span>
+        </div>
+        <div class="milestone-item">
+          <div class="milestone-dot pending"></div>
+          <div class="milestone-date">2024-12-01</div>
+          <div class="milestone-title">年度项目冲刺</div>
+          <div class="milestone-desc">冲刺完成全年目标，进入收尾阶段</div>
+          <span class="milestone-status pending">未开始</span>
+        </div>
+        <div class="milestone-item">
+          <div class="milestone-dot pending"></div>
+          <div class="milestone-date">2025-01-15</div>
+          <div class="milestone-title">供应链系统上线</div>
+          <div class="milestone-desc">供应链数字化平台正式上线运行</div>
+          <span class="milestone-status pending">未开始</span>
+        </div>
+      </div>
+    </div>
+
+    <footer class="page-footer">
+      <span>© 2025 项目管理平台 · 企业版</span>
+      <span class="version">v3.2.1-build-20250117</span>
+    </footer>
+  </main>
+
+  <!-- Clone Project Modal -->
+  <div id="cloneModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">复制项目</h3>
+        <button class="modal-close" onclick="closeCloneModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">项目名称</label>
+          <input type="text" id="cloneName" class="form-input" placeholder="输入新项目名称">
+        </div>
+        <p style="font-size:12px;color:var(--muted)">复制将创建原项目的所有配置，但进度将从 0 开始。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeCloneModal()">取消</button>
+        <button class="btn btn-primary" onclick="confirmClone()">确认复制</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Tabs ──
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Project Data ──
+  const projects = [
+    { name: '核心系统升级', client: '金融事业部', progress: 85, status: '进行中', statusClass: '进行中', manager: '张伟', start: '2024-01', end: '2024-12', budget: 800, used: 680, tasks: '124/146', risks: 2, color: 'var(--accent)' },
+    { name: '数据中台建设', client: '运营中心', progress: 62, status: '进行中', statusClass: '进行中', manager: '李明', start: '2024-03', end: '2025-06', budget: 600, used: 372, tasks: '89/143', risks: 1, color: 'var(--info)' },
+    { name: '移动端重构', client: '产品部', progress: 45, status: '正常', statusClass: '正常', manager: '王芳', start: '2024-06', end: '2025-03', budget: 400, used: 180, tasks: '56/124', risks: 0, color: 'var(--success)' },
+    { name: '安全合规审计', client: '合规部', progress: 95, status: '即将完成', statusClass: '即将完成', manager: '赵强', start: '2024-02', end: '2024-11', budget: 350, used: 332, tasks: '112/118', risks: 0, color: 'var(--warning)' },
+    { name: '智能客服平台', client: '客服中心', progress: 30, status: '正常', statusClass: '正常', manager: '孙丽', start: '2024-08', end: '2025-08', budget: 500, used: 150, tasks: '34/112', risks: 3, color: 'var(--accent-hover)' },
+    { name: '供应链数字化', client: '供应链部', progress: 78, status: '进行中', statusClass: '进行中', manager: '周杰', start: '2024-04', end: '2025-01', budget: 450, used: 351, tasks: '95/122', risks: 1, color: 'var(--accent)' }
+  ];
+
+  const grid = document.getElementById('projectGrid');
+  projects.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    card.innerHTML = `
+      <div class="project-card-header">
+        <div><div class="project-name">${p.name}</div><div class="project-client">${p.client}</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="project-status ${p.statusClass}">${p.status}</span>
+          <div class="card-actions">
+            <button class="card-btn" data-idx="${i}" data-action="clone" title="复制项目">📋</button>
+            <button class="card-btn danger" data-idx="${i}" data-action="delete" title="删除项目">🗑</button>
+          </div>
+        </div>
+      </div>
+      <div class="project-progress">
+        <div class="project-progress-label"><span>进度</span><span>${p.progress}%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${p.progress}%;background:${p.color}"></div></div>
+      </div>
+      <div class="project-meta">
+        <span>负责人: ${p.manager}</span>
+        <span>${p.start} ~ ${p.end}</span>
+      </div>
+      <div class="project-detail">
+        <div class="detail-grid">
+          <div class="detail-cell"><div class="detail-label">预算</div><div class="detail-value">${p.budget}万</div></div>
+          <div class="detail-cell"><div class="detail-label">已用</div><div class="detail-value">${p.used}万</div></div>
+          <div class="detail-cell"><div class="detail-label">风险</div><div class="detail-value" style="color:${p.risks>0?'var(--danger)':'var(--success)'})">${p.risks}项</div></div>
+          <div class="detail-cell"><div class="detail-label">任务</div><div class="detail-value">${p.tasks}</div></div>
+          <div class="detail-cell"><div class="detail-label">预算率</div><div class="detail-value">${(p.used/p.budget*100).toFixed(0)}%</div></div>
+          <div class="detail-cell"><div class="detail-label">状态</div><div class="detail-value">${p.status}</div></div>
+        </div>
+      </div>
+    `;
+    card.addEventListener('click', (e) => {
+      const btn = e.target.closest('.card-btn');
+      if (btn) {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.idx);
+        const action = btn.dataset.action;
+        if (action === 'clone') openCloneModal(projects[idx], idx);
+        else if (action === 'delete') deleteProject(idx);
+      } else {
+        card.classList.toggle('expanded');
+      }
+    });
+    grid.appendChild(card);
+
+    // Stagger animation
+    card.style.opacity = '0'; card.style.transform = 'translateY(8px)'; card.style.transition = 'opacity .3s ease, transform .3s ease';
+    setTimeout(() => { card.style.opacity = '1'; card.style.transform = 'translateY(0)'; }, 80 * i);
+  });
+
+  // ── Clone Project Modal ──
+  function openCloneModal(project, idx) {
+    const overlay = document.getElementById('cloneModal');
+    overlay.dataset.projectIdx = idx;
+    document.getElementById('cloneName').value = project.name + ' (复制)';
+    overlay.classList.add('active');
+  }
+
+  function closeCloneModal() {
+    document.getElementById('cloneModal').classList.remove('active');
+  }
+
+  function confirmClone() {
+    const overlay = document.getElementById('cloneModal');
+    const idx = parseInt(overlay.dataset.projectIdx);
+    const newName = document.getElementById('cloneName').value.trim();
+    if (!newName) return alert('请输入项目名称');
+
+    const original = projects[idx];
+    const newProject = {
+      name: newName,
+      client: original.client,
+      progress: 0,
+      status: '正常',
+      statusClass: '正常',
+      manager: original.manager,
+      start: '2024-06',
+      end: '2025-06',
+      budget: original.budget,
+      used: 0,
+      tasks: '0/0',
+      risks: 0,
+      color: original.color
+    };
+    projects.unshift(newProject);
+
+    // Re-render grid
+    const grid = document.getElementById('projectGrid');
+    grid.innerHTML = '';
+    projects.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'project-card';
+      card.innerHTML = `
+        <div class="project-card-header">
+          <div><div class="project-name">${p.name}</div><div class="project-client">${p.client}</div></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="project-status ${p.statusClass}">${p.status}</span>
+            <div class="card-actions">
+              <button class="card-btn" data-idx="${i}" data-action="clone" title="复制项目">📋</button>
+              <button class="card-btn danger" data-idx="${i}" data-action="delete" title="删除项目">🗑</button>
+            </div>
+          </div>
+        </div>
+        <div class="project-progress">
+          <div class="project-progress-label"><span>进度</span><span>${p.progress}%</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${p.progress}%;background:${p.color}"></div></div>
+        </div>
+        <div class="project-meta">
+          <span>负责人：${p.manager}</span>
+          <span>${p.start} ~ ${p.end}</span>
+        </div>
+        <div class="project-detail">
+          <div class="detail-grid">
+            <div class="detail-cell"><div class="detail-label">预算</div><div class="detail-value">${p.budget}万</div></div>
+            <div class="detail-cell"><div class="detail-label">已用</div><div class="detail-value">${p.used}万</div></div>
+            <div class="detail-cell"><div class="detail-label">风险</div><div class="detail-value" style="color:${p.risks>0?'var(--danger)':'var(--success)'}">${p.risks}项</div></div>
+            <div class="detail-cell"><div class="detail-label">任务</div><div class="detail-value">${p.tasks}</div></div>
+            <div class="detail-cell"><div class="detail-label">预算率</div><div class="detail-value">${Math.round(p.used/p.budget*100)}%</div></div>
+            <div class="detail-cell"><div class="detail-label">状态</div><div class="detail-value">${p.status}</div></div>
+          </div>
+        </div>
+      `;
+      card.addEventListener('click', (e) => {
+        const btn = e.target.closest('.card-btn');
+        if (btn) {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.idx);
+          const action = btn.dataset.action;
+          if (action === 'clone') openCloneModal(projects[idx], idx);
+          else if (action === 'delete') deleteProject(idx);
+        } else {
+          card.classList.toggle('expanded');
+        }
+      });
+      grid.appendChild(card);
+      card.style.opacity = '0'; card.style.transform = 'translateY(8px)'; card.style.transition = 'opacity .3s ease, transform .3s ease';
+      setTimeout(() => { card.style.opacity = '1'; card.style.transform = 'translateY(0)'; }, 80 * i);
+    });
+
+    // Update KPI
+    document.querySelectorAll('.kpi-value')[0].textContent = projects.length;
+
+    closeCloneModal();
+  }
+
+  function deleteProject(idx) {
+    if (!confirm('确定要删除这个项目吗？')) return;
+    projects.splice(idx, 1);
+
+    // Re-render grid
+    const grid = document.getElementById('projectGrid');
+    grid.innerHTML = '';
+    projects.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'project-card';
+      card.innerHTML = `
+        <div class="project-card-header">
+          <div><div class="project-name">${p.name}</div><div class="project-client">${p.client}</div></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="project-status ${p.statusClass}">${p.status}</span>
+            <div class="card-actions">
+              <button class="card-btn" data-idx="${i}" data-action="clone" title="复制项目">📋</button>
+              <button class="card-btn danger" data-idx="${i}" data-action="delete" title="删除项目">🗑</button>
+            </div>
+          </div>
+        </div>
+        <div class="project-progress">
+          <div class="project-progress-label"><span>进度</span><span>${p.progress}%</span></div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${p.progress}%;background:${p.color}"></div></div>
+        </div>
+        <div class="project-meta">
+          <span>负责人：${p.manager}</span>
+          <span>${p.start} ~ ${p.end}</span>
+        </div>
+        <div class="project-detail">
+          <div class="detail-grid">
+            <div class="detail-cell"><div class="detail-label">预算</div><div class="detail-value">${p.budget}万</div></div>
+            <div class="detail-cell"><div class="detail-label">已用</div><div class="detail-value">${p.used}万</div></div>
+            <div class="detail-cell"><div class="detail-label">风险</div><div class="detail-value" style="color:${p.risks>0?'var(--danger)':'var(--success)'}">${p.risks}项</div></div>
+            <div class="detail-cell"><div class="detail-label">任务</div><div class="detail-value">${p.tasks}</div></div>
+            <div class="detail-cell"><div class="detail-label">预算率</div><div class="detail-value">${Math.round(p.used/p.budget*100)}%</div></div>
+            <div class="detail-cell"><div class="detail-label">状态</div><div class="detail-value">${p.status}</div></div>
+          </div>
+        </div>
+      `;
+      card.addEventListener('click', (e) => {
+        const btn = e.target.closest('.card-btn');
+        if (btn) {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.idx);
+          const action = btn.dataset.action;
+          if (action === 'clone') openCloneModal(projects[idx], idx);
+          else if (action === 'delete') deleteProject(idx);
+        } else {
+          card.classList.toggle('expanded');
+        }
+      });
+      grid.appendChild(card);
+      card.style.opacity = '0'; card.style.transform = 'translateY(8px)'; card.style.transition = 'opacity .3s ease, transform .3s ease';
+      setTimeout(() => { card.style.opacity = '1'; card.style.transform = 'translateY(0)'; }, 80 * i);
+    });
+
+    // Update KPI
+    document.querySelectorAll('.kpi-value')[0].textContent = projects.length;
+  }
+
+
+  // ── Search ──
+  document.getElementById('project-search').addEventListener('input', e => {
+    const term = e.target.value.trim().toLowerCase();
+    document.querySelectorAll('.project-card').forEach(card => {
+      if (!term) { card.style.display = ''; return; }
+      const text = card.textContent.toLowerCase();
+      card.style.display = text.includes(term) ? '' : 'none';
+    });
+  });
+</script>
+</body>
+</html>

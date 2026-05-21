@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目管理平台 — 需求管理</title>
+<style>
+  /* ── Design Tokens ── */
+  :root {
+    --bg:       oklch(98% 0.005 250);
+    --surface:  oklch(100% 0 0);
+    --fg:       oklch(22% 0.02 240);
+    --muted:    oklch(50% 0.018 240);
+    --border:   oklch(90% 0.008 240);
+    --accent:   oklch(58% 0.16 145);
+    --accent-hover: oklch(52% 0.14 145);
+    --danger:   oklch(55% 0.18 25);
+    --warning:  oklch(70% 0.12 80);
+    --success:  oklch(60% 0.16 145);
+    --font-display: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --font-body:    -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    --shadow-ambient: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-card:    0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-elevated: 0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--fg);
+    height: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ── Layout ── */
+  .app {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "header header"
+      "sidebar main";
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  @media (max-width: 1024px) {
+    .app { grid-template-columns: 0 1fr; }
+    .sidebar { display: none; }
+  }
+
+  /* ── Header ── */
+  .header {
+    grid-area: header;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 56px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-ambient);
+    z-index: 100;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--fg);
+    letter-spacing: -0.02em;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: var(--radius-md);
+    display: grid;
+    place-items: center;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .search-global {
+    flex: 1;
+    max-width: 420px;
+    margin: 0 24px;
+    position: relative;
+  }
+
+  .search-global input {
+    width: 100%;
+    padding: 8px 16px 8px 40px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg);
+    color: var(--fg);
+    font: 13px/1.4 var(--font-body);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .search-global input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent) / 12%;
+  }
+
+  .search-global::before {
+    content: "🔍";
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: grid;
+    place-items: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    grid-area: sidebar;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 16px;
+    overflow-y: auto;
+  }
+
+  .nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-item {
+    margin-bottom: 2px;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .nav-link:hover {
+    background: rgba(0,0,0,0.04);
+    color: var(--fg);
+  }
+
+  .nav-link.active {
+    background: var(--accent) / 8%;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .nav-link.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+
+  .nav-icon {
+    font-size: 13px;
+    opacity: 0.6;
+    width: 20px;
+    text-align: center;
+  }
+
+  .nav-section {
+    padding: 16px 12px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Main ── */
+  .main {
+    grid-area: main;
+    padding: 32px;
+    overflow-y: auto;
+  }
+
+  .page-header {
+    margin-bottom: 24px;
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--fg);
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .breadcrumb a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    width: fit-content;
+    margin-bottom: 24px;
+  }
+
+  .tab-btn {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-btn:hover {
+    color: var(--fg);
+  }
+
+  .tab-btn.active {
+    background: var(--surface);
+    color: var(--fg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* ── Section Header ── */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .section-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--fg);
+  }
+
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .search input {
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--fg);
+    font: 13px/1.4 var(--font-body);
+    width: 240px;
+    transition: border-color 0.2s;
+  }
+
+  .search input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent) / 12%;
+  }
+
+  /* ── Key Metrics ── */
+  .key-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .key-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .key-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .key-value {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--fg);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .key-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    width: fit-content;
+  }
+
+  .key-trend.up {
+    color: var(--success);
+    background: var(--success) / 8%;
+  }
+
+  .key-trend.down {
+    color: var(--warning);
+    background: var(--warning) / 8%;
+  }
+
+  /* ── Grid Cards ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .grid-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: var(--shadow-card);
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .grid-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .grid-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .grid-card:hover::before {
+    opacity: 1;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: var(--accent) / 8%;
+  }
+
+  .card-text {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .progress-bar {
+    height: 5px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 12px 0;
+  }
+
+  .progress-bar div {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+    border-radius: 3px;
+  }
+
+  /* ── Status Pills ── */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 100px;
+  }
+
+  .status-pill.success {
+    background: var(--success) / 8%;
+    color: var(--success);
+    border: 1px solid var(--success) / 20%;
+  }
+
+  .status-pill.warning {
+    background: var(--warning) / 8%;
+    color: var(--warning);
+    border: 1px solid var(--warning) / 20%;
+  }
+
+  .status-pill.danger {
+    background: var(--danger) / 8%;
+    color: var(--danger);
+    border: 1px solid var(--danger) / 20%;
+  }
+
+  .status-pill.info {
+    background: var(--accent) / 8%;
+    color: var(--accent);
+    border: 1px solid var(--accent) / 20%;
+  }
+
+  /* ── Info Cards ── */
+  .info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: var(--shadow-card);
+    margin-bottom: 24px;
+  }
+
+  .info-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 12px;
+  }
+
+  .list-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .list-item:last-child {
+    border-bottom: none;
+  }
+
+  .list-name {
+    font-size: 13px;
+    color: var(--fg);
+  }
+
+  .list-meta {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ── Actions ── */
+  .actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .quick-btn {
+    padding: 8px 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .quick-btn:hover {
+    background: var(--accent-hover);
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-icon">PM</div>
+        项目管理平台
+      </div>
+    </div>
+    <div class="search-global">
+      <input type="search" placeholder="全局搜索...">
+    </div>
+    <div class="avatar">张</div>
+  </header>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <ul class="nav-list">
+      <li class="nav-item"><a href="dashboard.html" class="nav-link"><span class="nav-icon">🏠</span>概览面板</a></li>
+      <li class="nav-item"><a href="project-management.html" class="nav-link"><span class="nav-icon">📁</span>项目管理</a></li>
+      <li class="nav-item"><a href="resource-management.html" class="nav-link"><span class="nav-icon">👥</span>资源管理</a></li>
+      <li class="nav-item"><a href="plan-management.html" class="nav-link"><span class="nav-icon">📅</span>计划管理</a></li>
+      <li class="nav-item"><a href="risk-management.html" class="nav-link"><span class="nav-icon">⚠️</span>风险管理</a></li>
+      <li class="nav-item"><a href="communication-management.html" class="nav-link"><span class="nav-icon">💬</span>沟通管理</a></li>
+      <li class="nav-item"><a href="requirements-management.html" class="nav-link active"><span class="nav-icon">📝</span>需求管理</a></li>
+      <li class="nav-item"><a href="development-management.html" class="nav-link"><span class="nav-icon">💻</span>开发管理</a></li>
+      <li class="nav-item"><a href="testing-management.html" class="nav-link"><span class="nav-icon">🔍</span>测试管理</a></li>
+      <li class="nav-item"><a href="config-management.html" class="nav-link"><span class="nav-icon">⚙️</span>配置管理</a></li>
+      <li class="nav-item"><a href="drill-management.html" class="nav-link"><span class="nav-icon">🎯</span>演练管理</a></li>
+      <li class="nav-item"><a href="production-management.html" class="nav-link"><span class="nav-icon">🚀</span>投产管理</a></li>
+      <li class="nav-item"><a href="work-management.html" class="nav-link"><span class="nav-icon">📊</span>工作管理</a></li>
+      <li class="nav-section">系统设置</li>
+      <li class="nav-item"><a href="#" class="nav-link"><span class="nav-icon">👤</span>用户管理</a></li>
+      <li class="nav-item"><a href="#" class="nav-link"><span class="nav-icon">🔧</span>系统管理</a></li>
+      <li class="nav-item"><a href="#" class="nav-link"><span class="nav-icon">❓</span>帮助中心</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1 class="page-title">需求管理</h1>
+      <div class="breadcrumb">
+        <a href="dashboard.html">概览面板</a>
+        <span>/</span>
+        <span>需求管理</span>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="tab1">需求列表</button>
+      <button class="tab-btn" data-tab="tab2">需求统计</button>
+      <button class="tab-btn" data-tab="tab3">需求变更</button>
+    </div>
+
+    <!-- Tab 1: 需求列表 -->
+    <div class="tab-content active" id="tab1">
+      <div class="section-header">
+        <h2>需求列表</h2>
+        <div class="search">
+          <input type="search" placeholder="搜索需求...">
+        </div>
+      </div>
+
+      <div class="key-metrics">
+        <div class="key-card">
+          <div class="key-label">总需求</div>
+          <div class="key-value">86</div>
+          <span class="key-trend up">↑ 8</span>
+        </div>
+        <div class="key-card">
+          <div class="key-label">已实现</div>
+          <div class="key-value">52</div>
+          <span class="key-trend up">↑ 5</span>
+        </div>
+        <div class="key-card">
+          <div class="key-label">进行中</div>
+          <div class="key-value">24</div>
+          <span class="key-trend up">↑ 3</span>
+        </div>
+        <div class="key-card">
+          <div class="key-label">待评审</div>
+          <div class="key-value">10</div>
+          <span class="key-trend down">↓ 2</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-title">需求列表</div>
+        <div class="list-item">
+          <div>
+            <div class="list-name">REQ-001 用户登录与权限控制</div>
+            <div class="list-meta">高优先级 · 张伟 · 2024-03-15</div>
+          </div>
+          <span class="status-pill success">已实现</span>
+        </div>
+        <div class="list-item">
+          <div>
+            <div class="list-name">REQ-002 数据导入导出功能</div>
+            <div class="list-meta">中优先级 · 李明 · 2024-03-18</div>
+          </div>
+          <span class="status-pill success">已实现</span>
+        </div>
+        <div class="list-item">
+          <div>
+            <div class="list-name">REQ-003 报表自动生成功能</div>
+            <div class="list-meta">高优先级 · 王芳 · 2024-03-20</div>
+          </div>
+          <span class="status-pill warning">进行中</span>
+        </div>
+        <div class="list-item">
+          <div>
+            <div class="list-name">REQ-004 移动端适配</div>
+            <div class="list-meta">中优先级 · 赵强 · 2024-03-25</div>
+          </div>
+          <span class="status-pill info">待评审</span>
+        </div>
+        <div class="list-item">
+          <div>
+            <div class="list-name">REQ-005 第三方系统对接</div>
+            <div class="list-meta">高优先级 · 孙丽 · 2024-03-28</div>
+          </div>
+          <span class="status-pill info">待评审</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: 需求统计 -->
+    <div class="tab-content" id="tab2">
+      <div class="section-header">
+        <h2>需求统计</h2>
+      </div>
+
+      <div class="key-metrics">
+        <div class="key-card">
+          <div class="key-label">需求变更率</div>
+          <div class="key-value">12%</div>
+          <span class="key-trend down">↓ 3%</span>
+        </div>
+        <div class="key-card">
+          <div class="key-label">需求达成率</div>
+          <div class="key-value">88%</div>
+          <span class="key-trend up">↑ 5%</span>
+        </div>
+        <div class="key-card">
+          <div class="key-label">平均评审时间</div>
+          <div class="key-value">3.5 天</div>
+          <span class="key-trend down">↓ 0.5</span>
+        </div>
+        <div class="key-card">
+          <div class="key-label">需求返工率</div>
+          <div class="key-value">5%</div>
+          <span class="key-trend down">↓ 2%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: 需求变更 -->
+    <div class="tab-content" id="tab3">
+      <div class="section-header">
+        <h2>需求变更</h2>
+      </div>
+
+      <div class="info-card">
+        <div class="info-title">变更记录</div>
+        <div class="list-item">
+          <div>
+            <div class="list-name">REQ-003 范围调整：减少报表类型</div>
+            <div class="list-meta">2024-03-10</div>
+          </div>
+          <span class="status-pill warning">已批准</span>
+        </div>
+        <div class="list-item">
+          <div>
+            <div class="list-name">REQ-004 优先级调整：高→中</div>
+            <div class="list-meta">2024-03-12</div>
+          </div>
+          <span class="status-pill warning">已批准</span>
+        </div>
+        <div class="list-item">
+          <div>
+            <div class="list-name">REQ-005 新增字段：用户手机号</div>
+            <div class="list-meta">2024-03-15</div>
+          </div>
+          <span class="status-pill info">审批中</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+</div>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// Search functionality
+document.querySelectorAll('.search input').forEach(function(input) {
+  input.addEventListener('input', function(e) {
+    var query = e.target.value.toLowerCase();
+    var container = input.closest('.tab-content');
+    container.querySelectorAll('.grid-card, .list-item').forEach(function(card) {
+      card.style.display = card.textContent.toLowerCase().indexOf(query) > -1 ? '' : 'none';
+    });
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目管理平台 — 资源管理</title>
+<style>
+  /* ── Tokens ── */
+  :root {
+    --bg: oklch(98% 0.005 250);
+    --surface: oklch(100% 0 0);
+    --fg: oklch(22% 0.02 240);
+    --muted: oklch(50% 0.018 240);
+    --border: oklch(90% 0.008 240);
+    --accent: oklch(58% 0.16 145);
+    --accent-hover: oklch(52% 0.14 145);
+    --danger: oklch(55% 0.18 25);
+    --warning: oklch(70% 0.12 80);
+    --success: oklch(60% 0.16 145);
+    --info: oklch(55% 0.14 250);
+    --font-display: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    --shadow-ambient: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-card: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-elevated: 0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .app {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: 60px 1fr;
+    grid-template-areas:
+      "header header"
+      "sidebar main";
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    grid-area: header;
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px) saturate(140%);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; letter-spacing: -0.2px; }
+  .logo-icon {
+    width: 32px; height: 32px; border-radius: var(--radius-md);
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+  .breadcrumb { font-size: 13px; color: var(--muted); padding-left: 12px; border-left: 1px solid var(--border); }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .search-box input {
+    width: 280px; padding: 7px 12px 7px 32px;
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    font-size: 13px; background: transparent; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .search-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    grid-area: sidebar;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 8px 0;
+    overflow-y: auto;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 20px; margin: 0 8px;
+    border-radius: var(--radius-md);
+    font-size: 13px; cursor: pointer;
+    transition: background .15s, color .15s;
+    color: var(--muted);
+  }
+  .nav-item:hover { background: var(--bg); color: var(--fg); }
+  .nav-item.active { background: var(--accent); color: #fff; font-weight: 600; }
+  .nav-icon { font-size: 14px; width: 20px; text-align: center; }
+  .sidebar-section { font-size: 11px; font-weight: 600; color: var(--muted); padding: 16px 20px 6px; text-transform: uppercase; letter-spacing: .06em; }
+
+  /* ── Main ── */
+  .main { grid-area: main; padding: 24px 28px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+
+  /* ── Tabs ── */
+  .tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+  .tab-btn { padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: color .15s, border-color .15s; }
+  .tab-btn:hover { color: var(--fg); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; animation: fadeIn .3s ease; }
+  .tab-panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── KPI Row ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+  @media (max-width: 1280px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 768px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+  .kpi-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 16px; position: relative; overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .kpi-card.accent::before { background: var(--accent); }
+  .kpi-card.success::before { background: var(--success); }
+  .kpi-card.warning::before { background: var(--warning); }
+  .kpi-card.danger::before { background: var(--danger); }
+  .kpi-card.info::before { background: var(--info); }
+  .kpi-card.muted::before { background: var(--muted); }
+  .kpi-label { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  .kpi-value { font-family: var(--font-mono); font-size: 28px; font-weight: 700; line-height: 1.2; }
+  .kpi-trend { font-size: 11px; margin-top: 6px; font-weight: 600; }
+  .trend-up { color: var(--success); }
+  .trend-down { color: var(--danger); }
+
+  /* ── Project Cards ── */
+  .project-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 1280px) { .project-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 768px) { .project-grid { grid-template-columns: 1fr; } }
+  .project-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 20px; cursor: pointer;
+    box-shadow: var(--shadow-card);
+    transition: box-shadow .2s, transform .15s;
+  }
+  .project-card:hover { box-shadow: var(--shadow-elevated); transform: translateY(-2px); }
+  .project-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .project-name { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
+  .project-client { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .project-status { display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; }
+  .project-status.进行中 { background: oklch(95% 0.05 145); color: oklch(45% 0.10 145); }
+  .project-status.正常 { background: oklch(95% 0.03 240); color: oklch(50% 0.08 240); }
+  .project-status.即将完成 { background: oklch(95% 0.05 170); color: oklch(45% 0.10 170); }
+  .project-progress { margin: 12px 0 8px; }
+  .project-progress-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+  .progress-bar { height: 6px; background: oklch(92% 0.01 240); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width .8s ease-out; }
+  .project-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .project-detail { max-height: 0; overflow: hidden; transition: max-height .3s ease, opacity .3s ease; opacity: 0; margin-top: 0; }
+  .project-card.expanded .project-detail { max-height: 500px; opacity: 1; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 12px; }
+  .detail-cell { display: flex; flex-direction: column; gap: 2px; }
+  .detail-label { color: var(--muted); font-size: 11px; font-weight: 600; }
+  .detail-value { font-family: var(--font-mono); font-weight: 700; font-size: 14px; }
+
+  /* ── Gantt ── */
+  .gantt-chart { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; overflow-x: auto; }
+  .gantt-header { display: flex; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--muted); }
+  .gantt-header .gh-label { width: 140px; flex-shrink: 0; }
+  .gantt-header .gh-timeline { flex: 1; display: flex; }
+  .gh-month { flex: 1; text-align: center; }
+  .gantt-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .gantt-row:last-child { border-bottom: none; }
+  .gantt-label { width: 140px; flex-shrink: 0; font-size: 13px; font-weight: 600; }
+  .gantt-timeline { flex: 1; position: relative; height: 32px; }
+  .gantt-bar {
+    position: absolute; height: 24px; top: 4px; border-radius: var(--radius-sm);
+    font-size: 11px; font-weight: 600; color: #fff; display: flex; align-items: center; padding: 0 8px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: height .2s, top .2s, box-shadow .2s; cursor: pointer;
+  }
+  .gantt-bar:hover { height: 28px; top: 2px; box-shadow: var(--shadow-elevated); z-index: 5; }
+  .gantt-today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--danger); z-index: 10; }
+
+  /* ── Budget Chart ── */
+  .budget-overview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .budget-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; text-align: center; box-shadow: var(--shadow-card); }
+  .budget-card-value { font-family: var(--font-mono); font-size: 24px; font-weight: 700; }
+  .budget-card-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .budget-compare { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+  .bc-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .bc-row:last-child { border-bottom: none; }
+  .bc-label { width: 120px; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .bc-track { flex: 1; height: 24px; background: oklch(95% 0.01 240); border-radius: var(--radius-sm); position: relative; overflow: hidden; }
+  .bc-fill { height: 100%; border-radius: var(--radius-sm); transition: width .8s ease-out; }
+  .bc-fill.budget { background: oklch(85% 0.05 250); }
+  .bc-fill.actual { background: var(--accent); position: absolute; top: 0; left: 0; }
+  .bc-value { width: 80px; font-family: var(--font-mono); font-size: 12px; text-align: right; flex-shrink: 0; }
+
+  /* ── Milestone Timeline ── */
+  .milestone-timeline { position: relative; padding-left: 32px; }
+  .milestone-timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .milestone-item { position: relative; padding-bottom: 28px; }
+  .milestone-item:last-child { padding-bottom: 0; }
+  .milestone-dot {
+    position: absolute; left: -28px; top: 2px; width: 16px; height: 16px; border-radius: 50%;
+    border: 3px solid var(--surface); z-index: 2;
+  }
+  .milestone-dot.completed { background: var(--success); }
+  .milestone-dot.in-progress { background: var(--accent); }
+  .milestone-dot.pending { background: var(--muted); }
+  .milestone-date { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--muted); }
+  .milestone-title { font-size: 14px; font-weight: 700; margin-top: 2px; }
+  .milestone-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .milestone-status { display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; margin-top: 6px; }
+  .milestone-status.completed { background: oklch(95% 0.05 145); color: oklch(40% 0.10 145); }
+  .milestone-status.in-progress { background: oklch(95% 0.05 250); color: oklch(50% 0.10 250); }
+  .milestone-status.pending { background: oklch(95% 0.01 240); color: var(--muted); }
+
+  /* ── Section Title ── */
+  .section-title { font-size: 13px; font-weight: 700; color: var(--fg); display: flex; align-items: center; gap: 8px; margin-bottom: 16px; letter-spacing: -0.2px; }
+  .section-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+  /* ── Footer ── */
+  .page-footer { border-top: 1px solid var(--border); padding: 16px 0; margin-top: auto; display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+
+  /* ── Misc ── */
+  @media (max-width: 640px) { .page-footer { flex-direction: column; gap: 4px; text-align: center; } }
+
+  .tab-search {display:flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg);max-width:260px;width:100%;transition:border-color .2s,box-shadow .2s}
+  .tab-search:focus-within {border-color:var(--accent);box-shadow:0 0 0 3px oklch(58% .16 145 / .12)}
+  .tab-search input {border:none;outline:none;background:transparent;color:var(--fg);font:13px/1.4 var(--font-body);width:100%}
+  .tab-search input::placeholder {color:var(--muted)}
+
+  /* ── Member Cards ── */
+  .member-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 1280px) { .member-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 768px) { .member-grid { grid-template-columns: 1fr; } }
+  .member-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 20px; cursor: pointer;
+    box-shadow: var(--shadow-card);
+    transition: box-shadow .2s, transform .15s;
+  }
+  .member-card:hover { box-shadow: var(--shadow-elevated); transform: translateY(-2px); }
+  .member-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .member-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .member-info { flex: 1; min-width: 0; }
+  .member-name { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
+  .member-role { font-size: 12px; color: var(--muted); }
+  .member-dept { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .member-load { margin: 12px 0; }
+  .load-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+  .load-bar { height: 6px; background: oklch(92% 0.01 240); border-radius: 3px; overflow: hidden; }
+  .load-fill { height: 100%; border-radius: 3px; transition: width .8s ease-out; }
+  .member-skills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .skill-tag { padding: 2px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; background: var(--bg); color: var(--muted); }
+  .member-detail { max-height: 0; overflow: hidden; transition: max-height .3s ease, opacity .3s ease; opacity: 0; margin-top: 0; }
+  .member-card.expanded .member-detail { max-height: 500px; opacity: 1; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 12px; }
+  .detail-cell { display: flex; flex-direction: column; gap: 2px; }
+  .detail-label { color: var(--muted); font-size: 11px; font-weight: 600; }
+  .detail-value { font-family: var(--font-mono); font-weight: 700; font-size: 14px; }
+  /* ── Matrix ── */
+  .matrix-table { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; overflow-x: auto; }
+  .matrix-grid { display: grid; gap: 1px; background: var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .matrix-header { background: var(--bg); padding: 10px; font-size: 12px; font-weight: 600; color: var(--muted); text-align: center; }
+  .matrix-cell { background: var(--surface); padding: 10px; font-size: 12px; text-align: center; }
+  .matrix-cell.member { font-weight: 600; text-align: left; }
+  .matrix-cell.alloc { font-family: var(--font-mono); font-weight: 700; }
+  .matrix-cell.alloc.high { color: var(--danger); }
+  .matrix-cell.alloc.medium { color: var(--accent); }
+  .matrix-cell.alloc.low { color: var(--success); }
+  /* ── Utilization Chart ── */
+  .util-chart { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+  .util-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .util-row:last-child { border-bottom: none; }
+  .util-label { width: 130px; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .util-track { flex: 1; height: 24px; background: oklch(95% 0.01 240); border-radius: var(--radius-sm); overflow: hidden; position: relative; }
+  .util-fill { height: 100%; border-radius: var(--radius-sm); transition: width .8s ease-out; }
+  .util-value { width: 60px; font-family: var(--font-mono); font-size: 12px; text-align: right; flex-shrink: 0; font-weight: 700; }
+  .util-avg { display: flex; align-items: center; justify-content: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; }
+  .util-avg-value { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--fg); margin: 0 4px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-icon">PM</div>
+        项目管理平台
+      </div>
+      <span class="breadcrumb">项目管理</span>
+    </div>
+    <div class="header-right">
+      <div class="search-box"><input type="text" placeholder="搜索项目、任务、人员…"></div>
+      <div class="user-avatar" title="管理员">管</div>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <div class="nav-item"><span class="nav-icon">◈</span><span>概览面板</span></div>
+    <div class="nav-item active"><span class="nav-icon">🗂</span><span>项目管理</span></div>
+    <div class="nav-item"><span class="nav-icon">👥</span><span>资源管理</span></div>
+    <div class="nav-item"><span class="nav-icon">📅</span><span>计划管理</span></div>
+    <div class="nav-item"><span class="nav-icon">⚡</span><span>风险管理</span></div>
+    <div class="nav-item"><span class="nav-icon">💬</span><span>沟通管理</span></div>
+    <div class="nav-item"><span class="nav-icon">📝</span><span>需求管理</span></div>
+    <div class="nav-item"><span class="nav-icon">🔧</span><span>开发管理</span></div>
+    <div class="nav-item"><span class="nav-icon">🧪</span><span>测试管理</span></div>
+    <div class="nav-item"><span class="nav-icon">⚙️</span><span>配置管理</span></div>
+    <div class="nav-item"><span class="nav-icon">🎯</span><span>演练管理</span></div>
+    <div class="nav-item"><span class="nav-icon">🚀</span><span>投产管理</span></div>
+    <div class="nav-item"><span class="nav-icon">📋</span><span>工作管理</span></div>
+    <div class="sidebar-section">系统</div>
+    <div class="nav-item"><span class="nav-icon">🔐</span><span>用户管理</span></div>
+    <div class="nav-item"><span class="nav-icon">🔧</span><span>系统设置</span></div>
+    <div class="nav-item"><span class="nav-icon">❓</span><span>帮助中心</span></div>
+  </aside>
+
+  <main class="main">
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="members">成员概览</button>
+      <button class="tab-btn" data-tab="allocation">分配矩阵</button>
+      <button class="tab-btn" data-tab="utilization">利用率分析</button>
+    </div>
+
+        <!-- Tab: Members -->
+    <div class="tab-panel active" id="tab-members">
+      <!-- Search in tab context -->
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+        <div class="section-title"><span class="dot"></span>成员列表 (8)</div>
+        <div class="tab-search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg><input type="search" id="member-search" placeholder="搜索成员 / 角色 / 技能..." style="outline:none;background:transparent;border:none;width:100%;color:var(--fg);font:13px/1.4 var(--font-body)"></div>
+      </div>
+      <div class="member-grid" id="memberGrid"></div>
+    </div>
+
+    <!-- Tab: Allocation -->
+    <div class="tab-panel" id="tab-allocation">
+      <div class="section-title"><span class="dot"></span>资源分配矩阵</div>
+      <div class="matrix-table" id="matrixTable"></div>
+    </div>
+
+    <!-- Tab: Utilization -->
+    <div class="tab-panel" id="tab-utilization">
+      <div class="section-title"><span class="dot"></span>利用率分析</div>
+      <div class="util-chart" id="utilChart"></div>
+    </div>
+    <footer class="page-footer">
+      <span>© 2025 项目管理平台 · 企业版</span>
+      <span class="version">v3.2.1-build-20250117</span>
+    </footer>
+  </main>
+</div>
+
+<script>
+  // ── Tabs ──
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Member Data ──
+  const members = [
+    { name: '张明', initial: '张M', avatarBg: 'var(--accent)', role: '高级工程师', dept: '后端开发部', load: 90, skills: ['Java', 'Spring', 'MySQL'], projects: 2, phone: '138-0000-1111', email: 'zhang.ming@corp.com', joined: '2022-03-15' },
+    { name: '李婷', initial: '李T', avatarBg: 'var(--success)', role: '项目经理', dept: '产品部', load: 85, skills: ['PMP', 'JIRA'], projects: 3, phone: '139-0000-2222', email: 'li.ting@corp.com', joined: '2021-06-01' },
+    { name: '王伟', initial: '王W', avatarBg: 'var(--info)', role: '架构师', dept: '架构部', load: 80, skills: ['微服务', 'K8s'], projects: 2, phone: '137-0000-3333', email: 'wang.wei@corp.com', joined: '2020-08-20' },
+    { name: '刘芳', initial: '刘F', avatarBg: 'var(--warning)', role: '前端工程师', dept: '前端部', load: 95, skills: ['Vue', 'React', 'TS'], projects: 2, phone: '136-0000-4444', email: 'liu.fang@corp.com', joined: '2021-11-10' },
+    { name: '陈杰', initial: '陈J', avatarBg: 'var(--danger)', role: '测试工程师', dept: '测试部', load: 70, skills: ['Selenium', 'JMeter'], projects: 2, phone: '135-0000-5555', email: 'chen.jie@corp.com', joined: '2023-01-05' },
+    { name: '赵丽', initial: '赵L', avatarBg: 'var(--accent-hover)', role: '数据分析师', dept: '数据部', load: 88, skills: ['Python', 'SQL'], projects: 2, phone: '133-0000-6666', email: 'zhao.li@corp.com', joined: '2022-09-12' },
+    { name: '周涛', initial: '周T', avatarBg: 'var(--success)', role: 'DevOps', dept: '运维部', load: 72, skills: ['Docker', 'CI/CD'], projects: 2, phone: '132-0000-7777', email: 'zhou.tao@corp.com', joined: '2021-04-20' },
+    { name: '吴敏', initial: '吴M', avatarBg: 'var(--info)', role: 'UI设计师', dept: '设计部', load: 82, skills: ['Figma', '用户研究'], projects: 3, phone: '131-0000-8888', email: 'wu.min@corp.com', joined: '2023-06-18' }
+  ];
+
+  const memberGrid = document.getElementById('memberGrid');
+  members.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = 'member-card';
+    card.innerHTML = `
+      <div class="member-card-header">
+        <div class="member-avatar" style="background:${m.avatarBg}">${m.initial}</div>
+        <div class="member-info">
+          <div class="member-name">${m.name}</div>
+          <div class="member-role">${m.role}</div>
+          <div class="member-dept">${m.dept}</div>
+        </div>
+      </div>
+      <div class="member-load">
+        <div class="load-label"><span>工作负荷</span><span>${m.load}%</span></div>
+        <div class="load-bar"><div class="load-fill" style="width:${m.load}%;background:${m.avatarBg}"></div></div>
+      </div>
+      <div class="member-skills">${m.skills.map(s => `<span class="skill-tag">${s}</span>`).join('')}</div>
+      <div class="member-detail">
+        <div class="detail-grid">
+          <div class="detail-cell"><div class="detail-label">项目数</div><div class="detail-value">${m.projects}个</div></div>
+          <div class="detail-cell"><div class="detail-label">电话</div><div class="detail-value">${m.phone}</div></div>
+          <div class="detail-cell"><div class="detail-label">邮箱</div><div class="detail-value">${m.email}</div></div>
+          <div class="detail-cell"><div class="detail-label">入职日期</div><div class="detail-value">${m.joined}</div></div>
+        </div>
+      </div>
+    `;
+    card.addEventListener('click', () => card.classList.toggle('expanded'));
+    memberGrid.appendChild(card);
+
+    card.style.opacity = '0'; card.style.transform = 'translateY(8px)'; card.style.transition = 'opacity .3s ease, transform .3s ease';
+    setTimeout(() => { card.style.opacity = '1'; card.style.transform = 'translateY(0)'; }, 80 * i);
+  });
+
+  // ── Search ──
+  const memberSearch = document.getElementById('member-search');
+  if (memberSearch) {
+    memberSearch.addEventListener('input', e => {
+      const term = e.target.value.trim().toLowerCase();
+      document.querySelectorAll('.member-card').forEach(card => {
+        if (!term) { card.style.display = ''; return; }
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(term) ? '' : 'none';
+      });
+    });
+  }
+
+  // ── Allocation Matrix ──
+  const matrixTable = document.getElementById('matrixTable');
+  if (matrixTable) {
+    const projects = ['核心系统升级', '数据中台建设', '移动端重构', '安全合规审计', '智能客服平台', '供应链数字化'];
+    const allocations = {
+      '张明': [60, 30, 0, 0, 0, 0],
+      '李婷': [50, 0, 35, 0, 0, 0],
+      '王伟': [40, 40, 0, 0, 0, 0],
+      '刘芳': [0, 0, 80, 0, 15, 0],
+      '陈杰': [0, 0, 0, 60, 0, 10],
+      '赵丽': [0, 60, 0, 0, 0, 30],
+      '周涛': [0, 0, 40, 0, 32, 0],
+      '吴敏': [0, 0, 15, 0, 25, 10]
+    };
+
+    const grid = document.createElement('div');
+    grid.className = 'matrix-grid';
+    grid.style.gridTemplateColumns = `150px repeat(${projects.length}, 1fr)`;
+
+    // Header row
+    grid.appendChild(Object.assign(document.createElement('div'), { className: 'matrix-header matrix-cell', textContent: '成员' }));
+    projects.forEach(p => {
+      grid.appendChild(Object.assign(document.createElement('div'), { className: 'matrix-header matrix-cell', textContent: p }));
+    });
+
+    Object.entries(allocations).forEach(([name, values]) => {
+      const nameCell = document.createElement('div');
+      nameCell.className = 'matrix-cell member';
+      nameCell.textContent = name;
+      grid.appendChild(nameCell);
+
+      values.forEach(v => {
+        const cell = document.createElement('div');
+        cell.className = 'matrix-cell alloc' + (v >= 50 ? ' high' : v >= 30 ? ' medium' : ' low');
+        cell.textContent = v ? v + '%' : '-';
+        grid.appendChild(cell);
+      });
+    });
+
+    matrixTable.appendChild(grid);
+  }
+
+  // ── Utilization Chart ──
+  const utilChart = document.getElementById('utilChart');
+  if (utilChart) {
+    const utilData = members.map(m => ({ name: m.name, load: m.load, color: m.avatarBg }));
+    const avgLoad = Math.round(utilData.reduce((a, b) => a + b.load, 0) / utilData.length);
+
+    utilData.forEach(u => {
+      const row = document.createElement('div');
+      row.className = 'util-row';
+      row.innerHTML = `
+        <div class="util-label">${u.name}</div>
+        <div class="util-track"><div class="util-fill" style="width:${u.load}%;background:${u.color}"></div></div>
+        <div class="util-value">${u.load}%</div>
+      `;
+      utilChart.appendChild(row);
+    });
+
+    const avgDiv = document.createElement('div');
+    avgDiv.className = 'util-avg';
+    avgDiv.innerHTML = `团队平均利用率 <span class="util-avg-value">${avgLoad}%</span>`;
+    utilChart.appendChild(avgDiv);
+  }
+</script>
+</body>
+</html>

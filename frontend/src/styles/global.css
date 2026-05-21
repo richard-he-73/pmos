@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+@theme {
+  /* OKLCH 色彩系统 - PMOS 设计语言 */
+  --color-bg: oklch(98% 0.005 250);
+  --color-surface: oklch(100% 0 0);
+  --color-fg: oklch(22% 0.02 240);
+  --color-muted: oklch(50% 0.018 240);
+  --color-border: oklch(90% 0.008 240);
+  
+  /* 主色调 - 清新绿色 */
+  --color-accent: oklch(58% 0.16 145);
+  --color-accent-hover: oklch(52% 0.14 145);
+  --color-accent-soft: oklch(95% 0.04 145);
+  
+  /* 语义色 */
+  --color-danger: oklch(55% 0.18 25);
+  --color-danger-soft: oklch(95% 0.04 25);
+  --color-warning: oklch(70% 0.12 80);
+  --color-warning-soft: oklch(96% 0.03 80);
+  --color-success: oklch(60% 0.16 145);
+  --color-success-soft: oklch(95% 0.04 145);
+  --color-info: oklch(55% 0.14 250);
+  --color-info-soft: oklch(95% 0.04 240);
+  --color-muted-soft: oklch(97% 0.02 240);
+  
+  /* 阴影 */
+  --shadow-ambient: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-card: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-elevated: 0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+  
+  /* 圆角 */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-pill: 12px;
+  --radius-full: 50%;
+  
+  /* 间距 */
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+  
+  /* 字体 */
+  --font-display: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  
+  /* 字号 */
+  --text-display-xl: 28px;
+  --text-display-lg: 24px;
+  --text-display-md: 18px;
+  --text-heading-lg: 16px;
+  --text-heading-md: 15px;
+  --text-body-lg: 14px;
+  --text-body-md: 13px;
+  --text-body-mono: 13px;
+  --text-label-sm: 12px;
+  --text-micro: 11px;
+}
+
+/* 全局样式 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100%;
+}
+
+/* 数值显示使用等宽字体 */
+.mono-value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
