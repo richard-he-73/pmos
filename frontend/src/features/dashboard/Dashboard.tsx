@@ -1,7 +1,19 @@
+import { useEffect, useState } from 'react';
+import { Card, Typography, Spin, Empty, Table, Tag } from 'antd';
 import { KPICard } from '../../components/common/KPICard';
 import { ModuleCard } from '../../components/common/ModuleCard';
 import { AlertCard } from '../../components/common/AlertCard';
+import { DonutChart } from '../../components/charts/DonutChart';
+import { BarChart } from '../../components/charts/BarChart';
+import { LineChart } from '../../components/charts/LineChart';
+import { GanttChart } from '../../components/charts/GanttChart';
+import { getStats, getProjectStatusChart, getTaskPriorityChart, getTaskTrendChart, getBudgetUsageChart, getResourceUtilizationChart, getTaskGanttData } from '../../api/stats';
+import type { StatsData, ChartData, TrendData, BudgetUsage, ResourceUtilization, GanttTask } from '../../api/stats';
 import { formatDateTime } from '../../utils/formatters';
+import { PROJECT_STATUS, TASK_STATUS, PRIORITY } from '../../utils/constants';
+import { useNavigate } from 'react-router-dom';
+
+const { Title } = Typography;
 
 const modules = [
   { name: '项目管理', icon: '🗂', stat: '48', statLabel: '个活跃项目', status: '正常', color: 'oklch(58% 0.16 145)', path: '/projects' },
@@ -19,14 +31,136 @@ const modules = [
 ];
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const [statsData, setStatsData] = useState<StatsData | null>(null);
+  const [projectStatusData, setProjectStatusData] = useState<ChartData[]>([]);
+  const [taskPriorityData, setTaskPriorityData] = useState<ChartData[]>([]);
+  const [taskTrendData, setTaskTrendData] = useState<TrendData[]>([]);
+  const [budgetData, setBudgetData] = useState<BudgetUsage[]>([]);
+  const [resourceData, setResourceData] = useState<ResourceUtilization[]>([]);
+  const [ganttTasks, setGanttTasks] = useState<GanttTask[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [stats, projectStatus, taskPriority, taskTrend, budgetUsage, resourceUtil, ganttData] = await Promise.all([
+          getStats(),
+          getProjectStatusChart(),
+          getTaskPriorityChart(),
+          getTaskTrendChart(30),
+          getBudgetUsageChart(),
+          getResourceUtilizationChart(),
+          getTaskGanttData(),
+        ]);
+        setStatsData(stats);
+        setProjectStatusData(Array.isArray(projectStatus) ? projectStatus : []);
+        setTaskPriorityData(Array.isArray(taskPriority) ? taskPriority : []);
+        setTaskTrendData(Array.isArray(taskTrend) ? taskTrend : []);
+        setBudgetData(Array.isArray(budgetUsage) ? budgetUsage : []);
+        setResourceData(Array.isArray(resourceUtil) ? resourceUtil : []);
+        setGanttTasks(Array.isArray(ganttData) ? ganttData : []);
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const statusColorMap: Record<string, string> = {
+    planning: 'oklch(60% 0.15 170)',
+    active: 'oklch(58% 0.16 145)',
+    on_hold: 'oklch(70% 0.12 80)',
+    completed: 'oklch(50% 0.05 250)',
+    archived: 'oklch(50% 0.02 250)',
+  };
+
+  const priorityColorMap: Record<string, string> = {
+    low: 'oklch(50% 0.10 145)',
+    medium: 'oklch(55% 0.14 250)',
+    high: 'oklch(70% 0.12 80)',
+    critical: 'oklch(50% 0.20 30)',
+  };
+
+  const processedTrendData = taskTrendData.reduce(
+    (acc, curr) => {
+      if (!acc.dates.includes(curr.date)) {
+        acc.dates.push(curr.date);
+      }
+      const statusCount = acc.byStatus[curr.status] || {};
+      statusCount[curr.date] = (statusCount[curr.date] || 0) + 1;
+      acc.byStatus[curr.status] = statusCount;
+      return acc;
+    },
+    { dates: [] as string[], byStatus: {} as Record<string, Record<string, number>> }
+  );
+
+  const trendSeries = Object.entries(processedTrendData.byStatus).map(([status, data]) => ({
+    name: TASK_STATUS[status as keyof typeof TASK_STATUS] || status,
+    data: processedTrendData.dates.map((date) => data[date] || 0),
+  }));
+
+  const budgetChartData = {
+    xAxis: budgetData.map((b) => b.name.substring(0, 10)),
+    series: [
+      { name: '已使用', data: budgetData.map((b) => b.used) },
+      { name: '总预算', data: budgetData.map((b) => b.total) },
+    ],
+  };
+
+  const resourceChartData = {
+    xAxis: resourceData.map((r) => r.name.substring(0, 10)),
+    series: [{ name: '利用率 (%)', data: resourceData.map((r) => r.utilization) }],
+  };
+
+  const budgetColumns = [
+    {
+      title: '项目名称',
+      dataIndex: 'name',
+      key: 'name',
+      ellipsis: true,
+    },
+    {
+      title: '总预算',
+      dataIndex: 'total',
+      key: 'total',
+      render: (val: number) => <span className="mono-value">{val.toLocaleString()}</span>,
+    },
+    {
+      title: '已使用',
+      dataIndex: 'used',
+      key: 'used',
+      render: (val: number) => <span className="mono-value">{val.toLocaleString()}</span>,
+    },
+    {
+      title: '使用率',
+      dataIndex: 'usage_percent',
+      key: 'usage_percent',
+      render: (val: number) => {
+        const color = val > 80 ? 'red' : val > 50 ? 'orange' : 'green';
+        return <Tag color={color}>{val}%</Tag>;
+      },
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="kpi-row">
-        <KPICard label="项目总数" value={48} trend="12.5% 同比" trendDirection="up" variant="accent" />
-        <KPICard label="进行中项目" value={32} trend="3 本周新增" trendDirection="up" variant="success" />
-        <KPICard label="本月任务完成率" value="87.3%" trend="5.2% 环比" trendDirection="up" variant="info" />
-        <KPICard label="团队成员" value={156} trend="2 人离岗" trendDirection="down" variant="muted" />
-        <KPICard label="里程碑按时完成率" value="76.2%" trend="8.1% 环比" trendDirection="up" variant="warning" />
+        <KPICard label="项目总数" value={statsData?.projects.total ?? 0} trend={`${Object.values(statsData?.projects.by_status || {}).reduce((a, b) => a + b, 0)} 累计`} trendDirection="up" variant="accent" />
+        <KPICard label="进行中项目" value={statsData?.projects.by_status?.active ?? 0} trend="活跃项目" trendDirection="up" variant="success" />
+        <KPICard label="任务总数" value={statsData?.tasks.total ?? 0} trend={`${statsData?.tasks.by_status?.in_progress ?? 0} 进行中`} trendDirection="up" variant="info" />
+        <KPICard label="团队成员" value={statsData?.resources.total ?? 0} trend={`${statsData?.resources.by_type?.human ?? 0} 人力资源`} trendDirection="up" variant="muted" />
+        <KPICard label="待办任务" value={statsData?.tasks.by_status?.todo ?? 0} trend={`${statsData?.tasks.by_priority?.critical ?? 0} 紧急`} trendDirection="down" variant="warning" />
         <KPICard label="待处理预警" value={8} trend="待关注" trendDirection="down" variant="danger" />
       </div>
 
@@ -46,66 +180,75 @@ const Dashboard: React.FC = () => {
       </section>
 
       <div className="charts-row">
-        <div className="chart-card">
-          <div className="chart-header">
-            <div>
-              <div className="chart-title">项目状态分布</div>
-              <div className="chart-subtitle">当前 48 个项目</div>
-            </div>
-          </div>
-          <div className="donut-chart">
-            <div className="donut-wrap">
-              <svg viewBox="0 0 140 140" width="160" height="160">
-                <circle cx="70" cy="70" r="58" fill="none" stroke="var(--color-border)" strokeWidth="12" />
-                <circle cx="70" cy="70" r="58" fill="none" stroke="var(--color-accent)" strokeWidth="12" strokeDasharray="175 226" strokeLinecap="round" />
-                <circle cx="70" cy="70" r="58" fill="none" stroke="var(--color-info)" strokeWidth="12" strokeDasharray="52 349" strokeDashoffset="-181" strokeLinecap="round" />
-                <circle cx="70" cy="70" r="58" fill="none" stroke="var(--color-warning)" strokeWidth="12" strokeDasharray="37 364" strokeDashoffset="-236" strokeLinecap="round" />
-                <circle cx="70" cy="70" r="58" fill="none" stroke="var(--color-muted)" strokeWidth="12" strokeDasharray="19 382" strokeDashoffset="-274" strokeLinecap="round" />
-              </svg>
-              <div className="donut-center">
-                <div className="dc-val mono-value">48</div>
-                <div className="dc-label">项目</div>
-              </div>
-            </div>
-            <div className="donut-legend">
-              <div className="legend-item"><span className="legend-swatch" style={{ background: 'var(--color-accent)' }} />进行中 <span className="legend-value mono-value">30</span></div>
-              <div className="legend-item"><span className="legend-swatch" style={{ background: 'var(--color-info)' }} />规划中 <span className="legend-value mono-value">9</span></div>
-              <div className="legend-item"><span className="legend-swatch" style={{ background: 'var(--color-warning)' }} />延期 <span className="legend-value mono-value">6</span></div>
-              <div className="legend-item"><span className="legend-swatch" style={{ background: 'var(--color-muted)' }} />已归档 <span className="legend-value mono-value">3</span></div>
-            </div>
-          </div>
-        </div>
+        <Card title="项目状态分布" size="small" style={{ flex: 1 }}>
+          {projectStatusData.length > 0 ? (
+            <DonutChart
+              data={projectStatusData}
+              colors={projectStatusData.map((d) => statusColorMap[d.name] || 'oklch(58% 0.16 145)')}
+            />
+          ) : (
+            <Empty description="暂无数据" />
+          )}
+        </Card>
 
-        <div className="chart-card">
-          <div className="chart-header">
-            <div>
-              <div className="chart-title">任务优先级分布</div>
-              <div className="chart-subtitle">当前周期 1,247 个任务</div>
-            </div>
-          </div>
-          <div className="bar-chart">
-            <div className="bar-row">
-              <div className="bar-label">紧急</div>
-              <div className="bar-track"><div className="bar-fill" style={{ width: '18%', background: 'var(--color-danger)' }} /></div>
-              <div className="bar-value mono-value">224</div>
-            </div>
-            <div className="bar-row">
-              <div className="bar-label">高</div>
-              <div className="bar-track"><div className="bar-fill" style={{ width: '42%', background: 'var(--color-warning)' }} /></div>
-              <div className="bar-value mono-value">524</div>
-            </div>
-            <div className="bar-row">
-              <div className="bar-label">中</div>
-              <div className="bar-track"><div className="bar-fill" style={{ width: '28%', background: 'var(--color-info)' }} /></div>
-              <div className="bar-value mono-value">349</div>
-            </div>
-            <div className="bar-row">
-              <div className="bar-label">低</div>
-              <div className="bar-track"><div className="bar-fill" style={{ width: '12%', background: 'var(--color-success)' }} /></div>
-              <div className="bar-value mono-value">150</div>
-            </div>
-          </div>
-        </div>
+        <Card title="任务优先级分布" size="small" style={{ flex: 1 }}>
+          {taskPriorityData.length > 0 ? (
+            <BarChart
+              xAxis={taskPriorityData.map((d) => PRIORITY[d.name as keyof typeof PRIORITY] || d.name)}
+              series={[{ name: '任务数', data: taskPriorityData.map((d) => d.value) }]}
+              colors={taskPriorityData.map((d) => priorityColorMap[d.name] || 'oklch(58% 0.16 145)')}
+              horizontal
+            />
+          ) : (
+            <Empty description="暂无数据" />
+          )}
+        </Card>
+      </div>
+
+      <Card title="任务趋势" size="small" style={{ marginBottom: 16 }}>
+        {processedTrendData.dates.length > 0 ? (
+          <LineChart
+            xAxis={processedTrendData.dates}
+            series={trendSeries}
+            fillArea
+          />
+        ) : (
+          <Empty description="暂无数据" />
+        )}
+      </Card>
+
+      <Card title="项目甘特图" size="small" style={{ marginBottom: 16 }}>
+        {ganttTasks.length > 0 ? (
+          <GanttChart tasks={ganttTasks} height={350} />
+        ) : (
+          <Empty description="暂无任务数据" />
+        )}
+      </Card>
+
+      <div className="charts-row">
+        <Card title="预算使用情况" size="small" style={{ flex: 1 }}>
+          {budgetData.length > 0 ? (
+            <BarChart
+              xAxis={budgetChartData.xAxis}
+              series={budgetChartData.series}
+              colors={['oklch(58% 0.16 145)', 'oklch(50% 0.05 250)']}
+            />
+          ) : (
+            <Empty description="暂无数据" />
+          )}
+        </Card>
+
+        <Card title="资源利用率" size="small" style={{ flex: 1 }}>
+          {resourceData.length > 0 ? (
+            <BarChart
+              xAxis={resourceChartData.xAxis}
+              series={resourceChartData.series}
+              colors={['oklch(70% 0.12 80)']}
+            />
+          ) : (
+            <Empty description="暂无数据" />
+          )}
+        </Card>
       </div>
 
       <section>
@@ -165,10 +308,10 @@ const Dashboard: React.FC = () => {
       <section>
         <div className="section-title"><span className="dot"></span>快捷操作</div>
         <div className="quick-row">
-          <button className="quick-btn accent">➕ 新建项目</button>
-          <button className="quick-btn">📤 导出报表</button>
-          <button className="quick-btn">📊 查看统计</button>
-          <button className="quick-btn">🔔 预警设置</button>
+          <button className="quick-btn accent" onClick={() => navigate('/projects')}>➕ 新建项目</button>
+          <button className="quick-btn" onClick={() => navigate('/export')}>📤 导出报表</button>
+          <button className="quick-btn" onClick={() => navigate('/gantt')}>📊 查看统计</button>
+          <button className="quick-btn" onClick={() => navigate('/notifications')}>🔔 预警设置</button>
           <button className="quick-btn">💾 立即备份</button>
           <button className="quick-btn">📋 系统日志</button>
         </div>

@@ -48,3 +48,16 @@ def decode_token(token: str) -> dict | None:
         return payload
     except JWTError:
         return None
+
+
+def decode_access_token(token: str) -> dict | None:
+    """Decode and validate an access token (used by WebSocket)"""
+    try:
+        payload = jwt.decode(
+            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
+        )
+        if payload.get("type") != "access":
+            return None
+        return payload
+    except JWTError:
+        return None

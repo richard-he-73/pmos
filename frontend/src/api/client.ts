@@ -28,4 +28,6 @@ apiClient.interceptors.response.use(
   }
 );
 
+export type ApiResponse<T> = T;
+
 export default apiClient;

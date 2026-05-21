@@ -53,3 +53,8 @@ class ProjectResponse(ProjectBase):
             "used": self.budget_used,
             "currency": self.budget_currency,
         }
+
+
+class ProjectStatusTransition(BaseDocument):
+    new_status: str = Field(..., pattern="^(planning|active|on_hold|completed|archived)$")
+    reason: str = ""

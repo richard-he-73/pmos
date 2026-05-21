@@ -7,9 +7,25 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.core.database import get_db
 from app.dependencies import get_current_user
 from app.schemas.auth import UserInDB
-from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
+from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate, ProjectStatusTransition
 
 router = APIRouter(prefix="/projects", tags=["项目"])
+
+PROJECT_STATUS_FLOW = {
+    "planning": ["active", "on_hold"],
+    "active": ["on_hold", "completed"],
+    "on_hold": ["active", "archived"],
+    "completed": ["archived"],
+    "archived": [],
+}
+
+PROJECT_STATUS_TRANSITIONS = {
+    "planning": {"active": "启动项目", "on_hold": "暂停项目"},
+    "active": {"on_hold": "暂停项目", "completed": "完成项目"},
+    "on_hold": {"active": "恢复项目", "archived": "归档项目"},
+    "completed": {"archived": "归档项目"},
+    "archived": {},
+}
 
 
 @router.get("", response_model=list[ProjectResponse])
@@ -157,3 +173,88 @@ async def clone_project(
     original["_id"] = str(result.inserted_id)
 
     return ProjectResponse(**original)
+
+
+@router.get("/{project_id}/status-flow", response_model=dict)
+async def get_status_flow(
+    project_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: UserInDB = Depends(get_current_user),
+):
+    if not ObjectId.is_valid(project_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="无效的项目ID"
+        )
+
+    project = await db.projects.find_one({"_id": ObjectId(project_id)})
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="项目不存在")
+
+    current_status = project.get("status", "planning")
+    allowed_transitions = PROJECT_STATUS_FLOW.get(current_status, [])
+    transition_descriptions = PROJECT_STATUS_TRANSITIONS.get(current_status, {})
+
+    return {
+        "project_id": project_id,
+        "current_status": current_status,
+        "allowed_transitions": [
+            {"status": s, "description": transition_descriptions.get(s, "")}
+            for s in allowed_transitions
+        ],
+        "all_statuses": ["planning", "active", "on_hold", "completed", "archived"],
+    }
+
+
+@router.post(
+    "/{project_id}/status-transition",
+    response_model=ProjectResponse,
+)
+async def transition_project_status(
+    project_id: str,
+    transition_data: ProjectStatusTransition,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: UserInDB = Depends(get_current_user),
+):
+    if not ObjectId.is_valid(project_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="无效的项目ID"
+        )
+
+    project = await db.projects.find_one({"_id": ObjectId(project_id)})
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="项目不存在")
+
+    current_status = project.get("status", "planning")
+    allowed_transitions = PROJECT_STATUS_FLOW.get(current_status, [])
+
+    if transition_data.new_status not in allowed_transitions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"不允许从 '{current_status}' 转换到 '{transition_data.new_status}'。允许的转换: {allowed_transitions}",
+        )
+
+    now = datetime.datetime.now(datetime.UTC)
+    update_data = {
+        "status": transition_data.new_status,
+        "updated_at": now,
+        "status_transition_reason": transition_data.reason,
+        "status_transition_at": now,
+        "status_transition_from": current_status,
+    }
+
+    if transition_data.new_status == "completed":
+        update_data["progress"] = 100.0
+        update_data["completed_at"] = now
+    elif transition_data.new_status == "active" and current_status == "planning":
+        update_data["started_at"] = now
+    elif transition_data.new_status == "archived":
+        update_data["archived_at"] = now
+
+    await db.projects.update_one(
+        {"_id": ObjectId(project_id)},
+        {"$set": update_data},
+    )
+
+    updated = await db.projects.find_one({"_id": ObjectId(project_id)})
+    updated["_id"] = str(updated["_id"])
+    return ProjectResponse(**updated)

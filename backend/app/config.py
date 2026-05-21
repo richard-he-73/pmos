@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    model_config = {"env_file": ".env", "case_sensitive": False}
+
     app_name: str = "PMOS Backend"
     app_env: str = "development"
     debug: bool = True
@@ -17,6 +19,13 @@ class Settings(BaseSettings):
 
     redis_url: str = "redis://localhost:6379/0"
 
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    from_email: str = ""
+    from_name: str = "PMOS 系统"
+
     jwt_secret_key: str = "your-jwt-secret-change-in-production"
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 30
@@ -26,10 +35,6 @@ class Settings(BaseSettings):
 
     celery_broker_url: str = "amqp://guest:guest@localhost:5672/"
     celery_result_backend: str = "redis://localhost:6379/1"
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
 
 
 @lru_cache

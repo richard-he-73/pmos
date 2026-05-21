@@ -110,3 +110,210 @@ export interface ModuleInfo {
   color: string;
   path: string;
 }
+
+export interface Iteration {
+  _id: string;
+  project_id: string;
+  name: string;
+  description: string;
+  status: 'planning' | 'active' | 'completed' | 'cancelled';
+  start_date: string;
+  end_date?: string;
+  tasks: string[];
+  progress: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CodeReview {
+  _id: string;
+  project_id: string;
+  task_id: string;
+  reviewer_id: string;
+  author_id: string;
+  status: 'pending' | 'approved' | 'rejected' | 'needs_changes';
+  comment: string;
+  code_url: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TestCase {
+  _id: string;
+  project_id: string;
+  title: string;
+  description: string;
+  module: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: 'draft' | 'active' | 'deprecated';
+  preconditions: string;
+  steps: string[];
+  expected_result: string;
+  related_requirement_id?: string;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Defect {
+  _id: string;
+  project_id: string;
+  title: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: 'new' | 'open' | 'in_progress' | 'resolved' | 'closed' | 'rejected';
+  reporter_id: string;
+  assignee_id?: string;
+  environment: string;
+  steps_to_reproduce: string;
+  actual_result: string;
+  expected_result: string;
+  related_test_case_id?: string;
+  related_task_id?: string;
+  resolution: string;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TestReport {
+  _id: string;
+  project_id: string;
+  iteration_id?: string;
+  name: string;
+  total_cases: number;
+  passed: number;
+  failed: number;
+  blocked: number;
+  pass_rate: number;
+  defects_found: number;
+  summary: string;
+  tester_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Role {
+  _id: string;
+  name: string;
+  description: string;
+  permissions: string[];
+  is_system: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserGroup {
+  _id: string;
+  name: string;
+  description: string;
+  members: string[];
+  parent_group_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OperationLog {
+  _id: string;
+  user_id: string;
+  action: string;
+  resource_type: string;
+  resource_id: string;
+  description: string;
+  ip_address: string;
+  user_agent: string;
+  status: string;
+  details: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Notification {
+  _id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  type: 'info' | 'warning' | 'error' | 'success' | 'system';
+  is_read: boolean;
+  read_at?: string;
+  source_type: string;
+  source_id: string;
+  expire_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Communication {
+  _id: string;
+  project_id: string;
+  title: string;
+  description: string;
+  type: 'meeting' | 'email' | 'call' | 'discussion' | 'report';
+  participants: string[];
+  date: string;
+  location: string;
+  outcome: string;
+  attachments: string[];
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConfigItem {
+  _id: string;
+  name: string;
+  value: string;
+  type: 'string' | 'number' | 'boolean' | 'json';
+  category: string;
+  description: string;
+  is_sensitive: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DrillPlan {
+  _id: string;
+  project_id: string;
+  name: string;
+  description: string;
+  type: 'fire' | 'disaster' | 'security' | 'network' | 'database';
+  status: 'planned' | 'in_progress' | 'completed' | 'cancelled';
+  scheduled_date: string;
+  actual_date?: string;
+  participants: string[];
+  result: string;
+  lessons_learned: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DeploymentPlan {
+  _id: string;
+  project_id: string;
+  name: string;
+  description: string;
+  version: string;
+  status: 'planned' | 'approved' | 'deploying' | 'success' | 'failed' | 'rolled_back';
+  scheduled_date: string;
+  actual_date?: string;
+  rollback_plan: string;
+  approver_id: string;
+  deployed_by: string;
+  result: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkRecord {
+  _id: string;
+  user_id: string;
+  project_id: string;
+  date: string;
+  hours: number;
+  type: 'work' | 'overtime' | 'leave' | 'training';
+  description: string;
+  status: 'submitted' | 'approved' | 'rejected';
+  created_at: string;
+  updated_at: string;
+}

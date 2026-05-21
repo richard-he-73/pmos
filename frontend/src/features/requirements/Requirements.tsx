@@ -1,0 +1,244 @@
+import { useState, useEffect } from 'react';
+import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm, Card, Typography, Badge } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import { getRequirements, createRequirement, updateRequirement, deleteRequirement } from '../../api/requirements';
+import type { Requirement } from '../../types/models';
+import { REQUIREMENT_STATUS, REQUIREMENT_TYPE, PRIORITY } from '../../utils/constants';
+
+const { Title } = Typography;
+const { TextArea } = Input;
+
+const Requirements: React.FC = () => {
+  const [data, setData] = useState<Requirement[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingRequirement, setEditingRequirement] = useState<Requirement | null>(null);
+  const [form] = Form.useForm();
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const res = await getRequirements();
+      setData(Array.isArray(res) ? res : []);
+    } catch (error) {
+      message.error('获取需求列表失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleCreate = () => {
+    setEditingRequirement(null);
+    form.resetFields();
+    setModalOpen(true);
+  };
+
+  const handleEdit = (record: Requirement) => {
+    setEditingRequirement(record);
+    form.setFieldsValue(record);
+    setModalOpen(true);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      const payload = {
+        ...values,
+        project_id: values.project_id || 'default_project',
+        code: values.code || `REQ-${Date.now()}`,
+      };
+
+      if (editingRequirement) {
+        await updateRequirement(editingRequirement._id, payload);
+        message.success('需求更新成功');
+      } else {
+        await createRequirement(payload);
+        message.success('需求创建成功');
+      }
+      setModalOpen(false);
+      fetchData();
+    } catch (error: any) {
+      if (error?.errorFields) return;
+      message.error(editingRequirement ? '更新失败' : '创建失败');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteRequirement(id);
+      message.success('需求已删除');
+      fetchData();
+    } catch (error) {
+      message.error('删除失败');
+    }
+  };
+
+  const columns: ColumnsType<Requirement> = [
+    {
+      title: '需求编号',
+      dataIndex: 'code',
+      width: 120,
+      render: (code: string) => <span className="mono-value">{code}</span>,
+    },
+    {
+      title: '需求标题',
+      dataIndex: 'title',
+      width: 250,
+      ellipsis: true,
+      render: (title: string) => <span style={{ fontWeight: 600 }}>{title}</span>,
+    },
+    {
+      title: '类型',
+      dataIndex: 'type',
+      width: 100,
+      render: (type: string) => <Tag>{REQUIREMENT_TYPE[type as keyof typeof REQUIREMENT_TYPE] || type}</Tag>,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      width: 100,
+      render: (status: string) => {
+        const colorMap: Record<string, string> = {
+          draft: 'default',
+          reviewing: 'blue',
+          approved: 'success',
+          in_progress: 'processing',
+          done: 'success',
+          rejected: 'error',
+        };
+        return <Tag color={colorMap[status] || 'default'}>{REQUIREMENT_STATUS[status as keyof typeof REQUIREMENT_STATUS] || status}</Tag>;
+      },
+    },
+    {
+      title: '优先级',
+      dataIndex: 'priority',
+      width: 100,
+      render: (priority: string) => {
+        const colorMap: Record<string, string> = { low: 'default', medium: 'blue', high: 'orange', critical: 'red' };
+        return <Tag color={colorMap[priority] || 'default'}><Badge status={colorMap[priority] as any} text={PRIORITY[priority as keyof typeof PRIORITY]} /></Tag>;
+      },
+    },
+    {
+      title: '来源',
+      dataIndex: 'source',
+      width: 120,
+      ellipsis: true,
+    },
+    {
+      title: '版本',
+      dataIndex: 'version',
+      width: 80,
+      render: (version: number) => <span className="mono-value">v{version}</span>,
+    },
+    {
+      title: '标签',
+      dataIndex: 'tags',
+      width: 150,
+      render: (tags: string[]) => (
+        <Space wrap>
+          {tags.slice(0, 2).map((tag) => (
+            <Tag key={tag}>{tag}</Tag>
+          ))}
+          {tags.length > 2 && <Tag>+{tags.length - 2}</Tag>}
+        </Space>
+      ),
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 120,
+      render: (_, record) => (
+        <Space>
+          <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+          <Popconfirm title="确定删除此需求？" onConfirm={() => handleDelete(record._id)}>
+            <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <Title level={4} style={{ margin: 0 }}>需求管理</Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+          新建需求
+        </Button>
+      </div>
+
+      <Card>
+        <Table
+          columns={columns}
+          dataSource={data}
+          rowKey="_id"
+          loading={loading}
+          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 项` }}
+          scroll={{ x: 1200 }}
+        />
+      </Card>
+
+      <Modal
+        title={editingRequirement ? '编辑需求' : '新建需求'}
+        open={modalOpen}
+        onOk={handleSubmit}
+        onCancel={() => setModalOpen(false)}
+        width={600}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item name="code" label="需求编号" rules={[{ required: true, message: '请输入需求编号' }]}>
+            <Input placeholder="REQ-001" />
+          </Form.Item>
+          <Form.Item name="title" label="需求标题" rules={[{ required: true, message: '请输入需求标题' }]}>
+            <Input placeholder="请输入需求标题" />
+          </Form.Item>
+          <Form.Item name="description" label="描述">
+            <TextArea rows={3} placeholder="需求详细描述" />
+          </Form.Item>
+          <Form.Item name="type" label="需求类型" rules={[{ required: true }]}>
+            <Select>
+              <Select.Option value="functional">功能需求</Select.Option>
+              <Select.Option value="non_functional">非功能需求</Select.Option>
+              <Select.Option value="business">业务需求</Select.Option>
+              <Select.Option value="technical">技术需求</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item name="status" label="状态" rules={[{ required: true }]}>
+            <Select>
+              <Select.Option value="draft">草稿</Select.Option>
+              <Select.Option value="reviewing">评审中</Select.Option>
+              <Select.Option value="approved">已批准</Select.Option>
+              <Select.Option value="in_progress">进行中</Select.Option>
+              <Select.Option value="done">已完成</Select.Option>
+              <Select.Option value="rejected">已拒绝</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item name="priority" label="优先级" rules={[{ required: true }]}>
+            <Select>
+              <Select.Option value="low">低</Select.Option>
+              <Select.Option value="medium">中</Select.Option>
+              <Select.Option value="high">高</Select.Option>
+              <Select.Option value="critical">紧急</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item name="source" label="来源">
+            <Input placeholder="需求来源" />
+          </Form.Item>
+          <Form.Item name="acceptance_criteria" label="验收标准">
+            <Select mode="tags" placeholder="输入验收标准后按回车" />
+          </Form.Item>
+          <Form.Item name="tags" label="标签">
+            <Select mode="tags" placeholder="输入标签后按回车" />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
+  );
+};
+
+export default Requirements;
