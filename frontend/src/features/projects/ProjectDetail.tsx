@@ -1,13 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Tabs, Card, Descriptions, Button, Spin, Tag, Progress, Space, Typography, Result, Modal, Select, Input, message, Table, Divider } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, CopyOutlined, DeleteOutlined, SwapOutlined } from '@ant-design/icons';
+import { Tabs, Card, Descriptions, Button, Spin, Tag, Progress, Space, Typography, Result, Modal, Select, Input, message, Table, Form, DatePicker, InputNumber, Tree, Input as AntInput } from 'antd';
+import { ArrowLeftOutlined, EditOutlined, CopyOutlined, DeleteOutlined, SwapOutlined, PlusOutlined, UserOutlined, TeamOutlined, SnippetsOutlined, DashboardOutlined, DollarOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { getProject, deleteProject, cloneProject, getProjectStatusFlow, transitionProjectStatus } from '../../api/projects';
-import { getTasks, getTaskDependencies } from '../../api/tasks';
-import type { Project, Task } from '../../types/models';
+import { formatDateTime } from '../../utils/formatters';
+import { 
+  useGetProjectQuery, 
+  useDeleteProjectMutation, 
+  useUpdateProjectMutation, 
+  useCloneProjectMutation, 
+  useGetDetailTasksQuery, 
+  useGetResourcesQuery, 
+  useAddTeamMemberMutation, 
+  useRemoveTeamMemberMutation,
+  useGetDataDictionariesQuery,
+  useGetProjectStatusFlowQuery,
+  useTransitionProjectStatusMutation
+} from '../../store/api';
+import { TeamMemberCard } from '../../components/common/TeamMemberCard';
+import { OrgStructureCard } from '../../components/common/OrgStructureCard';
+import type { Project, Task, Resource, DataDictionary } from '../../types/models';
 import { PROJECT_STATUS, PRIORITY, TASK_STATUS } from '../../utils/constants';
-import type { ColumnsType } from 'antd/es/table';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -15,31 +28,44 @@ const { TextArea } = Input;
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [project, setProject] = useState<Project | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
-  const [statusFlow, setStatusFlow] = useState<{ allowed_transitions: { status: string; description: string }[] } | null>(null);
   const [newStatus, setNewStatus] = useState('');
   const [statusReason, setStatusReason] = useState('');
-  const [statusLoading, setStatusLoading] = useState(false);
+  const [teamModalOpen, setTeamModalOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
+  const [selectedOrgNode, setSelectedOrgNode] = useState('');
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [cloneModalOpen, setCloneModalOpen] = useState(false);
+  const [orgModalOpen, setOrgModalOpen] = useState(false);
+  const [editOrgNode, setEditOrgNode] = useState<any>(null);
+  const [form] = Form.useForm();
+  const [cloneForm] = Form.useForm();
+  const [orgForm] = Form.useForm();
 
-  useEffect(() => {
-    if (!id) return;
-    setLoading(true);
-    Promise.all([getProject(id), getTasks(id)])
-      .then(([projectData, tasksData]) => {
-        setProject(projectData);
-        setTasks(tasksData || []);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [id]);
+  const { data: project, isLoading: projectLoading, refetch } = useGetProjectQuery(id!, { skip: !id });
+  const { data: detailTasksData } = useGetDetailTasksQuery(id, { skip: !id });
+  const { data: resourcesData } = useGetResourcesQuery('human');
+  const { data: dataDictionaries = [] } = useGetDataDictionariesQuery();
+  const { data: statusFlowData } = useGetProjectStatusFlowQuery(id!, { skip: !id });
+  
+  const [deleteProject] = useDeleteProjectMutation();
+  const [updateProject] = useUpdateProjectMutation();
+  const [cloneProject] = useCloneProjectMutation();
+  const [addTeamMember] = useAddTeamMemberMutation();
+  const [removeTeamMember] = useRemoveTeamMemberMutation();
+  const [transitionStatus] = useTransitionProjectStatusMutation();
+  
+  const detailTasks = (detailTasksData as any) || [];
+  const resources = (resourcesData as any) || [];
+
+  const projectRoles: DataDictionary[] = dataDictionaries.filter(d => d.category === 'project_role');
+  const orgLevels: DataDictionary[] = dataDictionaries.filter(d => d.category === 'org_level');
 
   const handleDelete = async () => {
     if (!id) return;
     try {
-      await deleteProject(id);
+      await deleteProject(id).unwrap();
       message.success('项目删除成功');
       navigate('/projects');
     } catch (error) {
@@ -47,47 +73,381 @@ const ProjectDetail: React.FC = () => {
     }
   };
 
-  const handleClone = async () => {
-    if (!id || !project) return;
+  const openEditModal = () => {
+    if (!project) return;
+    form.setFieldsValue({
+      code: project.code,
+      name: project.name,
+      description: project.description,
+      status: project.status,
+      priority: project.priority,
+      start_date: dayjs(project.start_date),
+      end_date: project.end_date ? dayjs(project.end_date) : null,
+      budget_total: project.budget?.total || 0,
+    });
+    setEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async () => {
+    if (!id) return;
     try {
-      await cloneProject(id, `${project.name} (副本)`);
-      message.success('项目克隆成功');
-      navigate('/projects');
+      const values = await form.validateFields();
+      const payload: any = {
+        ...values,
+        start_date: values.start_date?.format('YYYY-MM-DD'),
+        end_date: values.end_date?.format('YYYY-MM-DD'),
+      };
+      await updateProject({ id, body: payload }).unwrap();
+      message.success('项目更新成功');
+      setEditModalOpen(false);
+      refetch();
     } catch (error) {
+      console.error('Error updating project:', error);
+      message.error('更新失败');
+    }
+  };
+
+  const handleCloneSubmit = async () => {
+    if (!id) return;
+    try {
+      const values = await cloneForm.validateFields();
+      await cloneProject({ id, body: values }).unwrap();
+      message.success('项目克隆成功');
+      setCloneModalOpen(false);
+    } catch (error) {
+      console.error('Error cloning project:', error);
       message.error('克隆失败');
     }
   };
 
-  const openStatusModal = async () => {
+  const handleAddTeamMember = async () => {
+    if (!id || !selectedMember) return;
+    try {
+      const payload: any = {
+        member_id: selectedMember,
+      };
+      if (selectedRole) {
+        payload.role = selectedRole;
+      }
+      if (selectedOrgNode) {
+        payload.org_node_id = selectedOrgNode;
+      }
+      await addTeamMember({ projectId: id, memberId: selectedMember, body: payload }).unwrap();
+      message.success('团队成员添加成功');
+      setTeamModalOpen(false);
+      setSelectedMember('');
+      setSelectedRole('');
+      setSelectedOrgNode('');
+      refetch();
+    } catch (error) {
+      console.error('Error adding team member:', error);
+      message.error('添加失败');
+    }
+  };
+
+  const handleRemoveTeamMember = async (memberId: string) => {
     if (!id) return;
     try {
-      const flow = await getProjectStatusFlow(id);
-      setStatusFlow(flow);
+      await removeTeamMember({ projectId: id, memberId }).unwrap();
+      message.success('团队成员移除成功');
+      refetch();
+    } catch (error) {
+      console.error('Error removing team member:', error);
+      message.error('移除失败');
+    }
+  };
+
+  const handleStatusChange = async () => {
+    if (!id) return;
+    try {
+      await transitionStatus({ projectId: id, body: { new_status: newStatus, reason: statusReason } }).unwrap();
+      message.success('项目状态更新成功');
+      setStatusModalOpen(false);
       setNewStatus('');
       setStatusReason('');
-      setStatusModalOpen(true);
-    } catch (error) {
-      message.error('获取状态流转信息失败');
-    }
-  };
-
-  const handleStatusTransition = async () => {
-    if (!id || !newStatus) return;
-    setStatusLoading(true);
-    try {
-      const updated = await transitionProjectStatus(id, newStatus, statusReason);
-      setProject(updated);
-      message.success(`状态已更新为 "${PROJECT_STATUS[newStatus as keyof typeof PROJECT_STATUS]}"`);
-      setStatusModalOpen(false);
+      refetch();
     } catch (error: any) {
-      message.error(error?.response?.data?.detail || '状态流转失败');
-    } finally {
-      setStatusLoading(false);
+      console.error('Error updating status:', error);
+      message.error(error?.data?.detail || '状态更新失败');
     }
   };
 
-  if (loading) {
-    return <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}><Spin size="large" /></div>;
+  const handleOrgSubmit = async () => {
+    if (!id) return;
+    try {
+      const values = await orgForm.validateFields();
+      const orgNode: any = {
+        id: editOrgNode?.id || `org_${Date.now()}`,
+        name: values.name,
+        org_level: values.org_level,
+        parent_id: values.parent_id || null,
+      };
+      
+      const currentOrgStructure = project?.org_structure || [];
+      let newOrgStructure;
+      
+      if (editOrgNode) {
+        newOrgStructure = currentOrgStructure.map((o: any) => 
+          o.id === editOrgNode.id ? orgNode : o
+        );
+      } else {
+        newOrgStructure = [...currentOrgStructure, orgNode];
+      }
+      
+      await updateProject({ id, body: { org_structure: newOrgStructure } }).unwrap();
+      message.success(editOrgNode ? '组织节点更新成功' : '组织节点添加成功');
+      setOrgModalOpen(false);
+      setEditOrgNode(null);
+      orgForm.resetFields();
+      refetch();
+    } catch (error) {
+      console.error('Error saving org node:', error);
+      message.error('保存失败');
+    }
+  };
+
+  const handleRemoveOrgNode = async (nodeId: string) => {
+    if (!id) return;
+    try {
+      const currentOrgStructure = project?.org_structure || [];
+      const newOrgStructure = currentOrgStructure.filter((o: any) => o.id !== nodeId);
+      await updateProject({ id, body: { org_structure: newOrgStructure } }).unwrap();
+      message.success('组织节点删除成功');
+      refetch();
+    } catch (error) {
+      console.error('Error removing org node:', error);
+      message.error('删除失败');
+    }
+  };
+
+  const teamTab = (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+        <Title level={5} style={{ margin: 0 }}>团队成员 ({project?.team_members?.length || 0})</Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setTeamModalOpen(true)}>添加成员</Button>
+      </div>
+      {project?.team_members?.length ? (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+          {project.team_members.map((memberId) => {
+            const member = resources.find((r: Resource) => r._id === memberId);
+            const memberRole = project.team_members_with_roles?.find(m => m.member_id === memberId);
+            const orgNode = memberRole?.org_node_id 
+              ? project.org_structure?.find((o: any) => o.id === memberRole.org_node_id) 
+              : null;
+            return (
+              <TeamMemberCard
+                key={memberId}
+                memberId={memberId}
+                name={member?.name || memberId}
+                role={memberRole?.role ? (projectRoles.find(r => r.value === memberRole.role)?.name || memberRole.role) : undefined}
+                orgNode={orgNode?.name}
+                type={member?.type}
+                onRemove={handleRemoveTeamMember}
+              />
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--color-muted)' }}>
+          <UserOutlined style={{ fontSize: 48, marginBottom: 12 }} />
+          <div>暂无团队成员</div>
+          <div style={{ fontSize: 12 }}>点击上方按钮添加成员</div>
+        </div>
+      )}
+    </Card>
+  );
+
+  const orgTab = (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+        <Title level={5} style={{ margin: 0 }}>组织架构</Title>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => {
+          setEditOrgNode(null);
+          orgForm.resetFields();
+          setOrgModalOpen(true);
+        }}>添加节点</Button>
+      </div>
+      {project?.org_structure?.length ? (
+        <OrgStructureCard
+          nodes={project.org_structure}
+          levelNames={orgLevels.reduce((acc, level) => {
+            acc[level.value] = level.name;
+            return acc;
+          }, {})}
+          onEdit={(node) => {
+            setEditOrgNode(node);
+            orgForm.setFieldsValue({
+              name: node.name,
+              org_level: node.org_level,
+              parent_id: node.parent_id,
+            });
+            setOrgModalOpen(true);
+          }}
+          onDelete={handleRemoveOrgNode}
+        />
+      ) : (
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--color-muted)' }}>
+          <TeamOutlined style={{ fontSize: 48, marginBottom: 12 }} />
+          <div>暂无组织架构</div>
+          <div style={{ fontSize: 12 }}>点击上方按钮添加组织节点</div>
+        </div>
+      )}
+    </Card>
+  );
+
+  const projectOverviewTab = (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div>
+          <Title level={2}>{project?.name}</Title>
+          <Text type="secondary">{project?.code}</Text>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button icon={<EditOutlined />} onClick={openEditModal}>编辑</Button>
+          <Button icon={<CopyOutlined />} onClick={() => setCloneModalOpen(true)}>克隆</Button>
+          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>删除</Button>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
+        <Card>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: 'var(--color-accent-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <DashboardOutlined style={{ fontSize: 20, color: 'var(--color-accent)' }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: 'var(--color-muted)' }}>项目状态</div>
+              <div style={{ fontWeight: 600 }}>{PROJECT_STATUS[project?.status as keyof typeof PROJECT_STATUS] || project?.status}</div>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: 'oklch(60% 0.15 170 / 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <TeamOutlined style={{ fontSize: 20, color: 'oklch(58% 0.16 145)' }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: 'var(--color-muted)' }}>团队成员</div>
+              <div style={{ fontWeight: 600 }}>{project?.team_members?.length || 0} 人</div>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: 'oklch(55% 0.14 250 / 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <SnippetsOutlined style={{ fontSize: 20, color: 'oklch(55% 0.14 250)' }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: 'var(--color-muted)' }}>任务数量</div>
+              <div style={{ fontWeight: 600 }}>{detailTasks.length} 项</div>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: 'oklch(70% 0.12 80 / 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <DollarOutlined style={{ fontSize: 20, color: 'oklch(70% 0.12 80)' }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: 'var(--color-muted)' }}>预算总额</div>
+              <div style={{ fontWeight: 600 }}>{project?.budget?.total ? `¥${project.budget.total.toLocaleString()}` : '-'}</div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: 16 }}>
+        <Card title="项目信息">
+          <Descriptions bordered column={2}>
+            <Descriptions.Item label="项目编号">{project?.code}</Descriptions.Item>
+            <Descriptions.Item label="优先级">
+              <Tag color={PRIORITY[project?.priority as keyof typeof PRIORITY]?.color || 'default'}>
+                {PRIORITY[project?.priority as keyof typeof PRIORITY]?.label || '未知'}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="开始日期">{dayjs(project?.start_date).format('YYYY-MM-DD')}</Descriptions.Item>
+            <Descriptions.Item label="结束日期">{project?.end_date ? dayjs(project.end_date).format('YYYY-MM-DD') : '-'}</Descriptions.Item>
+            <Descriptions.Item label="创建时间" span={2}>{formatDateTime(project?.created_at)}</Descriptions.Item>
+            <Descriptions.Item label="描述" span={2}>{project?.description || '-'}</Descriptions.Item>
+          </Descriptions>
+        </Card>
+
+        <Card title="状态变更">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 4 }}>当前状态</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Tag color={PROJECT_STATUS[project?.status as keyof typeof PROJECT_STATUS]?.color || 'default'}>
+                  {PROJECT_STATUS[project?.status as keyof typeof PROJECT_STATUS] || project?.status}
+                </Tag>
+                <Button type="text" icon={<SwapOutlined />} onClick={() => setStatusModalOpen(true)}>变更</Button>
+              </div>
+            </div>
+            {project?.status_reason && (
+              <div>
+                <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 4 }}>变更原因</div>
+                <div style={{ fontSize: 12, background: 'var(--color-bg-secondary)', padding: 8, borderRadius: 4 }}>
+                  {project?.status_reason}
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+
+  const budgetTab = (
+    <Card>
+      <Title level={5} style={{ marginBottom: 16 }}>预算概览</Title>
+      {project?.budget ? (
+        <div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 16 }}>
+            <Card>
+              <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 4 }}>总预算</div>
+              <div style={{ fontSize: 24, fontWeight: 600 }}>¥{project?.budget?.total?.toLocaleString()}</div>
+            </Card>
+            <Card>
+              <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 4 }}>已使用</div>
+              <div style={{ fontSize: 24, fontWeight: 600 }}>¥{project?.budget?.used?.toLocaleString()}</div>
+            </Card>
+            <Card>
+              <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 4 }}>剩余预算</div>
+              <div style={{ fontSize: 24, fontWeight: 600 }}>¥{(project?.budget?.total! - project?.budget?.used!).toLocaleString()}</div>
+            </Card>
+          </div>
+          <Card>
+            <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>预算使用进度</div>
+            <Progress 
+              percent={Math.round((project?.budget?.used! / project?.budget?.total!) * 100)} 
+              strokeColor={{
+                '0%': '#10b981',
+                '50%': '#f59e0b',
+                '100%': '#ef4444',
+              }}
+              showInfo={false}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12 }}>
+              <span>已使用 {Math.round((project?.budget?.used! / project?.budget?.total!) * 100)}%</span>
+              <span>剩余 {Math.round(((project?.budget?.total! - project?.budget?.used!) / project?.budget?.total!) * 100)}%</span>
+            </div>
+          </Card>
+        </div>
+      ) : (
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--color-muted)' }}>
+          <DollarOutlined style={{ fontSize: 48, marginBottom: 12 }} />
+          <div>暂无预算信息</div>
+        </div>
+      )}
+    </Card>
+  );
+
+  if (projectLoading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <Spin size="large" />
+      </div>
+    );
   }
 
   if (!project) {
@@ -95,168 +455,227 @@ const ProjectDetail: React.FC = () => {
       <Result
         status="404"
         title="项目不存在"
-        extra={<Button type="primary" onClick={() => navigate('/projects')}>返回项目列表</Button>}
+        subTitle="您访问的项目不存在或已被删除"
+        extra={
+          <Button type="primary" onClick={() => navigate('/projects')}>
+            返回项目列表
+          </Button>
+        }
       />
     );
   }
 
-  const budgetPercent = project.budget?.total ? Math.round((project.budget.used / project.budget.total) * 100) : 0;
-
-  const overviewTab = (
-    <Card>
-      <Descriptions title="项目信息" bordered column={2}>
-        <Descriptions.Item label="项目编号" span={1}>{project.code}</Descriptions.Item>
-        <Descriptions.Item label="项目名称" span={1}>{project.name}</Descriptions.Item>
-        <Descriptions.Item label="状态" span={1}>
-          <Tag color={project.status === 'active' ? 'processing' : project.status === 'completed' ? 'success' : project.status === 'on_hold' ? 'warning' : 'default'}>
-            {PROJECT_STATUS[project.status as keyof typeof PROJECT_STATUS] || project.status}
-          </Tag>
-        </Descriptions.Item>
-        <Descriptions.Item label="优先级" span={1}>
-          <Tag color={project.priority === 'critical' ? 'red' : project.priority === 'high' ? 'orange' : project.priority === 'medium' ? 'blue' : 'default'}>
-            {PRIORITY[project.priority as keyof typeof PRIORITY] || project.priority}
-          </Tag>
-        </Descriptions.Item>
-        <Descriptions.Item label="负责人" span={1}>{project.owner_id || '未分配'}</Descriptions.Item>
-        <Descriptions.Item label="团队成员" span={1}>{project.team_members?.length || 0} 人</Descriptions.Item>
-        <Descriptions.Item label="开始日期" span={1}>{dayjs(project.start_date).format('YYYY-MM-DD')}</Descriptions.Item>
-        <Descriptions.Item label="结束日期" span={1}>
-          {project.end_date ? dayjs(project.end_date).format('YYYY-MM-DD') : '未设置'}
-        </Descriptions.Item>
-        <Descriptions.Item label="进度" span={2}>
-          <Progress percent={Math.round(project.progress)} strokeColor="var(--color-accent)" />
-        </Descriptions.Item>
-        <Descriptions.Item label="描述" span={2}>{project.description || '暂无描述'}</Descriptions.Item>
-        <Descriptions.Item label="标签" span={2}>
-          <Space wrap>
-            {project.tags?.map((tag) => <Tag key={tag}>{tag}</Tag>)}
-          </Space>
-        </Descriptions.Item>
-        <Descriptions.Item label="创建时间" span={1}>{dayjs(project.created_at).format('YYYY-MM-DD HH:mm')}</Descriptions.Item>
-        <Descriptions.Item label="更新时间" span={1}>{dayjs(project.updated_at).format('YYYY-MM-DD HH:mm')}</Descriptions.Item>
-      </Descriptions>
-    </Card>
-  );
-
-  const tasksTab = (
-    <Card>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
-        <Title level={5} style={{ margin: 0 }}>任务列表 ({tasks.length})</Title>
-      </div>
-      <Table<Task>
-        columns={[
-          { title: '标题', dataIndex: 'title', ellipsis: true, render: (t: string) => <Text strong>{t}</Text> },
-          { title: '类型', dataIndex: 'type', width: 80, render: (t: string) => <Tag color="blue">{t}</Tag> },
-          { title: '优先级', dataIndex: 'priority', width: 80, render: (p: string) => <Tag>{PRIORITY[p as keyof typeof PRIORITY]}</Tag> },
-          { title: '状态', dataIndex: 'status', width: 100, render: (s: string) => <Tag color={s === 'done' ? 'success' : s === 'in_progress' ? 'processing' : 'default'}>{TASK_STATUS[s as keyof typeof TASK_STATUS]}</Tag> },
-          { title: '分配给', dataIndex: 'assignee_id', width: 120, ellipsis: true },
-          { title: '截止日期', dataIndex: 'due_date', width: 120, render: (d: string) => d ? dayjs(d).format('YYYY-MM-DD') : '-' },
-        ]}
-        dataSource={tasks}
-        rowKey="_id"
-        pagination={{ pageSize: 10 }}
-        size="small"
-        locale={{ emptyText: '暂无任务' }}
-      />
-    </Card>
-  );
-
-  const budgetTab = (
-    <Card>
-      <Title level={5} style={{ marginTop: 0 }}>预算分析</Title>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <div>
-          <Text type="secondary">总预算</Text>
-          <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-            {project.budget?.total.toLocaleString()} {project.budget?.currency}
-          </div>
-        </div>
-        <div>
-          <Text type="secondary">已使用</Text>
-          <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--font-mono)', color: budgetPercent > 80 ? 'var(--color-danger)' : 'var(--color-success)' }}>
-            {project.budget?.used.toLocaleString()} {project.budget?.currency}
-          </div>
-        </div>
-        <div>
-          <Text type="secondary">使用率</Text>
-          <Progress percent={budgetPercent} strokeColor={budgetPercent > 80 ? 'var(--color-danger)' : 'var(--color-accent)'} />
-        </div>
-        <div>
-          <Text type="secondary">剩余</Text>
-          <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--color-success)' }}>
-            {((project.budget?.total || 0) - (project.budget?.used || 0)).toLocaleString()} {project.budget?.currency}
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
-
   return (
-    <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/projects')}>返回</Button>
-          <Title level={4} style={{ margin: 0 }}>{project.name}</Title>
-          <Tag color="blue">{project.code}</Tag>
-        </div>
-        <Space>
-          <Button icon={<SwapOutlined />} onClick={openStatusModal}>状态流转</Button>
-          <Button icon={<CopyOutlined />} onClick={handleClone}>克隆</Button>
-          <Button icon={<EditOutlined />}>编辑</Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>删除</Button>
-        </Space>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/projects')}>返回</Button>
+        <Title level={4}>{project?.name}</Title>
       </div>
 
       <Tabs
         defaultActiveKey="overview"
         items={[
-          { key: 'overview', label: '概览', children: overviewTab },
-          { key: 'tasks', label: `任务 (${tasks.length})`, children: tasksTab },
-          { key: 'budget', label: '预算', children: budgetTab },
+          { 
+            key: 'overview', 
+            label: <span><DashboardOutlined /> 项目概览</span>, 
+            children: projectOverviewTab
+          },
+          { 
+            key: 'budget', 
+            label: <span><DollarOutlined /> 项目预算</span>, 
+            children: budgetTab
+          },
+          { 
+            key: 'org', 
+            label: <span><TeamOutlined /> 组织架构</span>, 
+            children: orgTab
+          },
+          { 
+            key: 'team', 
+            label: <span><UserOutlined /> 团队成员</span>, 
+            children: teamTab
+          },
         ]}
       />
 
       <Modal
-        title="项目状态流转"
+        title="编辑项目"
+        open={editModalOpen}
+        onCancel={() => setEditModalOpen(false)}
+        footer={[
+          <Button key="back" onClick={() => setEditModalOpen(false)}>取消</Button>
+        ]}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item label="项目编号" name="code" rules={[{ required: true, message: '请输入项目编号' }]}>
+            <Input disabled />
+          </Form.Item>
+          <Form.Item label="项目名称" name="name" rules={[{ required: true, message: '请输入项目名称' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item label="项目描述" name="description">
+            <TextArea rows={3} />
+          </Form.Item>
+          <Form.Item label="优先级" name="priority">
+            <Select>
+              <Select.Option value="low">低</Select.Option>
+              <Select.Option value="medium">中</Select.Option>
+              <Select.Option value="high">高</Select.Option>
+              <Select.Option value="critical">紧急</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item label="开始日期" name="start_date">
+            <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item label="结束日期" name="end_date">
+            <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item label="预算总额" name="budget_total">
+            <InputNumber style={{ width: '100%' }} prefix="¥" />
+          </Form.Item>
+          <Button type="primary" onClick={handleEditSubmit}>保存修改</Button>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="克隆项目"
+        open={cloneModalOpen}
+        onCancel={() => setCloneModalOpen(false)}
+        footer={[
+          <Button key="back" onClick={() => setCloneModalOpen(false)}>取消</Button>
+        ]}
+      >
+        <Form form={cloneForm} layout="vertical">
+          <Form.Item label="新项目名称" name="name" rules={[{ required: true, message: '请输入新项目名称' }]}>
+            <Input placeholder="输入新项目名称" />
+          </Form.Item>
+          <Form.Item label="新项目编号" name="code" rules={[{ required: true, message: '请输入新项目编号' }]}>
+            <Input placeholder="输入新项目编号" />
+          </Form.Item>
+          <Button type="primary" onClick={handleCloneSubmit}>确认克隆</Button>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="添加团队成员"
+        open={teamModalOpen}
+        onOk={handleAddTeamMember}
+        onCancel={() => { 
+          setTeamModalOpen(false); 
+          setSelectedMember('');
+          setSelectedRole('');
+          setSelectedOrgNode('');
+        }}
+        okText="确认添加"
+        okButtonProps={{ disabled: !selectedMember }}
+      >
+        <Form layout="vertical">
+          <Form.Item label="选择成员" required>
+            <Select
+              style={{ width: '100%' }}
+              value={selectedMember || undefined}
+              onChange={setSelectedMember}
+              placeholder="请选择要添加的成员"
+              options={resources
+                .filter((r: Resource) => !project?.team_members?.includes(r._id))
+                .map((r: Resource) => ({ label: r.name, value: r._id }))}
+            />
+          </Form.Item>
+          <Form.Item label="项目角色">
+            <Select
+              style={{ width: '100%' }}
+              value={selectedRole || undefined}
+              onChange={setSelectedRole}
+              placeholder="请选择项目角色"
+              allowClear
+              options={projectRoles.map(r => ({ label: r.name, value: r.value }))}
+            />
+          </Form.Item>
+          <Form.Item label="组织节点">
+            <Select
+              style={{ width: '100%' }}
+              value={selectedOrgNode || undefined}
+              onChange={setSelectedOrgNode}
+              placeholder="请选择组织节点"
+              allowClear
+              options={
+                project?.org_structure?.map((o: any) => ({
+                  label: o.name,
+                  value: o.id,
+                })) || []
+              }
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={editOrgNode ? '编辑组织节点' : '添加组织节点'}
+        open={orgModalOpen}
+        onOk={handleOrgSubmit}
+        onCancel={() => {
+          setOrgModalOpen(false);
+          setEditOrgNode(null);
+          orgForm.resetFields();
+        }}
+        okText="确认保存"
+      >
+        <Form form={orgForm} layout="vertical">
+          <Form.Item label="节点名称" name="name" rules={[{ required: true, message: '请输入节点名称' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item label="组织层级" name="org_level" rules={[{ required: true, message: '请选择组织层级' }]}>
+            <Select placeholder="请选择组织层级">
+              {orgLevels.map(level => (
+                <Select.Option key={level.value} value={level.value}>{level.name}</Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item label="上级节点" name="parent_id">
+            <Select placeholder="请选择上级节点（可选）" allowClear>
+              {project?.org_structure?.filter((o: any) => o.id !== editOrgNode?.id).map((o: any) => (
+                <Select.Option key={o.id} value={o.id}>{o.name}</Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="变更项目状态"
         open={statusModalOpen}
-        onOk={handleStatusTransition}
-        onCancel={() => setStatusModalOpen(false)}
-        confirmLoading={statusLoading}
-        okText="确认流转"
+        onOk={handleStatusChange}
+        onCancel={() => {
+          setStatusModalOpen(false);
+          setNewStatus('');
+          setStatusReason('');
+        }}
+        okText="确认变更"
         okButtonProps={{ disabled: !newStatus }}
       >
-        <Descriptions column={1} size="small" style={{ marginBottom: 16 }}>
-          <Descriptions.Item label="当前状态">
-            <Tag color={project?.status === 'active' ? 'processing' : project?.status === 'completed' ? 'success' : 'default'}>
-              {PROJECT_STATUS[project?.status as keyof typeof PROJECT_STATUS] || project?.status}
+        <Form layout="vertical">
+          <Form.Item label="当前状态" style={{ marginBottom: 16 }}>
+            <Tag color={PROJECT_STATUS[project?.status as keyof typeof PROJECT_STATUS]?.color || 'default'}>
+              {PROJECT_STATUS[project?.status as keyof typeof PROJECT_STATUS]?.label || project?.status}
             </Tag>
-          </Descriptions.Item>
-        </Descriptions>
-        <div style={{ marginBottom: 16 }}>
-          <Text>目标状态：</Text>
-          <Select
-            style={{ width: '100%', marginTop: 8 }}
-            value={newStatus || undefined}
-            onChange={setNewStatus}
-            placeholder="请选择目标状态"
-            options={statusFlow?.allowed_transitions.map((t) => ({
-              label: `${PROJECT_STATUS[t.status as keyof typeof PROJECT_STATUS]} - ${t.description}`,
-              value: t.status,
-            }))}
-          />
-        </div>
-        <div>
-          <Text>流转原因（可选）：</Text>
-          <TextArea
-            style={{ marginTop: 8 }}
-            value={statusReason}
-            onChange={(e) => setStatusReason(e.target.value)}
-            placeholder="请输入状态流转原因"
-            rows={3}
-          />
-        </div>
+          </Form.Item>
+          <Form.Item label="目标状态" required>
+            <Select
+              value={newStatus}
+              onChange={setNewStatus}
+              placeholder="请选择目标状态"
+              options={statusFlowData?.allowed_transitions?.map((t: any) => ({
+                label: `${PROJECT_STATUS[t.status]?.label || t.status}${t.description ? ` - ${t.description}` : ''}`,
+                value: t.status,
+              })) || []}
+            />
+          </Form.Item>
+          <Form.Item label="变更原因">
+            <TextArea rows={3} value={statusReason} onChange={(e) => setStatusReason(e.target.value)} placeholder="请输入变更原因（可选）" />
+          </Form.Item>
+        </Form>
       </Modal>
-    </>
+    </div>
   );
 };
 

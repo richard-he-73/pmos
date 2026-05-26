@@ -1,7 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Card, Row, Col, Select, Button, Typography, Divider, message, Tag, Descriptions } from 'antd';
+import { useState } from 'react';
+import { Card, Row, Col, Select, Button, Typography, message, Tag, Descriptions } from 'antd';
 import { DownloadOutlined, FileExcelOutlined, FileTextOutlined, FilePdfOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import {
+  useGetProjectsQuery,
+  useGetTasksQuery,
+  useGetRisksQuery,
+  useGetRequirementsQuery,
+} from '../../store/api';
 import {
   exportProjectsCSV,
   exportProjectsJSON,
@@ -10,52 +15,51 @@ import {
   exportRisksCSV,
   exportRequirementsCSV,
   exportSummaryReport,
-  exportToCSV,
-  exportToJSON,
 } from '../../api/export';
-import { getProjects } from '../../api/projects';
-import { getTasks } from '../../api/tasks';
-import { getRisks } from '../../api/risks';
-import { getRequirements } from '../../api/requirements';
 
 const { Title, Text } = Typography;
 
 const ExportPage: React.FC = () => {
   const [projectFilter, setProjectFilter] = useState<string>('');
   const [taskProjectFilter, setTaskProjectFilter] = useState<string>('');
-  const [projects, setProjects] = useState<{ _id: string; name: string }[]>([]);
-  const [stats, setStats] = useState({ projects: 0, tasks: 0, risks: 0, requirements: 0 });
-
-  useEffect(() => {
-    getProjects().then((res: any) => {
-      if (Array.isArray(res)) {
-        setProjects(res.map((p: any) => ({ _id: p._id, name: p.name })));
-        setStats((s) => ({ ...s, projects: res.length }));
-      }
-    });
-    getTasks().then((res: any) => {
-      if (Array.isArray(res)) setStats((s) => ({ ...s, tasks: res.length }));
-    });
-    getRisks().then((res: any) => {
-      if (Array.isArray(res)) setStats((s) => ({ ...s, risks: res.length }));
-    });
-    getRequirements().then((res: any) => {
-      if (Array.isArray(res)) setStats((s) => ({ ...s, requirements: res.length }));
-    });
-  }, []);
+  
+  const { data: projects = [] } = useGetProjectsQuery();
+  const { data: tasks = [] } = useGetTasksQuery({});
+  const { data: risks = [] } = useGetRisksQuery({});
+  const { data: requirements = [] } = useGetRequirementsQuery({});
+  
+  const stats = { 
+    projects: projects.length, 
+    tasks: tasks.length, 
+    risks: risks.length, 
+    requirements: requirements.length 
+  };
 
   const handleExport = async (type: 'projects' | 'tasks' | 'risks' | 'requirements', format: 'csv' | 'json') => {
     try {
       if (type === 'projects') {
-        format === 'csv' ? exportProjectsCSV(projectFilter || undefined) : exportProjectsJSON(projectFilter || undefined);
+        format === 'csv' 
+          ? exportProjectsCSV(projectFilter || undefined)
+          : exportProjectsJSON(projectFilter || undefined);
       } else if (type === 'tasks') {
-        format === 'csv' ? exportTasksCSV(taskProjectFilter || undefined) : exportTasksJSON(taskProjectFilter || undefined);
+        format === 'csv' 
+          ? exportTasksCSV(taskProjectFilter || undefined)
+          : exportTasksJSON(taskProjectFilter || undefined);
       } else if (type === 'risks') {
         exportRisksCSV();
       } else if (type === 'requirements') {
         exportRequirementsCSV();
       }
       message.success(`${type} 数据导出成功`);
+    } catch (error) {
+      message.error('导出失败');
+    }
+  };
+
+  const handleExportSummary = async () => {
+    try {
+      exportSummaryReport();
+      message.success('汇总报表导出成功');
     } catch (error) {
       message.error('导出失败');
     }
@@ -88,8 +92,8 @@ const ExportPage: React.FC = () => {
               />
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <Button icon={<FileExcelOutlined />} onClick={() => handleExport('projects', 'csv')}>导出 CSV</Button>
-              <Button icon={<FileTextOutlined />} onClick={() => handleExport('projects', 'json')}>导出 JSON</Button>
+              <Button icon={<FileExcelOutlined />} onClick={() => handleExport('projects', 'csv')}>导出CSV</Button>
+              <Button icon={<FileTextOutlined />} onClick={() => handleExport('projects', 'json')}>导出JSON</Button>
             </div>
           </Card>
         </Col>
@@ -104,12 +108,12 @@ const ExportPage: React.FC = () => {
                 allowClear
                 value={taskProjectFilter || undefined}
                 onChange={(val) => setTaskProjectFilter(val || '')}
-                options={projects.map((p) => ({ label: p.name, value: p._id }))}
+                options={projects.map((p: any) => ({ label: p.name, value: p._id }))}
               />
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <Button icon={<FileExcelOutlined />} onClick={() => handleExport('tasks', 'csv')}>导出 CSV</Button>
-              <Button icon={<FileTextOutlined />} onClick={() => handleExport('tasks', 'json')}>导出 JSON</Button>
+              <Button icon={<FileExcelOutlined />} onClick={() => handleExport('tasks', 'csv')}>导出CSV</Button>
+              <Button icon={<FileTextOutlined />} onClick={() => handleExport('tasks', 'json')}>导出JSON</Button>
             </div>
           </Card>
         </Col>
@@ -130,7 +134,7 @@ const ExportPage: React.FC = () => {
           <Card title="汇总报表">
             <Descriptions column={1} size="small">
               <Descriptions.Item label="项目汇总报表">
-                <Button type="primary" icon={<FilePdfOutlined />} onClick={exportSummaryReport}>
+                <Button type="primary" icon={<FilePdfOutlined />} onClick={handleExportSummary}>
                   下载 PDF 报表
                 </Button>
               </Descriptions.Item>

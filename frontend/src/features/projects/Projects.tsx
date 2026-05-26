@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, Button, Modal, Form, Input, Select, DatePicker, message, Space, Tag, Progress, Popconfirm, Card, Typography } from 'antd';
+import { Table, Button, Modal, Form, Input, Select, DatePicker, message, Space, Tag, Progress, Popconfirm, Card, Typography, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { getProjects, createProject, updateProject, deleteProject } from '../../api/projects';
+import { useGetProjectsQuery, useCreateProjectMutation, useUpdateProjectMutation, useDeleteProjectMutation } from '../../store/api';
 import type { Project } from '../../types/models';
 import { PROJECT_STATUS, PRIORITY } from '../../utils/constants';
 
@@ -13,27 +13,14 @@ const { TextArea } = Input;
 
 const Projects: React.FC = () => {
   const navigate = useNavigate();
-  const [data, setData] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [form] = Form.useForm();
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = await getProjects();
-      setData(Array.isArray(res) ? res : []);
-    } catch (error) {
-      message.error('获取项目列表失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  
+  const { data: projects = [], isLoading, refetch } = useGetProjectsQuery(undefined);
+  const [createProject, { isLoading: isCreating }] = useCreateProjectMutation();
+  const [updateProject, { isLoading: isUpdating }] = useUpdateProjectMutation();
+  const [deleteProject] = useDeleteProjectMutation();
 
   const handleCreate = () => {
     setEditingProject(null);
@@ -55,43 +42,45 @@ const Projects: React.FC = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      console.log('Form values:', values);
+      console.log('Code value:', values.code);
+      console.log('Code length:', values.code?.length);
       const payload: any = {
         ...values,
-        start_date: values.start_date?.toISOString(),
-        end_date: values.end_date?.toISOString(),
+        // 修复时区问题：只保留日期部分，不涉及时区转换
+        start_date: values.start_date?.format('YYYY-MM-DD'),
+        end_date: values.end_date?.format('YYYY-MM-DD'),
         owner_id: 'owner_id_placeholder',
+        stakeholders: [],
+        budget_total: Number(values.budget_total) || 0,
+        budget_used: editingProject?.budget?.used || 0,
+        budget_currency: editingProject?.budget?.currency || 'CNY',
+        progress: editingProject?.progress || 0,
       };
-
-      if (values.budget_total) {
-        payload.budget = {
-          total: Number(values.budget_total),
-          used: editingProject?.budget?.used || 0,
-          currency: editingProject?.budget?.currency || 'CNY',
-        };
-      }
-
-      delete payload.budget_total;
+      console.log('Payload to submit:', payload);
+      console.log('Payload code:', payload.code);
 
       if (editingProject) {
-        await updateProject(editingProject._id, payload);
+        await updateProject({ id: editingProject._id, body: payload }).unwrap();
         message.success('项目更新成功');
       } else {
-        await createProject(payload);
+        await createProject(payload).unwrap();
         message.success('项目创建成功');
       }
       setModalOpen(false);
-      fetchData();
+      refetch();
     } catch (error: any) {
+      console.error('Error submitting project:', error);
       if (error?.errorFields) return;
-      message.error(editingProject ? '更新失败' : '创建失败');
+      message.error(editingProject ? '更新失败' : (error?.data?.detail || '创建失败'));
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteProject(id);
+      await deleteProject(id).unwrap();
       message.success('项目已删除');
-      fetchData();
+      refetch();
     } catch (error) {
       message.error('删除失败');
     }
@@ -101,7 +90,13 @@ const Projects: React.FC = () => {
     {
       title: '项目编号',
       dataIndex: 'code',
-      width: 120,
+      width: 150,
+      ellipsis: true,
+      render: (code: string) => (
+        <Tooltip title={code}>
+          <span style={{ fontFamily: 'monospace' }}>{code}</span>
+        </Tooltip>
+      ),
     },
     {
       title: '项目名称',
@@ -189,10 +184,16 @@ const Projects: React.FC = () => {
       width: 150,
       render: (_, record) => (
         <Space>
-          <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/projects/${record._id}`)} />
-          <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+          <Tooltip title="查看详情">
+            <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/projects/${record._id}`)} />
+          </Tooltip>
+          <Tooltip title="编辑">
+            <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+          </Tooltip>
           <Popconfirm title="确定删除此项目？" onConfirm={() => handleDelete(record._id)}>
-            <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            <Tooltip title="删除">
+              <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            </Tooltip>
           </Popconfirm>
         </Space>
       ),
@@ -211,11 +212,12 @@ const Projects: React.FC = () => {
       <Card>
         <Table
           columns={columns}
-          dataSource={data}
+          dataSource={projects}
           rowKey="_id"
-          loading={loading}
+          loading={isLoading}
           pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 项` }}
           scroll={{ x: 1200 }}
+          locale={{ emptyText: '暂无数据' }}
         />
       </Card>
 
@@ -225,10 +227,13 @@ const Projects: React.FC = () => {
         onOk={handleSubmit}
         onCancel={() => setModalOpen(false)}
         width={600}
+        okText="确定"
+        cancelText="取消"
+        confirmLoading={isCreating || isUpdating}
       >
         <Form form={form} layout="vertical">
           <Form.Item name="code" label="项目编号" rules={[{ required: true, message: '请输入项目编号' }]}>
-            <Input placeholder="PRJ-2024-001" />
+            <Input placeholder="如 PRJ-2024-001" />
           </Form.Item>
           <Form.Item name="name" label="项目名称" rules={[{ required: true, message: '请输入项目名称' }]}>
             <Input placeholder="项目名称" />
@@ -253,10 +258,10 @@ const Projects: React.FC = () => {
             </Select>
           </Form.Item>
           <Form.Item name="start_date" label="开始日期" rules={[{ required: true }]}>
-            <DatePicker style={{ width: '100%' }} />
+            <DatePicker style={{ width: '100%' }} placeholder="选择日期" />
           </Form.Item>
           <Form.Item name="end_date" label="结束日期">
-            <DatePicker style={{ width: '100%' }} />
+            <DatePicker style={{ width: '100%' }} placeholder="选择日期" />
           </Form.Item>
           <Form.Item name="budget_total" label="总预算">
             <Input type="number" addonAfter="CNY" />

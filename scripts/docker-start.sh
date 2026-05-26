@@ -22,7 +22,12 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [[ "$SCRIPT_DIR" == */scripts ]]; then
+    PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+else
+    PROJECT_DIR="$SCRIPT_DIR"
+fi
 COMPOSE_FILE="${PROJECT_DIR}/docker-compose.yml"
 
 print_info() { echo -e "${CYAN}[INFO]${NC} $1"; }

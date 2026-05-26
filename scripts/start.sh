@@ -24,7 +24,13 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # 项目根目录
-PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# 如果脚本在 scripts/ 目录下，则使用上级目录作为项目根目录
+if [[ "$SCRIPT_DIR" == */scripts ]]; then
+    PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+else
+    PROJECT_DIR="$SCRIPT_DIR"
+fi
 
 # 默认配置
 BACKEND_PORT=18001

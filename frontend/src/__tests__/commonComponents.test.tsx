@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { StatusPill } from '../components/common/StatusPill';
 import { KPICard } from '../components/common/KPICard';
 import { AlertCard } from '../components/common/AlertCard';

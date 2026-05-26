@@ -43,12 +43,23 @@ async def register(user_data: UserCreate, db: AsyncIOMotorDatabase = Depends(get
     return UserResponse(**user_dict)
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=dict)
 async def login(login_data: UserLogin, db: AsyncIOMotorDatabase = Depends(get_db)):
     user = await db.users.find_one({"username": login_data.username})
     if not user or not verify_password(login_data.password, user["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误"
+        )
+    
+    # 检查用户状态
+    user_status = user.get("status", "active")
+    if user_status != "active":
+        status_message = {
+            "inactive": "账户未激活",
+            "suspended": "账户已被停用"
+        }.get(user_status, "账户状态异常")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=status_message
         )
 
     await db.users.update_one(
@@ -59,12 +70,26 @@ async def login(login_data: UserLogin, db: AsyncIOMotorDatabase = Depends(get_db
     token_data = {"sub": str(user["_id"]), "role": user["role"]}
     access_token = create_access_token(data=token_data)
     refresh_token = create_refresh_token(data=token_data)
-
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        token_type="bearer",
+    
+    # 构建用户响应
+    user_response = UserResponse(
+        id=str(user["_id"]),
+        username=user["username"],
+        email=user["email"],
+        display_name=user["display_name"],
+        avatar=user.get("avatar"),
+        role=user["role"],
+        department=user.get("department", ""),
+        status=user.get("status", "active"),
+        last_login=user.get("last_login")
     )
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "user": user_response.model_dump()
+    }
 
 
 @router.post("/refresh", response_model=TokenResponse)

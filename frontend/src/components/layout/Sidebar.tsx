@@ -4,7 +4,6 @@ const navModules = [
   { section: '', items: [
     { name: '概览面板', icon: '◈', path: '/' },
     { name: '项目管理', icon: '🗂', path: '/projects' },
-    { name: '任务管理', icon: '📌', path: '/tasks' },
     { name: '资源管理', icon: '👥', path: '/resources' },
     { name: '计划管理', icon: '📅', path: '/planning' },
     { name: '风险管理', icon: '⚡', path: '/risks' },

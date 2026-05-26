@@ -54,11 +54,8 @@
 .logo-icon {
   width: 32px;
   height: 32px;
-  background: var(--color-accent);
-  border-radius: var(--radius-md);
   display: grid;
   place-items: center;
-  color: white;
   font-size: var(--text-body-lg);
   font-weight: 700;
 }
@@ -160,8 +157,8 @@
 }
 
 .nav-item.active {
-  background: var(--color-accent);
-  color: white;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   font-weight: 600;
 }
 
@@ -849,4 +846,162 @@
   font-size: var(--text-display-lg);
   color: var(--color-muted);
   font-weight: 600;
+}
+
+/* ── Member Cards ── */
+.member-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s, transform 0.15s;
+  width: 200px;
+}
+
+.member-card:hover {
+  box-shadow: var(--shadow-elevated);
+  transform: translateY(-2px);
+}
+
+.member-card .member-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.member-card .member-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: oklch(55% 0.14 250 / 0.15);
+  display: grid;
+  place-items: center;
+  font-size: var(--text-display-md);
+  flex-shrink: 0;
+  color: oklch(55% 0.14 250);
+}
+
+.member-card .member-name {
+  font-size: var(--text-body-lg);
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.member-card .member-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.member-card .member-role {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.member-card .member-org {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.member-card .member-type {
+  font-size: var(--text-micro);
+  color: var(--color-muted);
+}
+
+.member-card .member-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ── Organization Structure Cards ── */
+.org-structure-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.org-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.org-card-container .org-card-container {
+  padding-left: 24px;
+  border-left: 2px dashed var(--color-border);
+  margin-left: 8px;
+}
+
+.org-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.org-card:hover {
+  box-shadow: var(--shadow-elevated);
+  border-color: var(--card-color, var(--color-accent));
+}
+
+.org-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.org-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: grid;
+  place-items: center;
+  font-size: var(--text-display-md);
+  flex-shrink: 0;
+}
+
+.org-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.org-card-name {
+  font-size: var(--text-body-md);
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.org-card-level {
+  font-size: var(--text-micro);
+  color: var(--color-muted);
+  padding: 2px 6px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  width: fit-content;
+}
+
+.org-card-actions {
+  display: flex;
+  gap: 8px;
 }

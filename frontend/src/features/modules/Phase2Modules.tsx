@@ -1,24 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Card, Typography, Tabs, Table, Button, Modal, Form, Input, Select, Tag, message, Popconfirm, Space } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Card, Typography, Tabs, Table, Button, Tag, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import type { Communication, ConfigItem, DrillPlan, DeploymentPlan, WorkRecord } from '../../types/models';
 
 const { Title } = Typography;
-const { TextArea } = Input;
 
 const CommunicationModule: React.FC = () => {
   const [data, setData] = useState<Communication[]>([]);
   const [loading, setLoading] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<Communication | null>(null);
-  const [form] = Form.useForm();
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { getCommunications, createCommunication, updateCommunication, deleteCommunication } = await import('../../api/modules');
+      const { getCommunications } = await import('../../api/modules');
       const res = await getCommunications();
       setData(Array.isArray(res) ? res : []);
     } catch (e) { message.error('获取数据失败'); }
@@ -38,9 +34,9 @@ const CommunicationModule: React.FC = () => {
   return (
     <Card>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); setModalOpen(true); }}>新建记录</Button>
+        <Button type="primary" icon={<PlusOutlined />}>新建记录</Button>
       </div>
-      <Table columns={columns} dataSource={data} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} />
+      <Table columns={columns} dataSource={data} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} locale={{ emptyText: '暂无数据' }} />
     </Card>
   );
 };
@@ -72,7 +68,7 @@ const ConfigModule: React.FC = () => {
 
   return (
     <Card>
-      <Table columns={columns} dataSource={data} rowKey="_id" loading={loading} pagination={{ pageSize: 15 }} />
+      <Table columns={columns} dataSource={data} rowKey="_id" loading={loading} pagination={{ pageSize: 15 }} locale={{ emptyText: '暂无数据' }} />
     </Card>
   );
 };
@@ -107,7 +103,7 @@ const DrillModule: React.FC = () => {
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
         <Button type="primary" icon={<PlusOutlined />}>新建演练</Button>
       </div>
-      <Table columns={columns} dataSource={data} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} />
+      <Table columns={columns} dataSource={data} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} locale={{ emptyText: '暂无数据' }} />
     </Card>
   );
 };
@@ -139,7 +135,7 @@ const DeploymentModule: React.FC = () => {
 
   return (
     <Card>
-      <Table columns={columns} dataSource={data} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} />
+      <Table columns={columns} dataSource={data} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} locale={{ emptyText: '暂无数据' }} />
     </Card>
   );
 };
@@ -164,14 +160,14 @@ const WorkModule: React.FC = () => {
   const columns: ColumnsType<WorkRecord> = [
     { title: '用户', dataIndex: 'user_id', render: (v: string) => <span className="mono-value">{v?.substring(0, 8)}</span> },
     { title: '日期', dataIndex: 'date', render: (d: string) => dayjs(d).format('YYYY-MM-DD') },
-    { title: '工时', dataIndex: 'hours', render: (h: number) => <span className="mono-value">{h}h</span> },
+    { title: '工时', dataIndex: 'hours', render: (h: number) => <span className="mono-value">{h}人天</span> },
     { title: '类型', dataIndex: 'type', render: (t: string) => <Tag>{t}</Tag> },
     { title: '状态', dataIndex: 'status', render: (s: string) => <Tag>{s}</Tag> },
   ];
 
   return (
     <Card>
-      <Table columns={columns} dataSource={data} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} />
+      <Table columns={columns} dataSource={data} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} locale={{ emptyText: '暂无数据' }} />
     </Card>
   );
 };

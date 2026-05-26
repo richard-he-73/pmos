@@ -1,43 +1,36 @@
-import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm, Card, Typography } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, BellOutlined } from '@ant-design/icons';
+import { useState } from 'react';
+import { Table, Button, Modal, Tag, message, Space, Popconfirm, Card, Typography, Tooltip } from 'antd';
+import { DeleteOutlined, BellOutlined, CheckOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { getNotifications, updateNotification, deleteNotification, markAllRead, getUnreadCount } from '../../api/notifications';
+import { useGetNotificationsQuery, useGetUnreadCountQuery, useMarkNotificationReadMutation, useDeleteNotificationMutation, useMarkAllNotificationsReadMutation } from '../../store/api';
 import type { Notification } from '../../types/models';
 
 const { Title } = Typography;
 
 const Notifications: React.FC = () => {
-  const [data, setData] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [res, count] = await Promise.all([getNotifications(), getUnreadCount()]);
-      setData(Array.isArray(res) ? res : []);
-      setUnreadCount((count as any)?.unread_count || 0);
-    } catch (error) { message.error('获取通知失败'); }
-    finally { setLoading(false); }
-  };
+  const { data: notifications = [], isLoading: loading, refetch } = useGetNotificationsQuery();
+  const { data: unreadCountData } = useGetUnreadCountQuery();
+  const [markNotificationRead] = useMarkNotificationReadMutation();
+  const [deleteNotification] = useDeleteNotificationMutation();
+  const [markAllNotificationsRead] = useMarkAllNotificationsReadMutation();
 
-  useEffect(() => { fetchData(); }, []);
+  const unreadCount = (unreadCountData as any)?.unread_count || 0;
 
   const handleMarkRead = async (id: string) => {
-    try { await updateNotification(id, { is_read: true }); message.success('已标记为已读'); fetchData(); }
+    try { await markNotificationRead(id).unwrap(); message.success('已标记为已读'); }
     catch (error) { message.error('操作失败'); }
   };
 
   const handleMarkAllRead = async () => {
-    try { await markAllRead(); message.success('全部已标记为已读'); fetchData(); }
+    try { await markAllNotificationsRead().unwrap(); message.success('全部已标记为已读'); }
     catch (error) { message.error('操作失败'); }
   };
 
   const handleDelete = async (id: string) => {
-    try { await deleteNotification(id); message.success('通知已删除'); fetchData(); }
+    try { await deleteNotification(id).unwrap(); message.success('通知已删除'); }
     catch (error) { message.error('删除失败'); }
   };
 
@@ -55,9 +48,9 @@ const Notifications: React.FC = () => {
     { title: '来源', dataIndex: 'source_type', width: 100 },
     { title: '操作', key: 'action', width: 150, render: (_, record) => (
       <Space>
-        {!record.is_read && <Button type="link" size="small" onClick={() => handleMarkRead(record._id)}>标为已读</Button>}
-        <Button type="link" size="small" onClick={() => { setSelectedNotif(record); setDetailModalOpen(true); }}>详情</Button>
-        <Popconfirm title="删除通知？" onConfirm={() => handleDelete(record._id)}><Button type="text" size="small" danger icon={<DeleteOutlined />} /></Popconfirm>
+        {!record.is_read && <Tooltip title="标为已读"><Button type="text" size="small" icon={<CheckOutlined />} onClick={() => handleMarkRead(record._id)} /></Tooltip>}
+        <Tooltip title="详情"><Button type="text" size="small" icon={<EyeOutlined />} onClick={() => { setSelectedNotif(record); setDetailModalOpen(true); }} /></Tooltip>
+        <Popconfirm title="删除通知？" onConfirm={() => handleDelete(record._id)}><Tooltip title="删除"><Button type="text" size="small" danger icon={<DeleteOutlined />} /></Tooltip></Popconfirm>
       </Space>
     )},
   ];
@@ -69,7 +62,7 @@ const Notifications: React.FC = () => {
         <Button onClick={handleMarkAllRead}>全部标记为已读</Button>
       </div>
       <Card>
-        <Table columns={columns} dataSource={data} rowKey="_id" loading={loading} pagination={{ pageSize: 10, showTotal: (t: number) => `共 ${t} 项` }} />
+        <Table columns={columns} dataSource={notifications} rowKey="_id" loading={loading} pagination={{ pageSize: 10, showTotal: (t: number) => `共 ${t} 项` }} locale={{ emptyText: '暂无数据' }} />
       </Card>
       <Modal title="通知详情" open={detailModalOpen} onCancel={() => setDetailModalOpen(false)} footer={null}>
         {selectedNotif && (

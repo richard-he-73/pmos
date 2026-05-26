@@ -23,7 +23,12 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # 项目根目录
-PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [[ "$SCRIPT_DIR" == */scripts ]]; then
+    PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+else
+    PROJECT_DIR="$SCRIPT_DIR"
+fi
 
 print_info() { echo -e "${CYAN}[INFO]${NC} $1"; }
 print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }

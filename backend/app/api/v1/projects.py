@@ -82,6 +82,14 @@ async def create_project(
         )
 
     project_dict = project_data.model_dump()
+    # 修复时区问题：将日期设置为当天的开始时间（本地时区）
+    if project_dict.get("start_date"):
+        dt = project_dict["start_date"]
+        project_dict["start_date"] = datetime.datetime(dt.year, dt.month, dt.day)
+    if project_dict.get("end_date"):
+        dt = project_dict["end_date"]
+        project_dict["end_date"] = datetime.datetime(dt.year, dt.month, dt.day)
+    
     project_dict["created_at"] = datetime.datetime.now(datetime.UTC)
     project_dict["updated_at"] = datetime.datetime.now(datetime.UTC)
 
@@ -109,6 +117,14 @@ async def update_project(
             status_code=status.HTTP_400_BAD_REQUEST, detail="没有提供更新数据"
         )
 
+    # 修复时区问题：将日期设置为当天的开始时间（本地时区）
+    if "start_date" in update_data and update_data["start_date"]:
+        dt = update_data["start_date"]
+        update_data["start_date"] = datetime.datetime(dt.year, dt.month, dt.day)
+    if "end_date" in update_data and update_data["end_date"]:
+        dt = update_data["end_date"]
+        update_data["end_date"] = datetime.datetime(dt.year, dt.month, dt.day)
+
     update_data["updated_at"] = datetime.datetime.now(datetime.UTC)
 
     result = await db.projects.update_one(
@@ -119,6 +135,76 @@ async def update_project(
     if result.matched_count == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="项目不存在")
 
+    updated = await db.projects.find_one({"_id": ObjectId(project_id)})
+    updated["_id"] = str(updated["_id"])
+    return ProjectResponse(**updated)
+
+
+@router.post("/{project_id}/team-members", response_model=ProjectResponse)
+async def add_team_member(
+    project_id: str,
+    member_data: dict,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: UserInDB = Depends(get_current_user),
+):
+    if not ObjectId.is_valid(project_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="无效的项目ID"
+        )
+    
+    member_id = member_data.get("member_id")
+    if not member_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="缺少成员ID"
+        )
+    
+    project = await db.projects.find_one({"_id": ObjectId(project_id)})
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="项目不存在")
+    
+    current_members = project.get("team_members", [])
+    if member_id in current_members:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="该成员已在团队中"
+        )
+    
+    await db.projects.update_one(
+        {"_id": ObjectId(project_id)},
+        {
+            "$push": {"team_members": member_id},
+            "$set": {"updated_at": datetime.datetime.now(datetime.UTC)}
+        }
+    )
+    
+    updated = await db.projects.find_one({"_id": ObjectId(project_id)})
+    updated["_id"] = str(updated["_id"])
+    return ProjectResponse(**updated)
+
+
+@router.delete("/{project_id}/team-members/{member_id}", response_model=ProjectResponse)
+async def remove_team_member(
+    project_id: str,
+    member_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: UserInDB = Depends(get_current_user),
+):
+    if not ObjectId.is_valid(project_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="无效的项目ID"
+        )
+    
+    project = await db.projects.find_one({"_id": ObjectId(project_id)})
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="项目不存在")
+    
+    await db.projects.update_one(
+        {"_id": ObjectId(project_id)},
+        {
+            "$pull": {"team_members": member_id},
+            "$set": {"updated_at": datetime.datetime.now(datetime.UTC)}
+        }
+    )
+    
     updated = await db.projects.find_one({"_id": ObjectId(project_id)})
     updated["_id"] = str(updated["_id"])
     return ProjectResponse(**updated)

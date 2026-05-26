@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm, Card, Typography, DatePicker, Tabs } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useState } from 'react';
+import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm, Card, Typography, DatePicker, Tabs, Tooltip } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { getIterations, createIteration, updateIteration, deleteIteration, getCodeReviews, createCodeReview, updateCodeReview } from '../../api/development';
+import { useGetIterationsQuery, useCreateIterationMutation, useUpdateIterationMutation, useDeleteIterationMutation, useGetCodeReviewsQuery, useCreateCodeReviewMutation, useUpdateCodeReviewMutation } from '../../store/api';
 import type { Iteration, CodeReview } from '../../types/models';
 import { ITERATION_STATUS, CODE_REVIEW_STATUS } from '../../utils/constants';
 
@@ -11,40 +11,19 @@ const { Title } = Typography;
 const { TextArea } = Input;
 
 const Development: React.FC = () => {
-  const [iterations, setIterations] = useState<Iteration[]>([]);
-  const [codeReviews, setCodeReviews] = useState<CodeReview[]>([]);
-  const [loading, setLoading] = useState(false);
   const [iterationModalOpen, setIterationModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [editingIteration, setEditingIteration] = useState<Iteration | null>(null);
   const [iterationForm] = Form.useForm();
   const [reviewForm] = Form.useForm();
 
-  const fetchIterations = async () => {
-    setLoading(true);
-    try {
-      const res = await getIterations();
-      setIterations(Array.isArray(res) ? res : []);
-    } catch (error) {
-      message.error('获取迭代列表失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCodeReviews = async () => {
-    try {
-      const res = await getCodeReviews();
-      setCodeReviews(Array.isArray(res) ? res : []);
-    } catch (error) {
-      message.error('获取代码评审列表失败');
-    }
-  };
-
-  useEffect(() => {
-    fetchIterations();
-    fetchCodeReviews();
-  }, []);
+  const { data: iterations = [], isLoading: loading } = useGetIterationsQuery({});
+  const { data: codeReviews = [] } = useGetCodeReviewsQuery({});
+  const [createIteration] = useCreateIterationMutation();
+  const [updateIteration] = useUpdateIterationMutation();
+  const [deleteIteration] = useDeleteIterationMutation();
+  const [createCodeReview] = useCreateCodeReviewMutation();
+  const [updateCodeReview] = useUpdateCodeReviewMutation();
 
   const handleCreateIteration = () => {
     setEditingIteration(null);
@@ -73,14 +52,13 @@ const Development: React.FC = () => {
       };
 
       if (editingIteration) {
-        await updateIteration(editingIteration._id, payload);
+        await updateIteration({ id: editingIteration._id, body: payload }).unwrap();
         message.success('迭代更新成功');
       } else {
-        await createIteration(payload);
+        await createIteration(payload).unwrap();
         message.success('迭代创建成功');
       }
       setIterationModalOpen(false);
-      fetchIterations();
     } catch (error: any) {
       if (error?.errorFields) return;
       message.error(editingIteration ? '更新失败' : '创建失败');
@@ -89,9 +67,8 @@ const Development: React.FC = () => {
 
   const handleDeleteIteration = async (id: string) => {
     try {
-      await deleteIteration(id);
+      await deleteIteration(id).unwrap();
       message.success('迭代已删除');
-      fetchIterations();
     } catch (error) {
       message.error('删除失败');
     }
@@ -110,10 +87,9 @@ const Development: React.FC = () => {
         project_id: values.project_id || 'default_project',
         reviewer_id: 'reviewer_id_placeholder',
         author_id: 'author_id_placeholder',
-      });
+      }).unwrap();
       message.success('评审创建成功');
       setReviewModalOpen(false);
-      fetchCodeReviews();
     } catch (error: any) {
       if (error?.errorFields) return;
       message.error('创建失败');
@@ -122,9 +98,8 @@ const Development: React.FC = () => {
 
   const handleUpdateReviewStatus = async (id: string, status: CodeReview['status']) => {
     try {
-      await updateCodeReview(id, { status });
+      await updateCodeReview({ id, body: { status } }).unwrap();
       message.success('评审状态已更新');
-      fetchCodeReviews();
     } catch (error) {
       message.error('更新失败');
     }
@@ -183,9 +158,13 @@ const Development: React.FC = () => {
       width: 120,
       render: (_, record) => (
         <Space>
-          <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEditIteration(record)} />
+          <Tooltip title="编辑">
+            <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEditIteration(record)} />
+          </Tooltip>
           <Popconfirm title="确定删除此迭代？" onConfirm={() => handleDeleteIteration(record._id)}>
-            <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            <Tooltip title="删除">
+              <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            </Tooltip>
           </Popconfirm>
         </Space>
       ),
@@ -231,8 +210,12 @@ const Development: React.FC = () => {
         <Space>
           {record.status === 'pending' && (
             <>
-              <Button type="link" size="small" onClick={() => handleUpdateReviewStatus(record._id, 'approved' as const)}>通过</Button>
-              <Button type="link" size="small" danger onClick={() => handleUpdateReviewStatus(record._id, 'rejected' as const)}>拒绝</Button>
+              <Tooltip title="通过">
+                <Button type="text" size="small" icon={<CheckCircleOutlined />} onClick={() => handleUpdateReviewStatus(record._id, 'approved' as const)} />
+              </Tooltip>
+              <Tooltip title="拒绝">
+                <Button type="text" size="small" danger icon={<CloseCircleOutlined />} onClick={() => handleUpdateReviewStatus(record._id, 'rejected' as const)} />
+              </Tooltip>
             </>
           )}
         </Space>
@@ -266,6 +249,7 @@ const Development: React.FC = () => {
                   loading={loading}
                   pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 项` }}
                   scroll={{ x: 1000 }}
+                  locale={{ emptyText: '暂无数据' }}
                 />
               </Card>
             ),
@@ -285,6 +269,7 @@ const Development: React.FC = () => {
                   dataSource={codeReviews}
                   rowKey="_id"
                   loading={loading}
+                  locale={{ emptyText: '暂无数据' }}
                   pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 项` }}
                   scroll={{ x: 1000 }}
                 />
@@ -300,10 +285,12 @@ const Development: React.FC = () => {
         onOk={handleSubmitIteration}
         onCancel={() => setIterationModalOpen(false)}
         width={600}
+        okText="确定"
+        cancelText="取消"
       >
         <Form form={iterationForm} layout="vertical">
           <Form.Item name="name" label="迭代名称" rules={[{ required: true, message: '请输入迭代名称' }]}>
-            <Input placeholder="Sprint 1" />
+            <Input placeholder="如 Sprint 1" />
           </Form.Item>
           <Form.Item name="description" label="描述">
             <TextArea rows={3} placeholder="迭代描述" />
@@ -317,10 +304,10 @@ const Development: React.FC = () => {
             </Select>
           </Form.Item>
           <Form.Item name="start_date" label="开始日期" rules={[{ required: true }]}>
-            <DatePicker style={{ width: '100%' }} />
+            <DatePicker style={{ width: '100%' }} placeholder="选择日期" />
           </Form.Item>
           <Form.Item name="end_date" label="结束日期">
-            <DatePicker style={{ width: '100%' }} />
+            <DatePicker style={{ width: '100%' }} placeholder="选择日期" />
           </Form.Item>
           <Form.Item name="progress" label="进度 (%)">
             <Input type="number" min={0} max={100} />
@@ -334,6 +321,8 @@ const Development: React.FC = () => {
         onOk={handleSubmitReview}
         onCancel={() => setReviewModalOpen(false)}
         width={500}
+        okText="确定"
+        cancelText="取消"
       >
         <Form form={reviewForm} layout="vertical">
           <Form.Item name="task_id" label="任务ID" rules={[{ required: true, message: '请输入任务ID' }]}>

@@ -11,6 +11,9 @@ class ProjectBase(TimestampMixin):
     description: str = ""
     owner_id: str
     stakeholders: list[str] = []
+    team_members: list[str] = []
+    team_members_with_roles: list[dict] = []
+    org_structure: list[dict] = []
     status: str = Field(
         default="planning", pattern="^(planning|active|on_hold|completed|archived)$"
     )
@@ -29,12 +32,21 @@ class ProjectCreate(ProjectBase):
 
 
 class ProjectUpdate(BaseDocument):
+    code: str | None = None
     name: str | None = None
     description: str | None = None
+    owner_id: str | None = None
+    stakeholders: list[str] | None = None
+    team_members: list[str] | None = None
+    team_members_with_roles: list[dict] | None = None
+    org_structure: list[dict] | None = None
     status: str | None = None
     priority: str | None = None
+    start_date: datetime | None = None
     end_date: datetime | None = None
+    budget_total: float | None = None
     budget_used: float | None = None
+    budget_currency: str | None = None
     progress: float | None = None
     tags: list[str] | None = None
 

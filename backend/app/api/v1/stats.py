@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends
+import datetime
+
+from bson import ObjectId
+from fastapi import APIRouter, Depends, HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.core.database import get_db
@@ -185,6 +188,76 @@ async def get_resource_utilization_chart(
         )
 
     return result
+
+
+@router.get("/alerts")
+async def get_alerts(
+    level: str | None = None,
+    limit: int = 20,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: UserInDB = Depends(get_current_user),
+):
+    query = {}
+    if level:
+        query["level"] = level
+    
+    alerts = (
+        await db.alerts.find(query)
+        .sort("created_at", -1)
+        .limit(limit)
+        .to_list(length=limit)
+    )
+    
+    result = []
+    for alert in alerts:
+        alert["_id"] = str(alert["_id"])
+        result.append(alert)
+    
+    return result
+
+
+@router.post("/alerts")
+async def create_alert(
+    alert_data: dict,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: UserInDB = Depends(get_current_user),
+):
+    alert_dict = {
+        **alert_data,
+        "created_at": datetime.datetime.now(datetime.UTC),
+        "updated_at": datetime.datetime.now(datetime.UTC),
+        "is_read": False,
+    }
+    
+    result = await db.alerts.insert_one(alert_dict)
+    alert_dict["_id"] = str(result.inserted_id)
+    
+    return alert_dict
+
+
+@router.put("/alerts/{alert_id}")
+async def update_alert(
+    alert_id: str,
+    update_data: dict,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: UserInDB = Depends(get_current_user),
+):
+    if not ObjectId.is_valid(alert_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="无效的预警ID")
+    
+    update_data["updated_at"] = datetime.datetime.now(datetime.UTC)
+    
+    result = await db.alerts.update_one(
+        {"_id": ObjectId(alert_id)},
+        {"$set": update_data},
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="预警不存在")
+    
+    updated = await db.alerts.find_one({"_id": ObjectId(alert_id)})
+    updated["_id"] = str(updated["_id"])
+    return updated
 
 
 @router.get("/gantt/tasks")

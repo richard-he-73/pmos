@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import (
     auth,
     communications,
+    data_dictionaries,
     development,
     export,
     modules,
@@ -19,6 +20,8 @@ from app.api.v1 import (
     stats,
     tasks,
     testing,
+    users,
+    plans,
 )
 from app.config import get_settings
 from app.core.websocket import manager
@@ -29,11 +32,13 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from app.core.database import close_mongo, connect_to_mongo
-
+    from app.services.cache import cache
+    
     await connect_to_mongo()
+    await cache.connect()
     yield
     await close_mongo()
-    await cache_service.close()
+    await cache.disconnect()
 
 
 def create_app(custom_lifespan: Callable | None = None) -> FastAPI:
@@ -66,6 +71,9 @@ def create_app(custom_lifespan: Callable | None = None) -> FastAPI:
     app.include_router(notifications.router, prefix=settings.api_prefix)
     app.include_router(communications.router, prefix=settings.api_prefix)
     app.include_router(modules.router, prefix=settings.api_prefix)
+    app.include_router(users.router, prefix=settings.api_prefix)
+    app.include_router(plans.router, prefix=settings.api_prefix)
+    app.include_router(data_dictionaries.router, prefix=settings.api_prefix)
 
     @app.get("/health")
     async def health_check():

@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { Card, Typography, Spin, Empty, Table, Tag } from 'antd';
+import { Card, Spin, Empty } from 'antd';
 import { KPICard } from '../../components/common/KPICard';
 import { ModuleCard } from '../../components/common/ModuleCard';
 import { AlertCard } from '../../components/common/AlertCard';
@@ -7,13 +6,31 @@ import { DonutChart } from '../../components/charts/DonutChart';
 import { BarChart } from '../../components/charts/BarChart';
 import { LineChart } from '../../components/charts/LineChart';
 import { GanttChart } from '../../components/charts/GanttChart';
-import { getStats, getProjectStatusChart, getTaskPriorityChart, getTaskTrendChart, getBudgetUsageChart, getResourceUtilizationChart, getTaskGanttData } from '../../api/stats';
-import type { StatsData, ChartData, TrendData, BudgetUsage, ResourceUtilization, GanttTask } from '../../api/stats';
+import { useGetStatsQuery, useGetAlertsQuery, useGetProjectStatusChartQuery, useGetTaskPriorityChartQuery, useGetTaskTrendChartQuery, useGetBudgetUsageChartQuery, useGetResourceUtilizationChartQuery, useGetTaskGanttDataQuery } from '../../store/api';
 import { formatDateTime } from '../../utils/formatters';
-import { PROJECT_STATUS, TASK_STATUS, PRIORITY } from '../../utils/constants';
+import { TASK_STATUS, PRIORITY } from '../../utils/constants';
 import { useNavigate } from 'react-router-dom';
 
-const { Title } = Typography;
+interface ChartData {
+  name: string;
+  value: number;
+}
+
+interface TrendData {
+  date: string;
+  status: string;
+}
+
+interface BudgetUsage {
+  name: string;
+  used: number;
+  total: number;
+}
+
+interface ResourceUtilization {
+  name: string;
+  utilization: number;
+}
 
 const modules = [
   { name: '项目管理', icon: '🗂', stat: '48', statLabel: '个活跃项目', status: '正常', color: 'oklch(58% 0.16 145)', path: '/projects' },
@@ -32,42 +49,22 @@ const modules = [
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [statsData, setStatsData] = useState<StatsData | null>(null);
-  const [projectStatusData, setProjectStatusData] = useState<ChartData[]>([]);
-  const [taskPriorityData, setTaskPriorityData] = useState<ChartData[]>([]);
-  const [taskTrendData, setTaskTrendData] = useState<TrendData[]>([]);
-  const [budgetData, setBudgetData] = useState<BudgetUsage[]>([]);
-  const [resourceData, setResourceData] = useState<ResourceUtilization[]>([]);
-  const [ganttTasks, setGanttTasks] = useState<GanttTask[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  const { data: statsData, isLoading: statsLoading } = useGetStatsQuery(undefined);
+  const { data: alertsData, isLoading: alertsLoading } = useGetAlertsQuery(undefined);
+  const { data: projectStatusData, isLoading: projectStatusLoading } = useGetProjectStatusChartQuery(undefined);
+  const { data: taskPriorityData, isLoading: taskPriorityLoading } = useGetTaskPriorityChartQuery(undefined);
+  const { data: taskTrendData, isLoading: taskTrendLoading } = useGetTaskTrendChartQuery(30);
+  const { data: budgetData, isLoading: budgetLoading } = useGetBudgetUsageChartQuery(undefined);
+  const { data: resourceData, isLoading: resourceLoading } = useGetResourceUtilizationChartQuery(undefined);
+  const { data: ganttTasks, isLoading: ganttLoading } = useGetTaskGanttDataQuery(undefined);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [stats, projectStatus, taskPriority, taskTrend, budgetUsage, resourceUtil, ganttData] = await Promise.all([
-          getStats(),
-          getProjectStatusChart(),
-          getTaskPriorityChart(),
-          getTaskTrendChart(30),
-          getBudgetUsageChart(),
-          getResourceUtilizationChart(),
-          getTaskGanttData(),
-        ]);
-        setStatsData(stats);
-        setProjectStatusData(Array.isArray(projectStatus) ? projectStatus : []);
-        setTaskPriorityData(Array.isArray(taskPriority) ? taskPriority : []);
-        setTaskTrendData(Array.isArray(taskTrend) ? taskTrend : []);
-        setBudgetData(Array.isArray(budgetUsage) ? budgetUsage : []);
-        setResourceData(Array.isArray(resourceUtil) ? resourceUtil : []);
-        setGanttTasks(Array.isArray(ganttData) ? ganttData : []);
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const loading = statsLoading || alertsLoading || projectStatusLoading || taskPriorityLoading || taskTrendLoading || budgetLoading || resourceLoading || ganttLoading;
+  
+  const alerts = Array.isArray(alertsData) ? alertsData : [];
+  const infoAlerts = alerts.filter((a: any) => a.level === 'info');
+  const warnAlerts = alerts.filter((a: any) => a.level === 'warn');
+  const critAlerts = alerts.filter((a: any) => a.level === 'crit');
 
   const statusColorMap: Record<string, string> = {
     planning: 'oklch(60% 0.15 170)',
@@ -84,8 +81,9 @@ const Dashboard: React.FC = () => {
     critical: 'oklch(50% 0.20 30)',
   };
 
-  const processedTrendData = taskTrendData.reduce(
-    (acc, curr) => {
+  const safeTaskTrendData = Array.isArray(taskTrendData) ? taskTrendData : [];
+  const processedTrendData = safeTaskTrendData.reduce(
+    (acc: { dates: string[]; byStatus: Record<string, Record<string, number>> }, curr: TrendData) => {
       if (!acc.dates.includes(curr.date)) {
         acc.dates.push(curr.date);
       }
@@ -94,56 +92,28 @@ const Dashboard: React.FC = () => {
       acc.byStatus[curr.status] = statusCount;
       return acc;
     },
-    { dates: [] as string[], byStatus: {} as Record<string, Record<string, number>> }
+    { dates: [], byStatus: {} }
   );
 
   const trendSeries = Object.entries(processedTrendData.byStatus).map(([status, data]) => ({
     name: TASK_STATUS[status as keyof typeof TASK_STATUS] || status,
-    data: processedTrendData.dates.map((date) => data[date] || 0),
+    data: processedTrendData.dates.map((date: string) => (data as Record<string, number>)[date] || 0),
   }));
 
+  const safeBudgetData = Array.isArray(budgetData) ? (budgetData as BudgetUsage[]) : [];
   const budgetChartData = {
-    xAxis: budgetData.map((b) => b.name.substring(0, 10)),
+    xAxis: safeBudgetData.map((b: BudgetUsage) => b.name.substring(0, 10)),
     series: [
-      { name: '已使用', data: budgetData.map((b) => b.used) },
-      { name: '总预算', data: budgetData.map((b) => b.total) },
+      { name: '已使用', data: safeBudgetData.map((b: BudgetUsage) => b.used) },
+      { name: '总预算', data: safeBudgetData.map((b: BudgetUsage) => b.total) },
     ],
   };
 
+  const safeResourceData = Array.isArray(resourceData) ? (resourceData as ResourceUtilization[]) : [];
   const resourceChartData = {
-    xAxis: resourceData.map((r) => r.name.substring(0, 10)),
-    series: [{ name: '利用率 (%)', data: resourceData.map((r) => r.utilization) }],
+    xAxis: safeResourceData.map((r: ResourceUtilization) => r.name.substring(0, 10)),
+    series: [{ name: '利用率 (%)', data: safeResourceData.map((r: ResourceUtilization) => r.utilization) }],
   };
-
-  const budgetColumns = [
-    {
-      title: '项目名称',
-      dataIndex: 'name',
-      key: 'name',
-      ellipsis: true,
-    },
-    {
-      title: '总预算',
-      dataIndex: 'total',
-      key: 'total',
-      render: (val: number) => <span className="mono-value">{val.toLocaleString()}</span>,
-    },
-    {
-      title: '已使用',
-      dataIndex: 'used',
-      key: 'used',
-      render: (val: number) => <span className="mono-value">{val.toLocaleString()}</span>,
-    },
-    {
-      title: '使用率',
-      dataIndex: 'usage_percent',
-      key: 'usage_percent',
-      render: (val: number) => {
-        const color = val > 80 ? 'red' : val > 50 ? 'orange' : 'green';
-        return <Tag color={color}>{val}%</Tag>;
-      },
-    },
-  ];
 
   if (loading) {
     return (
@@ -156,18 +126,31 @@ const Dashboard: React.FC = () => {
   return (
     <>
       <div className="kpi-row">
-        <KPICard label="项目总数" value={statsData?.projects.total ?? 0} trend={`${Object.values(statsData?.projects.by_status || {}).reduce((a, b) => a + b, 0)} 累计`} trendDirection="up" variant="accent" />
+        <KPICard label="项目总数" value={statsData?.projects.total ?? 0} trend={`${(Object.values(statsData?.projects.by_status || {}) as number[]).reduce((sum, val) => sum + val, 0)} 累计`} trendDirection="up" variant="accent" />
         <KPICard label="进行中项目" value={statsData?.projects.by_status?.active ?? 0} trend="活跃项目" trendDirection="up" variant="success" />
         <KPICard label="任务总数" value={statsData?.tasks.total ?? 0} trend={`${statsData?.tasks.by_status?.in_progress ?? 0} 进行中`} trendDirection="up" variant="info" />
         <KPICard label="团队成员" value={statsData?.resources.total ?? 0} trend={`${statsData?.resources.by_type?.human ?? 0} 人力资源`} trendDirection="up" variant="muted" />
         <KPICard label="待办任务" value={statsData?.tasks.by_status?.todo ?? 0} trend={`${statsData?.tasks.by_priority?.critical ?? 0} 紧急`} trendDirection="down" variant="warning" />
-        <KPICard label="待处理预警" value={8} trend="待关注" trendDirection="down" variant="danger" />
+        <KPICard label="待处理预警" value={alerts.length || 8} trend="待关注" trendDirection="down" variant="danger" />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <AlertCard message="今日有 3 个项目进入关键节点，2 个里程碑即将到期" count={3} level="info" />
-        <AlertCard message="资源利用率超阈值：开发组 A 负载 94%，建议调配" count={2} level="warn" />
-        <AlertCard message="高风险预警：项目「核心系统升级」已延迟 5 天，风险评级上调" count={1} level="crit" />
+        {critAlerts.map((alert: any) => (
+          <AlertCard key={alert._id} message={alert.message} count={alert.count || 1} level="crit" />
+        ))}
+        {warnAlerts.map((alert: any) => (
+          <AlertCard key={alert._id} message={alert.message} count={alert.count || 1} level="warn" />
+        ))}
+        {infoAlerts.map((alert: any) => (
+          <AlertCard key={alert._id} message={alert.message} count={alert.count || 1} level="info" />
+        ))}
+        {alerts.length === 0 && (
+          <>
+            <AlertCard message="今日有 3 个项目进入关键节点，2 个里程碑即将到期" count={3} level="info" />
+            <AlertCard message="资源利用率超阈值：开发组 A 负载 94%，建议调配" count={2} level="warn" />
+            <AlertCard message="高风险预警：项目「核心系统升级」已延迟 5 天，风险评级上调" count={1} level="crit" />
+          </>
+        )}
       </div>
 
       <section>
@@ -181,10 +164,10 @@ const Dashboard: React.FC = () => {
 
       <div className="charts-row">
         <Card title="项目状态分布" size="small" style={{ flex: 1 }}>
-          {projectStatusData.length > 0 ? (
+          {Array.isArray(projectStatusData) && projectStatusData.length > 0 ? (
             <DonutChart
               data={projectStatusData}
-              colors={projectStatusData.map((d) => statusColorMap[d.name] || 'oklch(58% 0.16 145)')}
+              colors={(projectStatusData as ChartData[]).map((d: ChartData) => statusColorMap[d.name] || 'oklch(58% 0.16 145)')}
             />
           ) : (
             <Empty description="暂无数据" />
@@ -192,11 +175,11 @@ const Dashboard: React.FC = () => {
         </Card>
 
         <Card title="任务优先级分布" size="small" style={{ flex: 1 }}>
-          {taskPriorityData.length > 0 ? (
+          {Array.isArray(taskPriorityData) && taskPriorityData.length > 0 ? (
             <BarChart
-              xAxis={taskPriorityData.map((d) => PRIORITY[d.name as keyof typeof PRIORITY] || d.name)}
-              series={[{ name: '任务数', data: taskPriorityData.map((d) => d.value) }]}
-              colors={taskPriorityData.map((d) => priorityColorMap[d.name] || 'oklch(58% 0.16 145)')}
+              xAxis={(taskPriorityData as ChartData[]).map((d: ChartData) => PRIORITY[d.name as keyof typeof PRIORITY] || d.name)}
+              series={[{ name: '任务数', data: (taskPriorityData as ChartData[]).map((d: ChartData) => d.value) }]}
+              colors={(taskPriorityData as ChartData[]).map((d: ChartData) => priorityColorMap[d.name] || 'oklch(58% 0.16 145)')}
               horizontal
             />
           ) : (
@@ -218,7 +201,7 @@ const Dashboard: React.FC = () => {
       </Card>
 
       <Card title="项目甘特图" size="small" style={{ marginBottom: 16 }}>
-        {ganttTasks.length > 0 ? (
+        {Array.isArray(ganttTasks) && ganttTasks.length > 0 ? (
           <GanttChart tasks={ganttTasks} height={350} />
         ) : (
           <Empty description="暂无任务数据" />
@@ -227,7 +210,7 @@ const Dashboard: React.FC = () => {
 
       <div className="charts-row">
         <Card title="预算使用情况" size="small" style={{ flex: 1 }}>
-          {budgetData.length > 0 ? (
+          {Array.isArray(budgetData) && budgetData.length > 0 ? (
             <BarChart
               xAxis={budgetChartData.xAxis}
               series={budgetChartData.series}
@@ -239,7 +222,7 @@ const Dashboard: React.FC = () => {
         </Card>
 
         <Card title="资源利用率" size="small" style={{ flex: 1 }}>
-          {resourceData.length > 0 ? (
+          {Array.isArray(resourceData) && resourceData.length > 0 ? (
             <BarChart
               xAxis={resourceChartData.xAxis}
               series={resourceChartData.series}

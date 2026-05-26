@@ -19,8 +19,17 @@ class CommunicationBase(TimestampMixin):
     tags: list[str] = []
 
 
-class CommunicationCreate(CommunicationBase):
-    pass
+class CommunicationCreate(BaseDocument):
+    project_id: str
+    title: str = Field(..., min_length=1, max_length=200)
+    description: str = ""
+    type: str = Field(default="meeting", pattern="^(meeting|email|call|discussion|report)$")
+    participants: list[str] = []
+    date: datetime
+    location: str = ""
+    outcome: str = ""
+    attachments: list[str] = []
+    tags: list[str] = []
 
 
 class CommunicationUpdate(BaseDocument):
@@ -52,8 +61,13 @@ class ConfigItemBase(TimestampMixin):
     is_sensitive: bool = False
 
 
-class ConfigItemCreate(ConfigItemBase):
-    pass
+class ConfigItemCreate(BaseDocument):
+    name: str = Field(..., min_length=1, max_length=100)
+    value: str = ""
+    type: str = Field(default="string", pattern="^(string|number|boolean|json)$")
+    category: str = ""
+    description: str = ""
+    is_sensitive: bool = False
 
 
 class ConfigItemUpdate(BaseDocument):
@@ -83,8 +97,17 @@ class DrillPlanBase(TimestampMixin):
     lessons_learned: str = ""
 
 
-class DrillPlanCreate(DrillPlanBase):
-    pass
+class DrillPlanCreate(BaseDocument):
+    project_id: str
+    name: str = Field(..., min_length=1, max_length=200)
+    description: str = ""
+    type: str = Field(default="fire", pattern="^(fire|disaster|security|network|database)$")
+    status: str = Field(default="planned", pattern="^(planned|in_progress|completed|cancelled)$")
+    scheduled_date: datetime
+    actual_date: Optional[datetime] = None
+    participants: list[str] = []
+    result: str = ""
+    lessons_learned: str = ""
 
 
 class DrillPlanUpdate(BaseDocument):
@@ -121,8 +144,18 @@ class DeploymentPlanBase(TimestampMixin):
     result: str = ""
 
 
-class DeploymentPlanCreate(DeploymentPlanBase):
-    pass
+class DeploymentPlanCreate(BaseDocument):
+    project_id: str
+    name: str = Field(..., min_length=1, max_length=200)
+    description: str = ""
+    version: str = ""
+    status: str = Field(default="planned", pattern="^(planned|approved|deploying|success|failed|rolled_back)$")
+    scheduled_date: datetime
+    actual_date: Optional[datetime] = None
+    rollback_plan: str = ""
+    approver_id: str = ""
+    deployed_by: str = ""
+    result: str = ""
 
 
 class DeploymentPlanUpdate(BaseDocument):
@@ -156,8 +189,14 @@ class WorkRecordBase(TimestampMixin):
     status: str = Field(default="submitted", pattern="^(submitted|approved|rejected)$")
 
 
-class WorkRecordCreate(WorkRecordBase):
-    pass
+class WorkRecordCreate(BaseDocument):
+    user_id: str
+    project_id: str
+    date: datetime
+    hours: float = Field(default=8.0, ge=0, le=24)
+    type: str = Field(default="work", pattern="^(work|overtime|leave|training)$")
+    description: str = ""
+    status: str = Field(default="submitted", pattern="^(submitted|approved|rejected)$")
 
 
 class WorkRecordUpdate(BaseDocument):

@@ -16,6 +16,13 @@ export const TASK_STATUS = {
   cancelled: '已取消',
 } as const;
 
+export const TASK_TYPE = {
+  task: '任务',
+  feature: '功能',
+  bug: '缺陷',
+  milestone: '里程碑',
+} as const;
+
 export const PRIORITY = {
   low: '低',
   medium: '中',

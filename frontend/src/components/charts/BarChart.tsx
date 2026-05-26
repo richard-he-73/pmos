@@ -15,7 +15,7 @@ export const BarChart: React.FC<BarChartProps> = ({
   xAxis,
   series,
   height = 300,
-  colors = ['oklch(58% 0.16 145)'],
+  colors = ['oklch(58% 0.16 145)', 'oklch(58% 0.16 180)', 'oklch(58% 0.16 220)', 'oklch(58% 0.16 300)', 'oklch(58% 0.16 60)'],
   horizontal = false,
 }) => {
   const option: EChartsOption = {
@@ -39,16 +39,19 @@ export const BarChart: React.FC<BarChartProps> = ({
     },
     grid: {
       top: title ? 50 : 30,
-      bottom: horizontal ? 80 : 40,
-      left: horizontal ? 100 : 60,
+      bottom: 40,
+      left: 60,
       right: 40,
     },
-    xAxis: horizontal
-      ? { type: 'value' }
-      : { type: 'category', data: xAxis },
-    yAxis: horizontal
-      ? { type: 'category', data: xAxis }
-      : { type: 'value' },
+    xAxis: {
+      type: 'category' as const,
+      data: horizontal ? undefined : xAxis,
+      boundaryGap: !horizontal,
+    },
+    yAxis: {
+      type: horizontal ? 'category' : 'value',
+      data: horizontal ? xAxis : undefined,
+    },
     series: series.map((s, index) => ({
       name: s.name,
       type: 'bar',

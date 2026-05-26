@@ -19,12 +19,12 @@ class Settings(BaseSettings):
 
     redis_url: str = "redis://localhost:6379/0"
 
-    smtp_host: str = ""
-    smtp_port: int = 587
-    smtp_username: str = ""
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_user: str = ""
     smtp_password: str = ""
-    from_email: str = ""
-    from_name: str = "PMOS 系统"
+    smtp_from: str = "no-reply@pmos.local"
+    email_enabled: bool = False
 
     jwt_secret_key: str = "your-jwt-secret-change-in-production"
     jwt_algorithm: str = "HS256"
@@ -40,3 +40,6 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+settings = get_settings()

@@ -16,6 +16,21 @@ export interface Project {
   description: string;
   owner_id: string;
   stakeholders: string[];
+  team_members: string[];
+  team_members_with_roles?: Array<{
+    member_id: string;
+    role: string;
+    org_node_id?: string;
+  }>;
+  org_structure?: Array<{
+    id: string;
+    name: string;
+    type: 'department' | 'group' | 'team';
+    parent_id?: string;
+    leader_id?: string;
+    org_level?: string;
+    description?: string;
+  }>;
   status: 'planning' | 'active' | 'on_hold' | 'completed' | 'archived';
   priority: 'low' | 'medium' | 'high' | 'critical';
   start_date: string;
@@ -56,13 +71,16 @@ export interface Task {
 export interface Resource {
   _id: string;
   name: string;
-  type: 'human' | 'equipment' | 'budget';
+  type: 'human' | 'equipment' | 'budget' | 'material' | 'software';
+  description?: string;
   category: string;
   capacity: number;
   allocated: number;
   availability: 'available' | 'busy' | 'unavailable';
   skills?: string[];
+  tags?: string[];
   cost_per_hour?: number;
+  hourly_rate?: number;
   created_at: string;
   updated_at: string;
 }
@@ -314,6 +332,20 @@ export interface WorkRecord {
   type: 'work' | 'overtime' | 'leave' | 'training';
   description: string;
   status: 'submitted' | 'approved' | 'rejected';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DataDictionary {
+  _id: string;
+  category: string;
+  code: string;
+  name: string;
+  value: string;
+  description?: string;
+  sort_order?: number;
+  is_active?: boolean;
+  is_system?: boolean;
   created_at: string;
   updated_at: string;
 }

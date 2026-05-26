@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm, Card, Typography, Tabs } from 'antd';
+import { useState } from 'react';
+import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm, Card, Typography, Tabs, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import {
-  getTestCases, createTestCase, updateTestCase, deleteTestCase,
-  getDefects, createDefect, updateDefect, deleteDefect,
-  getTestReports, createTestReport, updateTestReport, deleteTestReport,
-} from '../../api/testing';
+  useGetTestCasesQuery, useCreateTestCaseMutation, useUpdateTestCaseMutation, useDeleteTestCaseMutation,
+  useGetDefectsQuery, useCreateDefectMutation, useUpdateDefectMutation, useDeleteDefectMutation,
+  useGetTestReportsQuery, useCreateTestReportMutation, useUpdateTestReportMutation, useDeleteTestReportMutation,
+} from '../../store/api';
 import type { TestCase, Defect, TestReport } from '../../types/models';
 import { TEST_CASE_STATUS, DEFECT_STATUS, SEVERITY, PRIORITY } from '../../utils/constants';
 
@@ -14,10 +14,6 @@ const { Title } = Typography;
 const { TextArea } = Input;
 
 const Testing: React.FC = () => {
-  const [testCases, setTestCases] = useState<TestCase[]>([]);
-  const [defects, setDefects] = useState<Defect[]>([]);
-  const [reports, setReports] = useState<TestReport[]>([]);
-  const [loading, setLoading] = useState(false);
   const [testCaseModalOpen, setTestCaseModalOpen] = useState(false);
   const [defectModalOpen, setDefectModalOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -28,41 +24,18 @@ const Testing: React.FC = () => {
   const [defectForm] = Form.useForm();
   const [reportForm] = Form.useForm();
 
-  const fetchTestCases = async () => {
-    setLoading(true);
-    try {
-      const res = await getTestCases();
-      setTestCases(Array.isArray(res) ? res : []);
-    } catch (error) {
-      message.error('获取测试用例列表失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDefects = async () => {
-    try {
-      const res = await getDefects();
-      setDefects(Array.isArray(res) ? res : []);
-    } catch (error) {
-      message.error('获取缺陷列表失败');
-    }
-  };
-
-  const fetchReports = async () => {
-    try {
-      const res = await getTestReports();
-      setReports(Array.isArray(res) ? res : []);
-    } catch (error) {
-      message.error('获取测试报告列表失败');
-    }
-  };
-
-  useEffect(() => {
-    fetchTestCases();
-    fetchDefects();
-    fetchReports();
-  }, []);
+  const { data: testCases = [], isLoading: loading } = useGetTestCasesQuery({});
+  const { data: defects = [] } = useGetDefectsQuery({});
+  const { data: reports = [] } = useGetTestReportsQuery({});
+  const [createTestCase] = useCreateTestCaseMutation();
+  const [updateTestCase] = useUpdateTestCaseMutation();
+  const [deleteTestCase] = useDeleteTestCaseMutation();
+  const [createDefect] = useCreateDefectMutation();
+  const [updateDefect] = useUpdateDefectMutation();
+  const [deleteDefect] = useDeleteDefectMutation();
+  const [createTestReport] = useCreateTestReportMutation();
+  const [updateTestReport] = useUpdateTestReportMutation();
+  const [deleteTestReport] = useDeleteTestReportMutation();
 
   const handleCreateTestCase = () => {
     setEditingTestCase(null);
@@ -82,14 +55,13 @@ const Testing: React.FC = () => {
       const payload = { ...values, project_id: values.project_id || 'default_project' };
 
       if (editingTestCase) {
-        await updateTestCase(editingTestCase._id, payload);
+        await updateTestCase({ id: editingTestCase._id, body: payload }).unwrap();
         message.success('测试用例更新成功');
       } else {
-        await createTestCase(payload);
+        await createTestCase(payload).unwrap();
         message.success('测试用例创建成功');
       }
       setTestCaseModalOpen(false);
-      fetchTestCases();
     } catch (error: any) {
       if (error?.errorFields) return;
       message.error(editingTestCase ? '更新失败' : '创建失败');
@@ -98,9 +70,8 @@ const Testing: React.FC = () => {
 
   const handleDeleteTestCase = async (id: string) => {
     try {
-      await deleteTestCase(id);
+      await deleteTestCase(id).unwrap();
       message.success('测试用例已删除');
-      fetchTestCases();
     } catch (error) {
       message.error('删除失败');
     }
@@ -128,14 +99,13 @@ const Testing: React.FC = () => {
       };
 
       if (editingDefect) {
-        await updateDefect(editingDefect._id, payload);
+        await updateDefect({ id: editingDefect._id, body: payload }).unwrap();
         message.success('缺陷更新成功');
       } else {
-        await createDefect(payload);
+        await createDefect(payload).unwrap();
         message.success('缺陷创建成功');
       }
       setDefectModalOpen(false);
-      fetchDefects();
     } catch (error: any) {
       if (error?.errorFields) return;
       message.error(editingDefect ? '更新失败' : '创建失败');
@@ -144,9 +114,8 @@ const Testing: React.FC = () => {
 
   const handleDeleteDefect = async (id: string) => {
     try {
-      await deleteDefect(id);
+      await deleteDefect(id).unwrap();
       message.success('缺陷已删除');
-      fetchDefects();
     } catch (error) {
       message.error('删除失败');
     }
@@ -174,14 +143,13 @@ const Testing: React.FC = () => {
       };
 
       if (editingReport) {
-        await updateTestReport(editingReport._id, payload);
+        await updateTestReport({ id: editingReport._id, body: payload }).unwrap();
         message.success('测试报告更新成功');
       } else {
-        await createTestReport(payload);
+        await createTestReport(payload).unwrap();
         message.success('测试报告创建成功');
       }
       setReportModalOpen(false);
-      fetchReports();
     } catch (error: any) {
       if (error?.errorFields) return;
       message.error(editingReport ? '更新失败' : '创建失败');
@@ -190,9 +158,8 @@ const Testing: React.FC = () => {
 
   const handleDeleteReport = async (id: string) => {
     try {
-      await deleteTestReport(id);
+      await deleteTestReport(id).unwrap();
       message.success('测试报告已删除');
-      fetchReports();
     } catch (error) {
       message.error('删除失败');
     }
@@ -253,9 +220,13 @@ const Testing: React.FC = () => {
       width: 120,
       render: (_, record) => (
         <Space>
-          <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEditTestCase(record)} />
+          <Tooltip title="编辑">
+            <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEditTestCase(record)} />
+          </Tooltip>
           <Popconfirm title="确定删除此测试用例？" onConfirm={() => handleDeleteTestCase(record._id)}>
-            <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            <Tooltip title="删除">
+              <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            </Tooltip>
           </Popconfirm>
         </Space>
       ),
@@ -313,9 +284,13 @@ const Testing: React.FC = () => {
       width: 120,
       render: (_, record) => (
         <Space>
-          <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEditDefect(record)} />
+          <Tooltip title="编辑">
+            <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEditDefect(record)} />
+          </Tooltip>
           <Popconfirm title="确定删除此缺陷？" onConfirm={() => handleDeleteDefect(record._id)}>
-            <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            <Tooltip title="删除">
+              <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            </Tooltip>
           </Popconfirm>
         </Space>
       ),
@@ -370,9 +345,13 @@ const Testing: React.FC = () => {
       width: 120,
       render: (_, record) => (
         <Space>
-          <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEditReport(record)} />
+          <Tooltip title="编辑">
+            <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEditReport(record)} />
+          </Tooltip>
           <Popconfirm title="确定删除此报告？" onConfirm={() => handleDeleteReport(record._id)}>
-            <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            <Tooltip title="删除">
+              <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            </Tooltip>
           </Popconfirm>
         </Space>
       ),
@@ -405,6 +384,7 @@ const Testing: React.FC = () => {
                   loading={loading}
                   pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 项` }}
                   scroll={{ x: 1200 }}
+                  locale={{ emptyText: '暂无数据' }}
                 />
               </Card>
             ),
@@ -426,6 +406,7 @@ const Testing: React.FC = () => {
                   loading={loading}
                   pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 项` }}
                   scroll={{ x: 1200 }}
+                  locale={{ emptyText: '暂无数据' }}
                 />
               </Card>
             ),
@@ -447,6 +428,7 @@ const Testing: React.FC = () => {
                   loading={loading}
                   pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 项` }}
                   scroll={{ x: 1200 }}
+                  locale={{ emptyText: '暂无数据' }}
                 />
               </Card>
             ),
@@ -460,6 +442,8 @@ const Testing: React.FC = () => {
         onOk={handleSubmitTestCase}
         onCancel={() => setTestCaseModalOpen(false)}
         width={600}
+        okText="确定"
+        cancelText="取消"
       >
         <Form form={testCaseForm} layout="vertical">
           <Form.Item name="title" label="测试用例标题" rules={[{ required: true, message: '请输入测试用例标题' }]}>
@@ -507,6 +491,8 @@ const Testing: React.FC = () => {
         onOk={handleSubmitDefect}
         onCancel={() => setDefectModalOpen(false)}
         width={600}
+        okText="确定"
+        cancelText="取消"
       >
         <Form form={defectForm} layout="vertical">
           <Form.Item name="title" label="缺陷标题" rules={[{ required: true, message: '请输入缺陷标题' }]}>
@@ -568,6 +554,8 @@ const Testing: React.FC = () => {
         onOk={handleSubmitReport}
         onCancel={() => setReportModalOpen(false)}
         width={600}
+        okText="确定"
+        cancelText="取消"
       >
         <Form form={reportForm} layout="vertical">
           <Form.Item name="name" label="报告名称" rules={[{ required: true, message: '请输入报告名称' }]}>

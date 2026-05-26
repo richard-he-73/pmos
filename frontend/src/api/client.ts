@@ -18,7 +18,13 @@ apiClient.interceptors.request.use((config) => {
 });
 
 apiClient.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    // 204 No Content 没有响应体
+    if (response.status === 204) {
+      return null;
+    }
+    return response.data;
+  },
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');

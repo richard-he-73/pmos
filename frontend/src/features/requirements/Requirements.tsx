@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm, Card, Typography, Badge } from 'antd';
+import { useState } from 'react';
+import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm, Card, Typography, Badge, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { getRequirements, createRequirement, updateRequirement, deleteRequirement } from '../../api/requirements';
+import { useGetRequirementsQuery, useCreateRequirementMutation, useUpdateRequirementMutation, useDeleteRequirementMutation } from '../../store/api';
 import type { Requirement } from '../../types/models';
 import { REQUIREMENT_STATUS, REQUIREMENT_TYPE, PRIORITY } from '../../utils/constants';
 
@@ -10,27 +10,14 @@ const { Title } = Typography;
 const { TextArea } = Input;
 
 const Requirements: React.FC = () => {
-  const [data, setData] = useState<Requirement[]>([]);
-  const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRequirement, setEditingRequirement] = useState<Requirement | null>(null);
   const [form] = Form.useForm();
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = await getRequirements();
-      setData(Array.isArray(res) ? res : []);
-    } catch (error) {
-      message.error('获取需求列表失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const { data: requirements = [], isLoading: loading } = useGetRequirementsQuery({});
+  const [createRequirement] = useCreateRequirementMutation();
+  const [updateRequirement] = useUpdateRequirementMutation();
+  const [deleteRequirement] = useDeleteRequirementMutation();
 
   const handleCreate = () => {
     setEditingRequirement(null);
@@ -54,14 +41,13 @@ const Requirements: React.FC = () => {
       };
 
       if (editingRequirement) {
-        await updateRequirement(editingRequirement._id, payload);
+        await updateRequirement({ id: editingRequirement._id, body: payload }).unwrap();
         message.success('需求更新成功');
       } else {
-        await createRequirement(payload);
+        await createRequirement(payload).unwrap();
         message.success('需求创建成功');
       }
       setModalOpen(false);
-      fetchData();
     } catch (error: any) {
       if (error?.errorFields) return;
       message.error(editingRequirement ? '更新失败' : '创建失败');
@@ -70,9 +56,8 @@ const Requirements: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteRequirement(id);
+      await deleteRequirement(id).unwrap();
       message.success('需求已删除');
-      fetchData();
     } catch (error) {
       message.error('删除失败');
     }
@@ -154,9 +139,13 @@ const Requirements: React.FC = () => {
       width: 120,
       render: (_, record) => (
         <Space>
-          <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+          <Tooltip title="编辑">
+            <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+          </Tooltip>
           <Popconfirm title="确定删除此需求？" onConfirm={() => handleDelete(record._id)}>
-            <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            <Tooltip title="删除">
+              <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+            </Tooltip>
           </Popconfirm>
         </Space>
       ),
@@ -175,11 +164,12 @@ const Requirements: React.FC = () => {
       <Card>
         <Table
           columns={columns}
-          dataSource={data}
+          dataSource={requirements}
           rowKey="_id"
           loading={loading}
           pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 项` }}
           scroll={{ x: 1200 }}
+          locale={{ emptyText: '暂无数据' }}
         />
       </Card>
 
@@ -189,10 +179,12 @@ const Requirements: React.FC = () => {
         onOk={handleSubmit}
         onCancel={() => setModalOpen(false)}
         width={600}
+        okText="确定"
+        cancelText="取消"
       >
         <Form form={form} layout="vertical">
           <Form.Item name="code" label="需求编号" rules={[{ required: true, message: '请输入需求编号' }]}>
-            <Input placeholder="REQ-001" />
+            <Input placeholder="如 REQ-001" />
           </Form.Item>
           <Form.Item name="title" label="需求标题" rules={[{ required: true, message: '请输入需求标题' }]}>
             <Input placeholder="请输入需求标题" />

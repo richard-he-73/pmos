@@ -4,20 +4,25 @@ import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { API_PREFIX } from '../../utils/constants';
+import { useUser } from '../../contexts/UserContext';
 
 const { Title } = Typography;
 
 const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { setCurrentUser } = useUser();
 
   const onFinish = async (values: { username: string; password: string }) => {
     setLoading(true);
     try {
       const response = await axios.post(`${API_PREFIX}/auth/login`, values);
-      const { access_token, refresh_token } = response.data;
+      const { access_token, refresh_token, user } = response.data;
       localStorage.setItem('token', access_token);
       localStorage.setItem('refresh_token', refresh_token);
+      if (user) {
+        setCurrentUser(user);
+      }
       message.success('登录成功');
       navigate('/');
     } catch (error: any) {
