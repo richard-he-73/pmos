@@ -1,59 +1,134 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { Menu, Typography } from 'antd';
+import {
+  DashboardOutlined,
+  ProjectOutlined,
+  UserOutlined,
+  FolderOutlined,
+  WarningOutlined,
+  MessageOutlined,
+  FileTextOutlined,
+  CodeOutlined,
+  BugOutlined,
+  SettingOutlined,
+  SafetyOutlined,
+  RocketOutlined,
+  ClockCircleOutlined,
+  ArrowLeftOutlined
+} from '@ant-design/icons';
 
-const navModules = [
-  { section: '', items: [
-    { name: '概览面板', icon: '◈', path: '/' },
-    { name: '项目管理', icon: '🗂', path: '/projects' },
-    { name: '资源管理', icon: '👥', path: '/resources' },
-    { name: '计划管理', icon: '📅', path: '/planning' },
-    { name: '风险管理', icon: '⚡', path: '/risks' },
-    { name: '沟通管理', icon: '💬', path: '/communication' },
-    { name: '需求管理', icon: '📝', path: '/requirements' },
-    { name: '开发管理', icon: '🔧', path: '/development' },
-    { name: '测试管理', icon: '🧪', path: '/testing' },
-    { name: '配置管理', icon: '⚙️', path: '/configuration' },
-    { name: '演练管理', icon: '🎯', path: '/drill' },
-    { name: '投产管理', icon: '🚀', path: '/deployment' },
-    { name: '工作管理', icon: '📋', path: '/work' },
-  ]},
-  { section: '系统', items: [
-    { name: '用户管理', icon: '🔐', path: '/users' },
-    { name: '系统设置', icon: '🔧', path: '/settings' },
-    { name: '帮助中心', icon: '❓', path: '/help' },
-  ]},
-];
+const { Text } = Typography;
 
-export const Sidebar: React.FC = () => {
+const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { id: projectId } = useParams<{ id: string }>();
 
-  const isActive = (path: string) => {
-    if (path === '/') return location.pathname === '/';
-    return location.pathname.startsWith(path);
+  const [activeKey, setActiveKey] = useState('/');
+  const [openKeys, setOpenKeys] = useState<string[]>([]);
+
+  useEffect(() => {
+    setActiveKey(location.pathname);
+    
+    if (location.pathname.startsWith('/projects/')) {
+      if (!openKeys.includes('projects')) {
+        setOpenKeys(['projects']);
+      }
+    }
+  }, [location.pathname, openKeys]);
+
+  const isProjectPage = location.pathname.startsWith('/projects/') && projectId;
+
+  const projectSubMenuItems = [
+    { key: `/projects/${projectId}`, icon: <DashboardOutlined />, label: '项目概览' },
+    { key: `/projects/${projectId}/tasks`, icon: <FolderOutlined />, label: '任务管理' },
+    { key: `/projects/${projectId}/resources`, icon: <UserOutlined />, label: '资源管理' },
+    { key: `/projects/${projectId}/planning`, icon: <FolderOutlined />, label: '计划管理' },
+    { key: `/projects/${projectId}/risks`, icon: <WarningOutlined />, label: '风险管理' },
+    { key: `/projects/${projectId}/communication`, icon: <MessageOutlined />, label: '沟通管理' },
+    { key: `/projects/${projectId}/requirements`, icon: <FileTextOutlined />, label: '需求管理' },
+    { key: `/projects/${projectId}/development`, icon: <CodeOutlined />, label: '开发管理' },
+    { key: `/projects/${projectId}/testing`, icon: <BugOutlined />, label: '测试管理' },
+    { key: `/projects/${projectId}/configuration`, icon: <SettingOutlined />, label: '配置管理' },
+    { key: `/projects/${projectId}/drill`, icon: <SafetyOutlined />, label: '演练管理' },
+    { key: `/projects/${projectId}/deployment`, icon: <RocketOutlined />, label: '投产管理' },
+    { key: `/projects/${projectId}/work-records`, icon: <ClockCircleOutlined />, label: '工作管理' },
+  ];
+
+  const mainMenuItems = [
+    { key: '/', icon: <DashboardOutlined />, label: '概览面板' },
+    {
+      key: 'projects',
+      icon: <ProjectOutlined />,
+      label: '项目管理',
+      children: [
+        { key: '/projects', icon: <FolderOutlined />, label: '项目列表' },
+      ]
+    },
+  ];
+
+  const handleClick = (e: { key: string }) => {
+    navigate(e.key);
+  };
+
+  const handleOpenChange = (keys: string[]) => {
+    setOpenKeys(keys);
   };
 
   return (
-    <aside className="sidebar" role="navigation" aria-label="主导航">
-      {navModules.map((module, idx) => (
-        <div key={idx}>
-          {module.section && (
-            <div className="sidebar-section">{module.section}</div>
-          )}
-          {module.items.map((item) => (
-            <div
-              key={item.path}
-              className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
-              role="link"
-              tabIndex={0}
-              onClick={() => navigate(item.path)}
-              onKeyDown={(e) => e.key === 'Enter' && navigate(item.path)}
+    <div className="sidebar" style={{ width: 240, minHeight: '100vh', background: '#001529', color: '#fff', padding: '24px 0' }}>
+      <div style={{ padding: '0 24px 16px', borderBottom: '1px solid rgba(255, 255, 255, 0.12)', marginBottom: 16 }}>
+        <Text strong style={{ fontSize: 16, color: '#fff' }}>
+          PMOS 项目管理
+        </Text>
+      </div>
+
+      {isProjectPage ? (
+        <div>
+          <div style={{ padding: '0 16px 8px' }}>
+            <div 
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                cursor: 'pointer',
+                padding: '8px 12px',
+                borderRadius: 4,
+                color: 'rgba(255, 255, 255, 0.85)',
+                marginBottom: 8,
+                background: 'rgba(255, 255, 255, 0.08)'
+              }}
+              onClick={() => navigate('/projects')}
             >
-              <span className="nav-icon">{item.icon}</span>
-              <span>{item.name}</span>
+              <ArrowLeftOutlined style={{ marginRight: 8 }} />
+              <span>返回项目列表</span>
             </div>
-          ))}
+          </div>
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={[activeKey]}
+            openKeys={openKeys}
+            onOpenChange={handleOpenChange}
+            onClick={handleClick}
+            items={projectSubMenuItems}
+            style={{ borderRight: 0 }}
+          />
         </div>
-      ))}
-    </aside>
+      ) : (
+        <Menu
+          theme="dark"
+          mode="inline"
+          selectedKeys={[activeKey]}
+          openKeys={openKeys}
+          onOpenChange={handleOpenChange}
+          onClick={handleClick}
+          items={mainMenuItems}
+          style={{ borderRight: 0 }}
+        />
+      )}
+    </div>
   );
 };
+
+export default Sidebar;
