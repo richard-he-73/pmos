@@ -1,6 +1,6 @@
 import { Card, Row, Col, Typography, Statistic, Progress, Tag, Space, Button } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeftOutlined, UserOutlined, FolderOpenOutlined, CheckCircleOutlined, WarningOutlined } from '@ant-design/icons';
+import { UserOutlined, FolderOpenOutlined, CheckCircleOutlined, WarningOutlined, DashboardOutlined } from '@ant-design/icons';
 import { useGetProjectQuery, useGetTasksQuery, useGetRisksQuery } from '../../../store/api';
 import dayjs from 'dayjs';
 
@@ -22,32 +22,29 @@ const ProjectOverview: React.FC = () => {
 
   if (projectLoading) {
     return (
-      <div style={{ padding: 24 }}>
-        <div style={{ textAlign: 'center', padding: '50px' }}>
-          加载中...
+      <div style={{ padding: '24px' }}>
+        <div style={{ marginBottom: 24 }}>
+          <Title level={4} style={{ margin: 0, display: 'inline' }}>
+            <DashboardOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+            项目概览
+          </Title>
         </div>
+        <Card>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--color-muted)' }}>
+            加载中...
+          </div>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Button 
-            icon={<ArrowLeftOutlined />} 
-            onClick={() => navigate('/projects')}
-            style={{ marginRight: 16 }}
-          >
-            返回项目列表
-          </Button>
-          <Title level={3} style={{ margin: 0, display: 'inline' }}>
-            {project?.name}
-          </Title>
-        </div>
-        <Tag color={project?.status === 'active' ? 'green' : 'blue'}>
-          {project?.status === 'active' ? '进行中' : '规划中'}
-        </Tag>
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <DashboardOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+          项目概览
+        </Title>
       </div>
 
       <Row gutter={16} style={{ marginBottom: 24 }}>

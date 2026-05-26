@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm, Card, Typography, Tabs, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, BugOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useGetTestCasesQuery, useCreateTestCaseMutation, useUpdateTestCaseMutation, useDeleteTestCaseMutation, useGetDefectsQuery, useCreateDefectMutation, useUpdateDefectMutation, useDeleteDefectMutation, useGetTestReportsQuery, useCreateTestReportMutation, useUpdateTestReportMutation, useDeleteTestReportMutation } from '../../../store/api';
 import type { TestCase, Defect, TestReport } from '../../../types/models';
@@ -361,10 +361,10 @@ const ProjectTesting: React.FC = () => {
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: 24 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/projects/${projectId}`)} style={{ marginRight: 16 }}>
-          返回概览
-        </Button>
-        <Title level={4} style={{ margin: 0, display: 'inline' }}>测试管理</Title>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <BugOutlined style={{ marginRight: 8, color: '#fa541c' }} />
+          测试管理
+        </Title>
       </div>
 
       <Tabs

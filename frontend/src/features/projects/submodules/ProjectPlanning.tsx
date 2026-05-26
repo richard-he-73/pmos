@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Typography, Spin, Empty, Select, Tabs, Progress, Tag, Button, Modal, Form, Input, DatePicker, message, Tooltip, Popconfirm, Upload, InputNumber } from 'antd';
-import { CalendarOutlined, UserOutlined, BarsOutlined, RightOutlined, CheckCircleOutlined, ClockCircleOutlined, InfoCircleOutlined, PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, UploadOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { CalendarOutlined, FolderOutlined, UserOutlined, BarsOutlined, RightOutlined, CheckCircleOutlined, ClockCircleOutlined, InfoCircleOutlined, PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, UploadOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { GanttChart } from '../../../components/charts/GanttChart';
 import { BarChart } from '../../../components/charts/BarChart';
 import { getTaskGanttData } from '../../../api/stats';
@@ -620,137 +620,96 @@ const ProjectPlanning: React.FC = () => {
 
   if (!selectedProject) {
     return (
-      <div className="planning-page" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-        <Title level={4} style={{ marginBottom: 24 }}>计划管理</Title>
-        <Card style={{ width: '100%', maxWidth: 600, textAlign: 'center' }}>
-          <div style={{ marginBottom: 16, fontSize: 16 }}>项目加载中...</div>
+      <div style={{ padding: '24px' }}>
+        <div style={{ marginBottom: 24 }}>
+          <Title level={4} style={{ margin: 0, display: 'inline' }}>
+            <FolderOutlined style={{ marginRight: 8, color: '#fa8c16' }} />
+            计划管理
+          </Title>
+        </div>
+        <Card>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--color-muted)' }}>
+            项目加载中...
+          </div>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="planning-page">
-      <div style={{ position: 'fixed', top: 80, left: 284, right: 24, zIndex: 100, background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-        <Card style={{ borderLeft: '4px solid var(--color-accent)', marginBottom: 0, boxShadow: 'none', borderRadius: 0 }} bodyStyle={{ padding: '8px 16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/projects/${projectId}`)} style={{ marginRight: 16 }}>
-                返回概览
-              </Button>
-              <Title level={3} style={{ margin: 0, display: 'inline' }}>
-                <CalendarOutlined style={{ marginRight: 8 }} />
-                {selectedProject.name} - 计划管理
-              </Title>
-            </div>
-          </div>
-        </Card>
-
-        <div style={{ padding: '0 16px' }}>
-          <Tabs
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            items={[
-              {
-                key: 'milestone',
-                label: (
-                  <span>
-                    <CalendarOutlined style={{ marginRight: 6 }} />
-                    项目里程碑计划
-                  </span>
-                ),
-              },
-              {
-                key: 'group',
-                label: (
-                  <span>
-                    <UserOutlined style={{ marginRight: 6 }} />
-                    小组计划
-                  </span>
-                ),
-              },
-              {
-                key: 'detail',
-                label: (
-                  <span>
-                    <BarsOutlined style={{ marginRight: 6 }} />
-                    详细计划
-                  </span>
-                ),
-              },
-              {
-                key: 'analytics',
-                label: '计划统计',
-              },
-            ]}
-          />
-        </div>
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <FolderOutlined style={{ marginRight: 8, color: '#fa8c16' }} />
+          计划管理
+        </Title>
       </div>
 
-      <div style={{ paddingTop: 180 }}>
-        {activeTab === 'milestone' && (
-          <div>
-            <div style={{ position: 'sticky', top: 130, zIndex: 50, background: '#fff', paddingBottom: 16, borderBottom: '1px solid #f0f0f0' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
-                <Card>
-                  <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>总里程碑数</div>
-                  <div style={{ fontSize: 28, fontWeight: 700 }}>{milestoneStats.total}</div>
-                </Card>
-                <Card>
-                  <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>已完成</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(40% 0.14 145)' }}>{milestoneStats.completed}</div>
-                </Card>
-                <Card>
-                  <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>进行中</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(50% 0.12 40)' }}>{milestoneStats.in_progress}</div>
-                </Card>
-                <Card>
-                  <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>未开始</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(60% 0.14 240)' }}>{milestoneStats.pending}</div>
-                </Card>
-              </div>
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={[
+          {
+            key: 'milestone',
+            label: '项目里程碑计划',
+            children: (
+              <Card>
+                <div style={{ position: 'sticky', top: 130, zIndex: 50, background: '#fff', paddingBottom: 16, borderBottom: '1px solid #f0f0f0', marginBottom: 16 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
+                    <Card>
+                      <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>总里程碑数</div>
+                      <div style={{ fontSize: 28, fontWeight: 700 }}>{milestoneStats.total}</div>
+                    </Card>
+                    <Card>
+                      <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>已完成</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(40% 0.14 145)' }}>{milestoneStats.completed}</div>
+                    </Card>
+                    <Card>
+                      <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>进行中</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(50% 0.12 40)' }}>{milestoneStats.in_progress}</div>
+                    </Card>
+                    <Card>
+                      <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>未开始</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(60% 0.14 240)' }}>{milestoneStats.pending}</div>
+                    </Card>
+                  </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                <div>
-                  <Tooltip title="下载模板">
-                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('milestone')}>下载模板</Button>
-                  </Tooltip>
-                  <Upload showUploadList={false} beforeUpload={(file) => { handleImportData(file, 'milestone'); return false; }}>
-                    <Tooltip title="导入数据">
-                      <Button icon={<UploadOutlined />} style={{ marginLeft: 8 }}>导入</Button>
-                    </Tooltip>
-                  </Upload>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <div>
+                      <Tooltip title="下载模板">
+                        <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('milestone')} style={{ backgroundColor: '#52c41a', borderColor: '#52c41a', color: 'white' }}>下载模板</Button>
+                      </Tooltip>
+                      <Upload showUploadList={false} beforeUpload={(file) => { handleImportData(file, 'milestone'); return false; }}>
+                        <Tooltip title="导入数据">
+                          <Button icon={<UploadOutlined />} style={{ marginLeft: 8, backgroundColor: '#13c2c2', borderColor: '#13c2c2', color: 'white' }}>导入</Button>
+                        </Tooltip>
+                      </Upload>
+                    </div>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={() => openMilestoneModal()}>添加里程碑</Button>
+                  </div>
                 </div>
-                <Button type="primary" icon={<PlusOutlined />} onClick={() => openMilestoneModal()}>添加里程碑</Button>
-              </div>
 
-              {loadingData ? (
-                <div style={{ textAlign: 'center', padding: 40 }}><Spin size="large" /></div>
-              ) : milestones.length === 0 ? (
-                <Empty description="暂无里程碑" />
-              ) : (
-                <Card style={{ marginBottom: 0 }}>
-                  <GanttChart key={'milestone-gantt'} tasks={getMilestoneGanttData()} height={300} minDate={selectedProject?.start_date} maxDate={selectedProject?.end_date} />
-                </Card>
-              )}
-            </div>
+                {loadingData ? (
+                  <div style={{ textAlign: 'center', padding: 40 }}><Spin size="large" /></div>
+                ) : milestones.length === 0 ? (
+                  <Empty description="暂无里程碑" />
+                ) : (
+                  <Card style={{ marginBottom: 16 }}>
+                    <GanttChart key={'milestone-gantt'} tasks={getMilestoneGanttData()} height={300} minDate={selectedProject?.start_date} maxDate={selectedProject?.end_date} />
+                  </Card>
+                )}
 
-            {!loadingData && milestones.length > 0 && (
-              <div style={{ paddingTop: 16 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {milestones.map((milestone, index) => (
-                    <div key={milestone.id} style={{ display: 'flex', gap: 16 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 24 }}>
-                        <div style={{ width: 20, height: 20, borderRadius: '50%', backgroundColor: getStatusColor(milestone.status), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {getStatusIcon(milestone.status)}
-                        </div>
-                        {index < milestones.length - 1 && (
-                          <div style={{ width: 2, flex: 1, backgroundColor: 'var(--color-border)', marginTop: 8 }} />
-                        )}
-                      </div>
-                      <Card style={{ flex: 1 }} hoverable>
+                {!loadingData && milestones.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {milestones.map((milestone, index) => (
+                      <Card key={milestone.id}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                          <div style={{ fontSize: 16, fontWeight: 600 }}>{milestone.name}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ width: 20, height: 20, borderRadius: '50%', backgroundColor: getStatusColor(milestone.status), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {getStatusIcon(milestone.status)}
+                            </div>
+                            <div style={{ fontSize: 16, fontWeight: 600 }}>{milestone.name}</div>
+                          </div>
                           <div>
                             <Tooltip title="编辑">
                               <Button type="text" icon={<EditOutlined />} onClick={() => openMilestoneModal(milestone)} />
@@ -779,449 +738,259 @@ const ProjectPlanning: React.FC = () => {
                           {milestone.actual_start_date && <div>实际开始：{dayjs(milestone.actual_start_date).format('YYYY-MM-DD')}</div>}
                           {milestone.actual_end_date && <div>实际结束：{dayjs(milestone.actual_end_date).format('YYYY-MM-DD')}</div>}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <Progress percent={milestone.progress} strokeColor={getStatusColor(milestone.status)} showInfo={false} style={{ flex: 1 }} />
-                          <span style={{ fontSize: 14, fontWeight: 600 }}>{milestone.progress}%</span>
-                        </div>
+                        <Progress percent={milestone.progress} strokeColor={getStatusColor(milestone.status)} />
                       </Card>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'group' && (
-          <div>
-            <div style={{ position: 'sticky', top: 130, zIndex: 50, background: '#fff', paddingBottom: 16, borderBottom: '1px solid #f0f0f0' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
-                <Card>
-                  <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>总计划数</div>
-                  <div style={{ fontSize: 28, fontWeight: 700 }}>{groupStats.total}</div>
-                </Card>
-                <Card>
-                  <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>已完成</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(40% 0.14 145)' }}>{groupStats.completed}</div>
-                </Card>
-                <Card>
-                  <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>进行中</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(50% 0.12 40)' }}>{groupStats.in_progress}</div>
-                </Card>
-                <Card>
-                  <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>未开始</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(60% 0.14 240)' }}>{groupStats.pending}</div>
-                </Card>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                <div>
-                  <Tooltip title="下载模板">
-                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('group')}>下载模板</Button>
-                  </Tooltip>
-                  <Upload showUploadList={false} beforeUpload={(file) => { handleImportData(file, 'group'); return false; }}>
-                    <Tooltip title="导入数据">
-                      <Button icon={<UploadOutlined />} style={{ marginLeft: 8 }}>导入</Button>
-                    </Tooltip>
-                  </Upload>
-                </div>
-                <Button type="primary" icon={<PlusOutlined />} onClick={() => openGroupModal()}>添加小组计划</Button>
-              </div>
-
-              {loadingData ? (
-                <div style={{ textAlign: 'center', padding: 40 }}><Spin size="large" /></div>
-              ) : groupPlans.length === 0 ? (
-                <Empty description="暂无小组计划" />
-              ) : (
-                <Card style={{ marginBottom: 0 }}>
-                  <GanttChart key={'group-gantt'} tasks={getGroupGanttData()} height={300} minDate={selectedProject?.start_date} maxDate={selectedProject?.end_date} />
-                </Card>
-              )}
-            </div>
-
-            {!loadingData && groupPlans.length > 0 && (
-              <div style={{ paddingTop: 16 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {groupPlans.map((group) => {
-                    const milestone = milestones.find(m => m.id === group.milestone_id);
-                    return (
-                      <div key={group.id} style={{ display: 'flex', gap: 16 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 24 }}>
-                          <div style={{ width: 16, height: 16, borderRadius: '50%', background: getStatusColor(group.status), flexShrink: 0 }} />
-                          <div style={{ width: 2, flex: 1, background: 'var(--color-border)' }} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <Card style={{ marginBottom: 0 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                  <Title level={4} style={{ margin: 0 }}>{group.name}</Title>
-                                  {getStatusIcon(group.status)}
-                                </div>
-                                {milestone && (
-                                  <div style={{ marginBottom: 8, padding: '4px 8px', backgroundColor: 'rgba(82, 196, 26, 0.1)', borderRadius: 4, display: 'inline-block' }}>
-                                    <span style={{ fontSize: 12, color: 'oklch(40% 0.14 145)', fontWeight: 500 }}>
-                                      隶属里程碑：{milestone.name}
-                                    </span>
-                                  </div>
-                                )}
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-                                  <Text type="secondary">负责人：{getMemberDisplayName(group.owner, teamMembers)}</Text>
-                                  <Text type="secondary">计划：{dayjs(group.plan_start_date).format('YYYY-MM-DD')} ~ {dayjs(group.plan_end_date).format('YYYY-MM-DD')}</Text>
-                                  {group.actual_start_date && (
-                                    <Text type="secondary">实际开始：{dayjs(group.actual_start_date).format('YYYY-MM-DD')}</Text>
-                                  )}
-                                  {group.actual_end_date && (
-                                    <Text type="secondary">实际结束：{dayjs(group.actual_end_date).format('YYYY-MM-DD')}</Text>
-                                  )}
-                                  <Text type="secondary">状态：{group.current_status}</Text>
-                                </div>
-                                {group.description && (
-                                  <Text style={{ display: 'block', marginBottom: 8 }}>{group.description}</Text>
-                                )}
-                                {group.acceptance_criteria && (
-                                  <div style={{ marginBottom: 8, padding: 8, backgroundColor: 'rgba(24, 144, 255, 0.05)', borderRadius: 4 }}>
-                                    <span style={{ fontWeight: 500, color: 'var(--color-accent)' }}>验收标准：</span>
-                                    {group.acceptance_criteria}
-                                  </div>
-                                )}
-                                <div style={{ display: 'flex', gap: 24, marginBottom: 8, fontSize: 13 }}>
-                                  <div>计划开始：{dayjs(group.plan_start_date).format('YYYY-MM-DD')}</div>
-                                  <div>计划结束：{dayjs(group.plan_end_date).format('YYYY-MM-DD')}</div>
-                                  {group.actual_start_date && <div>实际开始：{dayjs(group.actual_start_date).format('YYYY-MM-DD')}</div>}
-                                  {group.actual_end_date && <div>实际结束：{dayjs(group.actual_end_date).format('YYYY-MM-DD')}</div>}
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                  <Progress percent={group.progress} strokeColor={getStatusColor(group.status)} showInfo={false} style={{ flex: 1 }} />
-                                  <span style={{ fontSize: 14, fontWeight: 600 }}>{group.progress}%</span>
-                                </div>
-                              </div>
-                              <div style={{ display: 'flex', gap: 8, marginLeft: 16 }}>
-                                <Tooltip title="编辑">
-                                  <Button type="text" icon={<EditOutlined />} onClick={() => openGroupModal(group)} />
-                                </Tooltip>
-                                <Tooltip title="删除">
-                                  <Popconfirm title="确定删除此小组计划吗？" onConfirm={() => handleDeleteGroup(group.id)}>
-                                    <Button type="text" danger icon={<DeleteOutlined />} />
-                                  </Popconfirm>
-                                </Tooltip>
-                              </div>
-                            </div>
-                          </Card>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'detail' && (
-          <div>
-            <div style={{ position: 'sticky', top: 130, zIndex: 50, background: '#fff', paddingBottom: 16, borderBottom: '1px solid #f0f0f0' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
-                <Card>
-                  <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>总任务数</div>
-                  <div style={{ fontSize: 28, fontWeight: 700 }}>{taskStats.total}</div>
-                </Card>
-                <Card>
-                  <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>已完成</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(40% 0.14 145)' }}>{taskStats.completed}</div>
-                </Card>
-                <Card>
-                  <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>进行中</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(50% 0.12 40)' }}>{taskStats.in_progress}</div>
-                </Card>
-                <Card>
-                  <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>未开始</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(60% 0.14 240)' }}>{taskStats.pending}</div>
-                </Card>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                <div>
-                  <Tooltip title="下载模板">
-                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('detail')}>下载模板</Button>
-                  </Tooltip>
-                  <Upload showUploadList={false} beforeUpload={(file) => { handleImportData(file, 'detail'); return false; }}>
-                    <Tooltip title="导入数据">
-                      <Button icon={<UploadOutlined />} style={{ marginLeft: 8 }}>导入</Button>
-                    </Tooltip>
-                  </Upload>
-                </div>
-                <Button type="primary" icon={<PlusOutlined />} onClick={() => openTaskModal()}>添加任务</Button>
-              </div>
-
-              {loadingData ? (
-                <div style={{ textAlign: 'center', padding: 40 }}><Spin size="large" /></div>
-              ) : detailTasks.length === 0 ? (
-                <Empty description="暂无详细任务" />
-              ) : (
-                <Card style={{ marginBottom: 0 }}>
-                  <GanttChart key={'detail-gantt'} tasks={getDetailTaskGanttData()} height={300} minDate={selectedProject?.start_date} maxDate={selectedProject?.end_date} />
-                </Card>
-              )}
-            </div>
-
-            {!loadingData && detailTasks.length > 0 && (
-              <div style={{ paddingTop: 16 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {detailTasks.map((task) => {
-                    const group = groupPlans.find(g => g.id === task.group_id);
-                    const milestone = milestones.find(m => m.id === task.milestone_id);
-                    return (
-                      <div key={task.id} style={{ display: 'flex', gap: 16 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 24 }}>
-                          <div style={{ width: 16, height: 16, borderRadius: '50%', background: getStatusColor(task.status), flexShrink: 0 }} />
-                          <div style={{ width: 2, flex: 1, background: 'var(--color-border)' }} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <Card style={{ marginBottom: 0 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                  <Title level={4} style={{ margin: 0 }}>{task.name}</Title>
-                                  {getStatusIcon(task.status)}
-                                </div>
-                                <div style={{ marginBottom: 8, display: 'flex', gap: 8 }}>
-                                  {group && (
-                                    <div style={{ padding: '4px 8px', backgroundColor: 'rgba(82, 196, 26, 0.1)', borderRadius: 4 }}>
-                                      <span style={{ fontSize: 12, color: 'oklch(40% 0.14 145)', fontWeight: 500 }}>
-                                        隶属小组计划：{group.name}
-                                      </span>
-                                    </div>
-                                  )}
-                                  {milestone && (
-                                    <div style={{ padding: '4px 8px', backgroundColor: 'rgba(24, 144, 255, 0.1)', borderRadius: 4 }}>
-                                      <span style={{ fontSize: 12, color: 'oklch(50% 0.14 240)', fontWeight: 500 }}>
-                                        隶属里程碑：{milestone.name}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-                                  <Text type="secondary">负责人：{getMemberDisplayName(task.owner, teamMembers)}</Text>
-                                  <Text type="secondary">计划：{dayjs(task.plan_start_date).format('YYYY-MM-DD')} ~ {dayjs(task.plan_end_date).format('YYYY-MM-DD')}</Text>
-                                  {task.actual_start_date && (
-                                    <Text type="secondary">实际开始：{dayjs(task.actual_start_date).format('YYYY-MM-DD')}</Text>
-                                  )}
-                                  {task.actual_end_date && (
-                                    <Text type="secondary">实际结束：{dayjs(task.actual_end_date).format('YYYY-MM-DD')}</Text>
-                                  )}
-                                  <Text type="secondary">状态：{task.current_status}</Text>
-                                </div>
-                                {task.description && (
-                                  <Text style={{ display: 'block', marginBottom: 8 }}>{task.description}</Text>
-                                )}
-                                {task.acceptance_criteria && (
-                                  <div style={{ marginBottom: 8, padding: 8, backgroundColor: 'rgba(24, 144, 255, 0.05)', borderRadius: 4 }}>
-                                    <span style={{ fontWeight: 500, color: 'var(--color-accent)' }}>验收标准：</span>
-                                    {task.acceptance_criteria}
-                                  </div>
-                                )}
-                                <div style={{ display: 'flex', gap: 24, marginBottom: 8, fontSize: 13 }}>
-                                  <div>计划开始：{dayjs(task.plan_start_date).format('YYYY-MM-DD')}</div>
-                                  <div>计划结束：{dayjs(task.plan_end_date).format('YYYY-MM-DD')}</div>
-                                  {task.actual_start_date && <div>实际开始：{dayjs(task.actual_start_date).format('YYYY-MM-DD')}</div>}
-                                  {task.actual_end_date && <div>实际结束：{dayjs(task.actual_end_date).format('YYYY-MM-DD')}</div>}
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                  <Progress percent={task.progress} strokeColor={getStatusColor(task.status)} showInfo={false} style={{ flex: 1 }} />
-                                  <span style={{ fontSize: 14, fontWeight: 600 }}>{task.progress}%</span>
-                                </div>
-                              </div>
-                              <div style={{ display: 'flex', gap: 8, marginLeft: 16 }}>
-                                <Tooltip title="编辑">
-                                  <Button type="text" icon={<EditOutlined />} onClick={() => openTaskModal(task)} />
-                                </Tooltip>
-                                <Tooltip title="删除">
-                                  <Popconfirm title="确定删除此任务吗？" onConfirm={() => handleDeleteTask(task.id)}>
-                                    <Button type="text" danger icon={<DeleteOutlined />} />
-                                  </Popconfirm>
-                                </Tooltip>
-                              </div>
-                            </div>
-                          </Card>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'analytics' && (
-          <div style={{ padding: '0 16px 16px' }}>
-            <Tabs
-              defaultActiveKey="status"
-              items={[
-                {
-                  key: 'status',
-                  label: '状态分布',
-                  children: (
+                    ))}
+                  </div>
+                )}
+              </Card>
+            ),
+          },
+          {
+            key: 'group',
+            label: '小组计划',
+            children: (
+              <Card>
+                <div style={{ position: 'sticky', top: 130, zIndex: 50, background: '#fff', paddingBottom: 16, borderBottom: '1px solid #f0f0f0', marginBottom: 16 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
                     <Card>
-                      {loadingData ? (
-                        <div style={{ textAlign: 'center', padding: 40 }}><Spin size="large" /></div>
-                      ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }}>
-                          <div>
-                            <Title level={4} style={{ marginBottom: 16 }}>任务状态分布</Title>
-                            <BarChart
-                              data={[
-                                { name: '待开始', value: taskStats.pending, color: 'oklch(60% 0.14 240)' },
-                                { name: '进行中', value: taskStats.in_progress, color: 'oklch(50% 0.12 40)' },
-                                { name: '已完成', value: taskStats.completed, color: 'oklch(40% 0.14 145)' },
-                              ]}
-                              height={300}
-                            />
-                          </div>
-                          <div>
-                            <Title level={4} style={{ marginBottom: 16 }}>里程碑状态分布</Title>
-                            <BarChart
-                              data={[
-                                { name: '未开始', value: milestoneStats.pending, color: 'oklch(60% 0.14 240)' },
-                                { name: '进行中', value: milestoneStats.in_progress, color: 'oklch(50% 0.12 40)' },
-                                { name: '已完成', value: milestoneStats.completed, color: 'oklch(40% 0.14 145)' },
-                              ]}
-                              height={300}
-                            />
-                          </div>
-                        </div>
-                      )}
+                      <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>总计划数</div>
+                      <div style={{ fontSize: 28, fontWeight: 700 }}>{groupStats.total}</div>
                     </Card>
-                  ),
-                },
-              ]}
-            />
-          </div>
-        )}
-      </div>
+                    <Card>
+                      <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>已完成</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(40% 0.14 145)' }}>{groupStats.completed}</div>
+                    </Card>
+                    <Card>
+                      <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>进行中</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(50% 0.12 40)' }}>{groupStats.in_progress}</div>
+                    </Card>
+                    <Card>
+                      <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>未开始</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(60% 0.14 240)' }}>{groupStats.pending}</div>
+                    </Card>
+                  </div>
 
-      <Modal
-        title={isEditingMilestone ? '编辑里程碑' : '添加里程碑'}
-        open={milestoneModalOpen}
-        onOk={handleMilestoneSubmit}
-        onCancel={() => setMilestoneModalOpen(false)}
-        width={600}
-      >
-        <Form form={milestoneForm} layout="vertical">
-          <Form.Item name="name" label="里程碑名称" rules={[{ required: true, message: '请输入里程碑名称' }]}>
-            <Input placeholder="请输入里程碑名称" />
-          </Form.Item>
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={3} placeholder="描述" />
-          </Form.Item>
-          <Form.Item name="acceptance_criteria" label="验收标准">
-            <Input.TextArea rows={2} placeholder="验收标准" />
-          </Form.Item>
-          <Form.Item name="owner" label="负责人">
-            <Select placeholder="请选择负责人" options={teamMembers.map(m => ({ label: m.name, value: m._id }))} />
-          </Form.Item>
-          <Form.Item name="current_status" label="当前状态">
-            <Select placeholder="请选择状态" options={MILESTONE_STATUS_OPTIONS} />
-          </Form.Item>
-          <Form.Item name="plan_start_date" label="计划开始日期" rules={[{ required: true, message: '请选择计划开始日期' }]}>
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="plan_end_date" label="计划结束日期" rules={[{ required: true, message: '请选择计划结束日期' }]}>
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="actual_start_date" label="实际开始日期">
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="actual_end_date" label="实际结束日期">
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-        </Form>
-      </Modal>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <div>
+                      <Tooltip title="下载模板">
+                        <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('group')} style={{ backgroundColor: '#1890ff', borderColor: '#1890ff', color: 'white' }}>下载模板</Button>
+                      </Tooltip>
+                      <Upload showUploadList={false} beforeUpload={(file) => { handleImportData(file, 'group'); return false; }}>
+                        <Tooltip title="导入数据">
+                          <Button icon={<UploadOutlined />} style={{ marginLeft: 8, backgroundColor: '#13c2c2', borderColor: '#13c2c2', color: 'white' }}>导入</Button>
+                        </Tooltip>
+                      </Upload>
+                    </div>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={() => openGroupModal()}>添加小组计划</Button>
+                  </div>
+                </div>
 
-      <Modal
-        title={isEditingGroup ? '编辑小组计划' : '添加小组计划'}
-        open={groupModalOpen}
-        onOk={handleGroupSubmit}
-        onCancel={() => setGroupModalOpen(false)}
-        width={600}
-      >
-        <Form form={groupForm} layout="vertical">
-          <Form.Item name="milestone_id" label="隶属里程碑">
-            <Select placeholder="请选择里程碑" options={milestones.map(m => ({ label: m.name, value: m.id }))} />
-          </Form.Item>
-          <Form.Item name="name" label="小组计划名称" rules={[{ required: true, message: '请输入小组计划名称' }]}>
-            <Input placeholder="请输入小组计划名称" />
-          </Form.Item>
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={3} placeholder="描述" />
-          </Form.Item>
-          <Form.Item name="acceptance_criteria" label="验收标准">
-            <Input.TextArea rows={2} placeholder="验收标准" />
-          </Form.Item>
-          <Form.Item name="owner" label="负责人">
-            <Select placeholder="请选择负责人" options={teamMembers.map(m => ({ label: m.name, value: m._id }))} />
-          </Form.Item>
-          <Form.Item name="current_status" label="当前状态">
-            <Select placeholder="请选择状态" options={GROUP_STATUS_OPTIONS} />
-          </Form.Item>
-          <Form.Item name="plan_start_date" label="计划开始日期" rules={[{ required: true, message: '请选择计划开始日期' }]}>
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="plan_end_date" label="计划结束日期" rules={[{ required: true, message: '请选择计划结束日期' }]}>
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="actual_start_date" label="实际开始日期">
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="actual_end_date" label="实际结束日期">
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-        </Form>
-      </Modal>
+                {loadingData ? (
+                  <div style={{ textAlign: 'center', padding: 40 }}><Spin size="large" /></div>
+                ) : groupPlans.length === 0 ? (
+                  <Empty description="暂无小组计划" />
+                ) : (
+                  <Card style={{ marginBottom: 16 }}>
+                    <GanttChart key={'group-gantt'} tasks={getGroupGanttData()} height={300} minDate={selectedProject?.start_date} maxDate={selectedProject?.end_date} />
+                  </Card>
+                )}
 
-      <Modal
-        title={isEditingTask ? '编辑详细任务' : '添加详细任务'}
-        open={taskModalOpen}
-        onOk={handleTaskSubmit}
-        onCancel={() => setTaskModalOpen(false)}
-        width={600}
-      >
-        <Form form={taskForm} layout="vertical">
-          <Form.Item name="group_id" label="隶属小组计划">
-            <Select placeholder="请选择小组计划" options={groupPlans.map(g => ({ label: g.name, value: g.id }))} />
-          </Form.Item>
-          <Form.Item name="name" label="任务名称" rules={[{ required: true, message: '请输入任务名称' }]}>
-            <Input placeholder="请输入任务名称" />
-          </Form.Item>
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={3} placeholder="描述" />
-          </Form.Item>
-          <Form.Item name="acceptance_criteria" label="验收标准">
-            <Input.TextArea rows={2} placeholder="验收标准" />
-          </Form.Item>
-          <Form.Item name="owner" label="负责人">
-            <Select placeholder="请选择负责人" options={teamMembers.map(m => ({ label: m.name, value: m._id }))} />
-          </Form.Item>
-          <Form.Item name="current_status" label="当前状态">
-            <Select placeholder="请选择状态" options={TASK_STATUS_OPTIONS} />
-          </Form.Item>
-          <Form.Item name="plan_start_date" label="计划开始日期" rules={[{ required: true, message: '请选择计划开始日期' }]}>
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="plan_end_date" label="计划结束日期" rules={[{ required: true, message: '请选择计划结束日期' }]}>
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="actual_start_date" label="实际开始日期">
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="actual_end_date" label="实际结束日期">
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-        </Form>
-      </Modal>
+                {!loadingData && groupPlans.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {groupPlans.map((group) => {
+                      const milestone = milestones.find(m => m.id === group.milestone_id);
+                      return (
+                        <Card key={group.id}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div style={{ width: 16, height: 16, borderRadius: '50%', background: getStatusColor(group.status), flexShrink: 0 }} />
+                              <Title level={4} style={{ margin: 0 }}>{group.name}</Title>
+                              {getStatusIcon(group.status)}
+                            </div>
+                            <div>
+                              <Tooltip title="编辑">
+                                <Button type="text" icon={<EditOutlined />} onClick={() => openGroupModal(group)} />
+                              </Tooltip>
+                              <Tooltip title="删除">
+                                <Popconfirm title="确定删除此小组计划吗？" onConfirm={() => handleDeleteGroup(group.id)}>
+                                  <Button type="text" danger icon={<DeleteOutlined />} />
+                                </Popconfirm>
+                              </Tooltip>
+                            </div>
+                          </div>
+                          {milestone && (
+                            <div style={{ marginBottom: 8, padding: '4px 8px', backgroundColor: 'rgba(82, 196, 26, 0.1)', borderRadius: 4, display: 'inline-block' }}>
+                              <span style={{ fontSize: 12, color: 'oklch(40% 0.14 145)', fontWeight: 500 }}>
+                                隶属里程碑：{milestone.name}
+                              </span>
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                            <Text type="secondary">负责人：{getMemberDisplayName(group.owner, teamMembers)}</Text>
+                            <Text type="secondary">计划：{dayjs(group.plan_start_date).format('YYYY-MM-DD')} ~ {dayjs(group.plan_end_date).format('YYYY-MM-DD')}</Text>
+                            {group.actual_start_date && (
+                              <Text type="secondary">实际开始：{dayjs(group.actual_start_date).format('YYYY-MM-DD')}</Text>
+                            )}
+                            {group.actual_end_date && (
+                              <Text type="secondary">实际结束：{dayjs(group.actual_end_date).format('YYYY-MM-DD')}</Text>
+                            )}
+                            <Text type="secondary">状态：{group.current_status}</Text>
+                          </div>
+                          {group.description && (
+                            <Text style={{ display: 'block', marginBottom: 8 }}>{group.description}</Text>
+                          )}
+                          {group.acceptance_criteria && (
+                            <div style={{ marginBottom: 8, padding: 8, backgroundColor: 'rgba(24, 144, 255, 0.05)', borderRadius: 4 }}>
+                              <span style={{ fontWeight: 500, color: 'var(--color-accent)' }}>验收标准：</span>
+                              {group.acceptance_criteria}
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', gap: 24, marginBottom: 8, fontSize: 13 }}>
+                            <div>计划开始：{dayjs(group.plan_start_date).format('YYYY-MM-DD')}</div>
+                            <div>计划结束：{dayjs(group.plan_end_date).format('YYYY-MM-DD')}</div>
+                            {group.actual_start_date && <div>实际开始：{dayjs(group.actual_start_date).format('YYYY-MM-DD')}</div>}
+                            {group.actual_end_date && <div>实际结束：{dayjs(group.actual_end_date).format('YYYY-MM-DD')}</div>}
+                          </div>
+                          <Progress percent={group.progress} strokeColor={getStatusColor(group.status)} />
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+            ),
+          },
+          {
+            key: 'detail',
+            label: '详细计划',
+            children: (
+              <Card>
+                <div style={{ position: 'sticky', top: 130, zIndex: 50, background: '#fff', paddingBottom: 16, borderBottom: '1px solid #f0f0f0', marginBottom: 16 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
+                    <Card>
+                      <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>总任务数</div>
+                      <div style={{ fontSize: 28, fontWeight: 700 }}>{taskStats.total}</div>
+                    </Card>
+                    <Card>
+                      <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>已完成</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(40% 0.14 145)' }}>{taskStats.completed}</div>
+                    </Card>
+                    <Card>
+                      <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>进行中</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(50% 0.12 40)' }}>{taskStats.in_progress}</div>
+                    </Card>
+                    <Card>
+                      <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>未开始</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(60% 0.14 240)' }}>{taskStats.pending}</div>
+                    </Card>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <div>
+                      <Tooltip title="下载模板">
+                        <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('detail')} style={{ backgroundColor: '#1890ff', borderColor: '#1890ff', color: 'white' }}>下载模板</Button>
+                      </Tooltip>
+                      <Upload showUploadList={false} beforeUpload={(file) => { handleImportData(file, 'detail'); return false; }}>
+                        <Tooltip title="导入数据">
+                          <Button icon={<UploadOutlined />} style={{ marginLeft: 8, backgroundColor: '#13c2c2', borderColor: '#13c2c2', color: 'white' }}>导入</Button>
+                        </Tooltip>
+                      </Upload>
+                    </div>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={() => openTaskModal()}>添加任务</Button>
+                  </div>
+                </div>
+
+                {loadingData ? (
+                  <div style={{ textAlign: 'center', padding: 40 }}><Spin size="large" /></div>
+                ) : detailTasks.length === 0 ? (
+                  <Empty description="暂无详细任务" />
+                ) : (
+                  <Card style={{ marginBottom: 16 }}>
+                    <GanttChart key={'detail-gantt'} tasks={getDetailTaskGanttData()} height={300} minDate={selectedProject?.start_date} maxDate={selectedProject?.end_date} />
+                  </Card>
+                )}
+
+                {!loadingData && detailTasks.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {detailTasks.map((task) => {
+                      const group = groupPlans.find(g => g.id === task.group_id);
+                      const milestone = milestones.find(m => m.id === task.milestone_id);
+                      return (
+                        <Card key={task.id}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div style={{ width: 16, height: 16, borderRadius: '50%', background: getStatusColor(task.status), flexShrink: 0 }} />
+                              <Title level={4} style={{ margin: 0 }}>{task.name}</Title>
+                              {getStatusIcon(task.status)}
+                            </div>
+                            <div>
+                              <Tooltip title="编辑">
+                                <Button type="text" icon={<EditOutlined />} onClick={() => openTaskModal(task)} />
+                              </Tooltip>
+                              <Tooltip title="删除">
+                                <Popconfirm title="确定删除此任务吗？" onConfirm={() => handleDeleteTask(task.id)}>
+                                  <Button type="text" danger icon={<DeleteOutlined />} />
+                                </Popconfirm>
+                              </Tooltip>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                            {group && (
+                              <div style={{ padding: '4px 8px', backgroundColor: 'rgba(82, 196, 26, 0.1)', borderRadius: 4 }}>
+                                <span style={{ fontSize: 12, color: 'oklch(40% 0.14 145)', fontWeight: 500 }}>
+                                  隶属小组计划：{group.name}
+                                </span>
+                              </div>
+                            )}
+                            {milestone && (
+                              <div style={{ padding: '4px 8px', backgroundColor: 'rgba(24, 144, 255, 0.1)', borderRadius: 4 }}>
+                                <span style={{ fontSize: 12, color: 'oklch(50% 0.14 240)', fontWeight: 500 }}>
+                                  隶属里程碑：{milestone.name}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                            <Text type="secondary">负责人：{getMemberDisplayName(task.owner, teamMembers)}</Text>
+                            <Text type="secondary">计划：{dayjs(task.plan_start_date).format('YYYY-MM-DD')} ~ {dayjs(task.plan_end_date).format('YYYY-MM-DD')}</Text>
+                            {task.actual_start_date && (
+                              <Text type="secondary">实际开始：{dayjs(task.actual_start_date).format('YYYY-MM-DD')}</Text>
+                            )}
+                            {task.actual_end_date && (
+                              <Text type="secondary">实际结束：{dayjs(task.actual_end_date).format('YYYY-MM-DD')}</Text>
+                            )}
+                            <Text type="secondary">状态：{task.current_status}</Text>
+                          </div>
+                          {task.description && (
+                            <Text style={{ display: 'block', marginBottom: 8 }}>{task.description}</Text>
+                          )}
+                          {task.acceptance_criteria && (
+                            <div style={{ marginBottom: 8, padding: 8, backgroundColor: 'rgba(24, 144, 255, 0.05)', borderRadius: 4 }}>
+                              <span style={{ fontWeight: 500, color: 'var(--color-accent)' }}>验收标准：</span>
+                              {task.acceptance_criteria}
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', gap: 24, marginBottom: 8, fontSize: 13 }}>
+                            <div>计划开始：{dayjs(task.plan_start_date).format('YYYY-MM-DD')}</div>
+                            <div>计划结束：{dayjs(task.plan_end_date).format('YYYY-MM-DD')}</div>
+                            {task.actual_start_date && <div>实际开始：{dayjs(task.actual_start_date).format('YYYY-MM-DD')}</div>}
+                            {task.actual_end_date && <div>实际结束：{dayjs(task.actual_end_date).format('YYYY-MM-DD')}</div>}
+                          </div>
+                          <Progress percent={task.progress} strokeColor={getStatusColor(task.status)} />
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+            ),
+          },
+        ]}
+      />
     </div>
   );
+
 };
 
 export default ProjectPlanning;

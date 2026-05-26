@@ -702,30 +702,15 @@ const PlanningPage: React.FC = () => {
             items={[
               {
                 key: 'milestone',
-                label: (
-                  <span>
-                    <CalendarOutlined style={{ marginRight: 6 }} />
-                    项目里程碑计划
-                  </span>
-                ),
+                label: '项目里程碑计划',
               },
               {
                 key: 'group',
-                label: (
-                  <span>
-                    <UserOutlined style={{ marginRight: 6 }} />
-                    小组计划
-                  </span>
-                ),
+                label: '小组计划',
               },
               {
                 key: 'detail',
-                label: (
-                  <span>
-                    <BarsOutlined style={{ marginRight: 6 }} />
-                    详细计划
-                  </span>
-                ),
+                label: '详细计划',
               },
               {
                 key: 'analytics',
@@ -773,11 +758,11 @@ const PlanningPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div>
                   <Tooltip title="下载模板">
-                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('milestone')}>下载模板</Button>
+                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('milestone')} style={{ backgroundColor: '#1890ff', borderColor: '#1890ff', color: 'white' }}>下载模板</Button>
                   </Tooltip>
                   <Upload showUploadList={false} beforeUpload={(file) => { handleImportData(file, 'milestone'); return false; }}>
                     <Tooltip title="导入数据">
-                      <Button icon={<UploadOutlined />} style={{ marginLeft: 8 }}>导入</Button>
+                      <Button icon={<UploadOutlined />} style={{ marginLeft: 8, backgroundColor: '#13c2c2', borderColor: '#13c2c2', color: 'white' }}>导入</Button>
                     </Tooltip>
                   </Upload>
                 </div>
@@ -903,11 +888,11 @@ const PlanningPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div>
                   <Tooltip title="下载模板">
-                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('group')}>下载模板</Button>
+                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('group')} style={{ backgroundColor: '#1890ff', borderColor: '#1890ff', color: 'white' }}>下载模板</Button>
                   </Tooltip>
                   <Upload showUploadList={false} beforeUpload={(file) => { handleImportData(file, 'group'); return false; }}>
                     <Tooltip title="导入数据">
-                      <Button icon={<UploadOutlined />} style={{ marginLeft: 8 }}>导入</Button>
+                      <Button icon={<UploadOutlined />} style={{ marginLeft: 8, backgroundColor: '#13c2c2', borderColor: '#13c2c2', color: 'white' }}>导入</Button>
                     </Tooltip>
                   </Upload>
                 </div>
@@ -1045,11 +1030,11 @@ const PlanningPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div>
                   <Tooltip title="下载模板">
-                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('detail')}>下载模板</Button>
+                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('detail')} style={{ backgroundColor: '#1890ff', borderColor: '#1890ff', color: 'white' }}>下载模板</Button>
                   </Tooltip>
                   <Upload showUploadList={false} beforeUpload={(file) => { handleImportData(file, 'detail'); return false; }}>
                     <Tooltip title="导入数据">
-                      <Button icon={<UploadOutlined />} style={{ marginLeft: 8 }}>导入</Button>
+                      <Button color="cyan" icon={<UploadOutlined />} style={{ marginLeft: 8 }}>导入</Button>
                     </Tooltip>
                   </Upload>
                 </div>

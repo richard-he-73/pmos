@@ -41,8 +41,7 @@ const Sidebar: React.FC = () => {
   const isProjectPage = location.pathname.startsWith('/projects/') && projectId;
 
   const projectSubMenuItems = [
-    { key: `/projects/${projectId}`, icon: <DashboardOutlined />, label: '项目概览' },
-    { key: `/projects/${projectId}/tasks`, icon: <FolderOutlined />, label: '任务管理' },
+    { key: `/projects/${projectId}/tasks`, icon: <DashboardOutlined />, label: '项目概览' },
     { key: `/projects/${projectId}/resources`, icon: <UserOutlined />, label: '资源管理' },
     { key: `/projects/${projectId}/planning`, icon: <FolderOutlined />, label: '计划管理' },
     { key: `/projects/${projectId}/risks`, icon: <WarningOutlined />, label: '风险管理' },

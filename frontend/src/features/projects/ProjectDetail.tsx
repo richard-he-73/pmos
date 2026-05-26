@@ -1,14 +1,11 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, Card, Descriptions, Button, Spin, Tag, Progress, Space, Typography, Result, Modal, Select, Input, message, Table, Form, DatePicker, InputNumber, Tree, Input as AntInput } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, CopyOutlined, DeleteOutlined, SwapOutlined, PlusOutlined, UserOutlined, TeamOutlined, SnippetsOutlined, DashboardOutlined, DollarOutlined } from '@ant-design/icons';
+import { FolderOutlined, SwapOutlined, PlusOutlined, UserOutlined, TeamOutlined, SnippetsOutlined, DashboardOutlined, DollarOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { formatDateTime } from '../../utils/formatters';
 import { 
   useGetProjectQuery, 
-  useDeleteProjectMutation, 
-  useUpdateProjectMutation, 
-  useCloneProjectMutation, 
   useGetDetailTasksQuery, 
   useGetResourcesQuery, 
   useAddTeamMemberMutation, 
@@ -35,12 +32,8 @@ const ProjectDetail: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedOrgNode, setSelectedOrgNode] = useState('');
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [cloneModalOpen, setCloneModalOpen] = useState(false);
   const [orgModalOpen, setOrgModalOpen] = useState(false);
   const [editOrgNode, setEditOrgNode] = useState<any>(null);
-  const [form] = Form.useForm();
-  const [cloneForm] = Form.useForm();
   const [orgForm] = Form.useForm();
 
   const { data: project, isLoading: projectLoading, refetch } = useGetProjectQuery(id!, { skip: !id });
@@ -49,9 +42,6 @@ const ProjectDetail: React.FC = () => {
   const { data: dataDictionaries = [] } = useGetDataDictionariesQuery();
   const { data: statusFlowData } = useGetProjectStatusFlowQuery(id!, { skip: !id });
   
-  const [deleteProject] = useDeleteProjectMutation();
-  const [updateProject] = useUpdateProjectMutation();
-  const [cloneProject] = useCloneProjectMutation();
   const [addTeamMember] = useAddTeamMemberMutation();
   const [removeTeamMember] = useRemoveTeamMemberMutation();
   const [transitionStatus] = useTransitionProjectStatusMutation();
@@ -61,64 +51,6 @@ const ProjectDetail: React.FC = () => {
 
   const projectRoles: DataDictionary[] = dataDictionaries.filter(d => d.category === 'project_role');
   const orgLevels: DataDictionary[] = dataDictionaries.filter(d => d.category === 'org_level');
-
-  const handleDelete = async () => {
-    if (!id) return;
-    try {
-      await deleteProject(id).unwrap();
-      message.success('项目删除成功');
-      navigate('/projects');
-    } catch (error) {
-      message.error('删除失败');
-    }
-  };
-
-  const openEditModal = () => {
-    if (!project) return;
-    form.setFieldsValue({
-      code: project.code,
-      name: project.name,
-      description: project.description,
-      status: project.status,
-      priority: project.priority,
-      start_date: dayjs(project.start_date),
-      end_date: project.end_date ? dayjs(project.end_date) : null,
-      budget_total: project.budget?.total || 0,
-    });
-    setEditModalOpen(true);
-  };
-
-  const handleEditSubmit = async () => {
-    if (!id) return;
-    try {
-      const values = await form.validateFields();
-      const payload: any = {
-        ...values,
-        start_date: values.start_date?.format('YYYY-MM-DD'),
-        end_date: values.end_date?.format('YYYY-MM-DD'),
-      };
-      await updateProject({ id, body: payload }).unwrap();
-      message.success('项目更新成功');
-      setEditModalOpen(false);
-      refetch();
-    } catch (error) {
-      console.error('Error updating project:', error);
-      message.error('更新失败');
-    }
-  };
-
-  const handleCloneSubmit = async () => {
-    if (!id) return;
-    try {
-      const values = await cloneForm.validateFields();
-      await cloneProject({ id, body: values }).unwrap();
-      message.success('项目克隆成功');
-      setCloneModalOpen(false);
-    } catch (error) {
-      console.error('Error cloning project:', error);
-      message.error('克隆失败');
-    }
-  };
 
   const handleAddTeamMember = async () => {
     if (!id || !selectedMember) return;
@@ -302,11 +234,6 @@ const ProjectDetail: React.FC = () => {
           <Title level={2}>{project?.name}</Title>
           <Text type="secondary">{project?.code}</Text>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button icon={<EditOutlined />} onClick={openEditModal}>编辑</Button>
-          <Button icon={<CopyOutlined />} onClick={() => setCloneModalOpen(true)}>克隆</Button>
-          <Button danger icon={<DeleteOutlined />} onClick={handleDelete}>删除</Button>
-        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
@@ -466,10 +393,12 @@ const ProjectDetail: React.FC = () => {
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/projects')}>返回</Button>
-        <Title level={4}>{project?.name}</Title>
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <FolderOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+          {project?.name}
+        </Title>
       </div>
 
       <Tabs
@@ -497,64 +426,6 @@ const ProjectDetail: React.FC = () => {
           },
         ]}
       />
-
-      <Modal
-        title="编辑项目"
-        open={editModalOpen}
-        onCancel={() => setEditModalOpen(false)}
-        footer={[
-          <Button key="back" onClick={() => setEditModalOpen(false)}>取消</Button>
-        ]}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item label="项目编号" name="code" rules={[{ required: true, message: '请输入项目编号' }]}>
-            <Input disabled />
-          </Form.Item>
-          <Form.Item label="项目名称" name="name" rules={[{ required: true, message: '请输入项目名称' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item label="项目描述" name="description">
-            <TextArea rows={3} />
-          </Form.Item>
-          <Form.Item label="优先级" name="priority">
-            <Select>
-              <Select.Option value="low">低</Select.Option>
-              <Select.Option value="medium">中</Select.Option>
-              <Select.Option value="high">高</Select.Option>
-              <Select.Option value="critical">紧急</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="开始日期" name="start_date">
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item label="结束日期" name="end_date">
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item label="预算总额" name="budget_total">
-            <InputNumber style={{ width: '100%' }} prefix="¥" />
-          </Form.Item>
-          <Button type="primary" onClick={handleEditSubmit}>保存修改</Button>
-        </Form>
-      </Modal>
-
-      <Modal
-        title="克隆项目"
-        open={cloneModalOpen}
-        onCancel={() => setCloneModalOpen(false)}
-        footer={[
-          <Button key="back" onClick={() => setCloneModalOpen(false)}>取消</Button>
-        ]}
-      >
-        <Form form={cloneForm} layout="vertical">
-          <Form.Item label="新项目名称" name="name" rules={[{ required: true, message: '请输入新项目名称' }]}>
-            <Input placeholder="输入新项目名称" />
-          </Form.Item>
-          <Form.Item label="新项目编号" name="code" rules={[{ required: true, message: '请输入新项目编号' }]}>
-            <Input placeholder="输入新项目编号" />
-          </Form.Item>
-          <Button type="primary" onClick={handleCloneSubmit}>确认克隆</Button>
-        </Form>
-      </Modal>
 
       <Modal
         title="添加团队成员"

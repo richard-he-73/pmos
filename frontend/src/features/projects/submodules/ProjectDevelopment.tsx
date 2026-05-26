@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm, Card, Typography, DatePicker, Tabs, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, CloseCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, CloseCircleOutlined, CodeOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { useGetIterationsQuery, useCreateIterationMutation, useUpdateIterationMutation, useDeleteIterationMutation, useGetCodeReviewsQuery, useCreateCodeReviewMutation, useUpdateCodeReviewMutation } from '../../../store/api';
@@ -230,10 +230,10 @@ const ProjectDevelopment: React.FC = () => {
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: 24 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/projects/${projectId}`)} style={{ marginRight: 16 }}>
-          返回概览
-        </Button>
-        <Title level={4} style={{ margin: 0, display: 'inline' }}>开发管理</Title>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <CodeOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+          开发管理
+        </Title>
       </div>
 
       <Tabs

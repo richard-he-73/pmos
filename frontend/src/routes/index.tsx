@@ -4,7 +4,6 @@ import { ProtectedRoute } from '../components/ProtectedRoute';
 import Login from '../features/auth/Login';
 import Dashboard from '../features/dashboard/Dashboard';
 import Projects from '../features/projects/Projects';
-import ProjectOverview from '../features/projects/submodules/ProjectOverview';
 import ProjectDetail from '../features/projects/ProjectDetail';
 import GanttPage from '../features/gantt/GanttPage';
 import UsersPage from '../features/users/Users';
@@ -48,7 +47,6 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Dashboard /> },
       { path: 'projects', element: <Projects /> },
-      { path: 'projects/:id', element: <ProjectOverview /> },
       { path: 'projects/:id/tasks', element: <ProjectDetail /> },
       { 
         path: 'projects/:id/resources', 

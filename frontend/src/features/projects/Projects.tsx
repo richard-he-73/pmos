@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, Button, Modal, Form, Input, Select, DatePicker, message, Space, Tag, Progress, Popconfirm, Card, Typography, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, CopyOutlined, ProjectOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { useGetProjectsQuery, useCreateProjectMutation, useUpdateProjectMutation, useDeleteProjectMutation } from '../../store/api';
+import { useGetProjectsQuery, useCreateProjectMutation, useUpdateProjectMutation, useDeleteProjectMutation, useCloneProjectMutation } from '../../store/api';
 import type { Project } from '../../types/models';
 import { PROJECT_STATUS, PRIORITY } from '../../utils/constants';
 
@@ -15,12 +15,16 @@ const Projects: React.FC = () => {
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [cloneModalOpen, setCloneModalOpen] = useState(false);
+  const [cloningProject, setCloningProject] = useState<Project | null>(null);
   const [form] = Form.useForm();
+  const [cloneForm] = Form.useForm();
   
   const { data: projects = [], isLoading, refetch } = useGetProjectsQuery(undefined);
   const [createProject, { isLoading: isCreating }] = useCreateProjectMutation();
   const [updateProject, { isLoading: isUpdating }] = useUpdateProjectMutation();
   const [deleteProject] = useDeleteProjectMutation();
+  const [cloneProject] = useCloneProjectMutation();
 
   const handleCreate = () => {
     setEditingProject(null);
@@ -86,6 +90,30 @@ const Projects: React.FC = () => {
     }
   };
 
+  const handleClone = (record: Project) => {
+    setCloningProject(record);
+    cloneForm.setFieldsValue({
+      name: `${record.name} (副本)`,
+      code: `${record.code}-copy`,
+    });
+    setCloneModalOpen(true);
+  };
+
+  const handleCloneSubmit = async () => {
+    if (!cloningProject) return;
+    try {
+      const values = await cloneForm.validateFields();
+      await cloneProject({ id: cloningProject._id, body: values }).unwrap();
+      message.success('项目克隆成功');
+      setCloneModalOpen(false);
+      setCloningProject(null);
+      refetch();
+    } catch (error) {
+      console.error('Error cloning project:', error);
+      message.error('克隆失败');
+    }
+  };
+
   const columns: ColumnsType<Project> = [
     {
       title: '项目编号',
@@ -104,7 +132,7 @@ const Projects: React.FC = () => {
       width: 200,
       ellipsis: true,
       render: (name: string, record: Project) => (
-        <a onClick={() => navigate(`/projects/${record._id}`)} style={{ fontWeight: 600 }}>{name}</a>
+        <a onClick={() => navigate(`/projects/${record._id}/tasks`)} style={{ fontWeight: 600 }}>{name}</a>
       ),
     },
     {
@@ -185,10 +213,13 @@ const Projects: React.FC = () => {
       render: (_, record) => (
         <Space>
           <Tooltip title="查看详情">
-            <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/projects/${record._id}`)} />
+            <Button type="text" size="small" icon={<EyeOutlined />} onClick={() => navigate(`/projects/${record._id}/tasks`)} />
           </Tooltip>
           <Tooltip title="编辑">
             <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+          </Tooltip>
+          <Tooltip title="克隆">
+            <Button type="text" size="small" icon={<CopyOutlined />} onClick={() => handleClone(record)} />
           </Tooltip>
           <Popconfirm title="确定删除此项目？" onConfirm={() => handleDelete(record._id)}>
             <Tooltip title="删除">
@@ -201,15 +232,21 @@ const Projects: React.FC = () => {
   ];
 
   return (
-    <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>项目管理</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          新建项目
-        </Button>
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <ProjectOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+          项目管理
+        </Title>
       </div>
 
       <Card>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+            新建项目
+          </Button>
+        </div>
+
         <Table
           columns={columns}
           dataSource={projects}
@@ -271,7 +308,32 @@ const Projects: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </>
+
+      <Modal
+        title="克隆项目"
+        open={cloneModalOpen}
+        onCancel={() => {
+          setCloneModalOpen(false);
+          setCloningProject(null);
+        }}
+        footer={[
+          <Button key="back" onClick={() => {
+            setCloneModalOpen(false);
+            setCloningProject(null);
+          }}>取消</Button>
+        ]}
+      >
+        <Form form={cloneForm} layout="vertical">
+          <Form.Item label="新项目名称" name="name" rules={[{ required: true, message: '请输入新项目名称' }]}>
+            <Input placeholder="输入新项目名称" />
+          </Form.Item>
+          <Form.Item label="新项目编号" name="code" rules={[{ required: true, message: '请输入新项目编号' }]}>
+            <Input placeholder="输入新项目编号" />
+          </Form.Item>
+          <Button type="primary" onClick={handleCloneSubmit}>确认克隆</Button>
+        </Form>
+      </Modal>
+    </div>
   );
 };
 

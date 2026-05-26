@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Table, Button, Modal, Form, Input, Select, DatePicker, message, Space, Tag, Popconfirm, Card, Typography, Progress, Row, Col, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, WarningOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { useGetRisksQuery, useCreateRiskMutation, useUpdateRiskMutation, useDeleteRiskMutation } from '../../../store/api';
@@ -193,19 +193,21 @@ const ProjectRisks: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/projects/${projectId}`)} style={{ marginRight: 16 }}>
-            返回概览
-          </Button>
-          <Title level={4} style={{ margin: 0, display: 'inline' }}>风险管理</Title>
-        </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          新增风险
-        </Button>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <WarningOutlined style={{ marginRight: 8, color: '#f5222d' }} />
+          风险管理
+        </Title>
       </div>
 
-      <Row gutter={16} style={{ marginBottom: 16 }}>
+      <Card>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+            新增风险
+          </Button>
+        </div>
+
+        <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={8}>
           <Card>
             <div style={{ fontSize: 14, color: 'var(--color-muted)' }}>总风险数</div>
@@ -233,6 +235,7 @@ const ProjectRisks: React.FC = () => {
           </Card>
         </Col>
       </Row>
+      </Card>
 
       <Card>
         <Table

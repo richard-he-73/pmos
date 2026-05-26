@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Table, Button, Modal, Form, Input, InputNumber, Select, message, Space, Tag, Card, Typography, Progress, Alert, Tabs, Tooltip, Popconfirm } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, WarningOutlined, SyncOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, WarningOutlined, SyncOutlined, UserOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useGetResourcesQuery, useCreateResourceMutation, useUpdateResourceMutation, useDeleteResourceMutation, useCheckResourceConflictsQuery } from '../../../store/api';
 import type { Resource } from '../../../types/models';
@@ -191,28 +191,12 @@ const ProjectResources: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div>
-          <Button 
-            icon={<ArrowLeftOutlined />} 
-            onClick={() => navigate(`/projects/${projectId}`)}
-            style={{ marginRight: 16 }}
-          >
-            返回概览
-          </Button>
-          <Title level={4} style={{ margin: 0, display: 'inline' }}>
-            资源管理
-          </Title>
-        </div>
-        <Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-            新建资源
-          </Button>
-          <Button icon={<SyncOutlined />} onClick={handleCheckConflicts} loading={conflictLoading}>
-            检测冲突
-          </Button>
-        </Space>
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <UserOutlined style={{ marginRight: 8, color: '#52c41a' }} />
+          资源管理
+        </Title>
       </div>
 
       {conflictChecked && conflicts.length > 0 && (
@@ -263,15 +247,25 @@ const ProjectResources: React.FC = () => {
               key: 'resources',
               label: '资源列表',
               children: (
-                <Table
-                  columns={columns}
-                  dataSource={resources}
-                  rowKey="_id"
-                  loading={loading}
-                  pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 项` }}
-                  scroll={{ x: 1200 }}
-                  locale={{ emptyText: '暂无数据' }}
-                />
+                <div>
+                  <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                    <Button icon={<SyncOutlined />} onClick={handleCheckConflicts} loading={conflictLoading}>
+                      检测冲突
+                    </Button>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+                      新建资源
+                    </Button>
+                  </div>
+                  <Table
+                    columns={columns}
+                    dataSource={resources}
+                    rowKey="_id"
+                    loading={loading}
+                    pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 项` }}
+                    scroll={{ x: 1200 }}
+                    locale={{ emptyText: '暂无数据' }}
+                  />
+                </div>
               ),
             },
             {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Table, Button, Tag, Typography, Modal, Form, Input, Select, Switch, message, Space, Popconfirm, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, LeftOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { ConfigItem } from '../../../types/models';
 import { useGetConfigItemsQuery, useCreateConfigItemMutation, useUpdateConfigItemMutation, useDeleteConfigItemMutation } from '../../../store/api';
@@ -84,17 +84,20 @@ const ProjectConfiguration: React.FC = () => {
   ];
 
   return (
-    <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Button icon={<LeftOutlined />} onClick={() => navigate(`/projects/${projectId}`)}>返回概览</Button>
-          <Title level={4} style={{ margin: 0 }}>配置管理</Title>
-        </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          新建配置项
-        </Button>
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <SettingOutlined style={{ marginRight: 8, color: '#595959' }} />
+          配置管理
+        </Title>
       </div>
+
       <Card>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+            新建配置项
+          </Button>
+        </div>
         <Table columns={columns} dataSource={configItems} rowKey="_id" loading={loading} pagination={{ pageSize: 15 }} locale={{ emptyText: '暂无数据' }} />
       </Card>
 
@@ -134,7 +137,7 @@ const ProjectConfiguration: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </>
+    </div>
   );
 };
 

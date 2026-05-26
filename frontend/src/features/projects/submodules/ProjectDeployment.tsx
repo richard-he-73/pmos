@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Table, Button, Tag, message, Space, Popconfirm, Typography, Tooltip, Modal, Form, Input, Select, DatePicker, Input as AntInput } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, LeftOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, RocketOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import type { DeploymentPlan } from '../../../types/models';
@@ -99,17 +99,20 @@ const ProjectDeployment: React.FC = () => {
   ];
 
   return (
-    <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Button icon={<LeftOutlined />} onClick={() => navigate(`/projects/${projectId}`)}>返回概览</Button>
-          <Title level={4} style={{ margin: 0 }}>投产管理</Title>
-        </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          新建投产
-        </Button>
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <RocketOutlined style={{ marginRight: 8, color: '#fa8c16' }} />
+          投产管理
+        </Title>
       </div>
+
       <Card>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+            新建投产
+          </Button>
+        </div>
         <Table columns={columns} dataSource={deployments} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} locale={{ emptyText: '暂无数据' }} />
       </Card>
 
@@ -163,7 +166,7 @@ const ProjectDeployment: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </>
+    </div>
   );
 };
 

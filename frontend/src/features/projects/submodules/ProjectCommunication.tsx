@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Typography, Table, Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm, Tooltip, DatePicker } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { Typography, Table, Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm, Tooltip, DatePicker, Card } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, MessageOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import type { Communication } from '../../../types/models';
@@ -97,17 +97,19 @@ const ProjectCommunication: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/projects/${projectId}`)} style={{ marginRight: 16 }}>
-            返回概览
-          </Button>
-          <Title level={4} style={{ margin: 0, display: 'inline' }}>沟通管理</Title>
-        </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新建记录</Button>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <MessageOutlined style={{ marginRight: 8, color: '#722ed1' }} />
+          沟通管理
+        </Title>
       </div>
-      
-      <Table columns={columns} dataSource={communications} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} locale={{ emptyText: '暂无数据' }} />
+
+      <Card>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新建记录</Button>
+        </div>
+        <Table columns={columns} dataSource={communications} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} locale={{ emptyText: '暂无数据' }} />
+      </Card>
 
       <Modal
         title={editing ? '编辑沟通记录' : '新建沟通记录'}

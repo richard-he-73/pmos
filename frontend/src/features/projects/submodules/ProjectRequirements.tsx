@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Table, Button, Modal, Form, Input, Select, Tag, message, Space, Popconfirm, Card, Typography, Badge, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, FileTextOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useGetRequirementsQuery, useCreateRequirementMutation, useUpdateRequirementMutation, useDeleteRequirementMutation } from '../../../store/api';
 import type { Requirement } from '../../../types/models';
@@ -158,19 +158,19 @@ const ProjectRequirements: React.FC = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/projects/${projectId}`)} style={{ marginRight: 16 }}>
-            返回概览
-          </Button>
-          <Title level={4} style={{ margin: 0, display: 'inline' }}>需求管理</Title>
-        </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          新建需求
-        </Button>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <FileTextOutlined style={{ marginRight: 8, color: '#13c2c2' }} />
+          需求管理
+        </Title>
       </div>
 
       <Card>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+            新建需求
+          </Button>
+        </div>
         <Table
           columns={columns}
           dataSource={requirements}

@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from './Header';
-import { Sidebar } from './Sidebar';
+import Sidebar from './Sidebar';
 
 const titleMap: Record<string, string> = {
   '/': '概览面板',
