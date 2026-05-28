@@ -6,6 +6,8 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import type { DrillPlan } from '../../../types/models';
 import { useGetDrillsQuery, useDeleteDrillMutation, useCreateDrillMutation, useUpdateDrillMutation } from '../../../store/api';
+import { useDataItems } from '../../../hooks/useDataItems';
+import DataItemSelect from '../../../components/common/DataItemSelect';
 
 const { Title } = Typography;
 const { TextArea } = AntInput;
@@ -21,6 +23,10 @@ const ProjectDrill: React.FC = () => {
   const [deleteDrill] = useDeleteDrillMutation();
   const [createDrill, { isLoading: isCreating }] = useCreateDrillMutation();
   const [updateDrill, { isLoading: isUpdating }] = useUpdateDrillMutation();
+
+  const { items: drillTypes } = useDataItems('drill_type');
+  const { items: drillStatuses } = useDataItems('drill_status');
+  const { items: drillTargets } = useDataItems('drill_target');
 
   const handleCreate = () => {
     setEditingItem(null);
@@ -133,27 +139,19 @@ const ProjectDrill: React.FC = () => {
             <TextArea rows={3} placeholder="演练描述" />
           </Form.Item>
           <Form.Item name="type" label="类型" rules={[{ required: true }]}>
-            <Select placeholder="选择类型">
-              <Select.Option value="fire">火灾</Select.Option>
-              <Select.Option value="disaster">灾害</Select.Option>
-              <Select.Option value="security">安全</Select.Option>
-              <Select.Option value="network">网络</Select.Option>
-              <Select.Option value="database">数据库</Select.Option>
-            </Select>
+            <DataItemSelect category="drill_type" />
           </Form.Item>
           <Form.Item name="status" label="状态" rules={[{ required: true }]}>
-            <Select placeholder="选择状态">
-              <Select.Option value="planned">计划中</Select.Option>
-              <Select.Option value="in_progress">进行中</Select.Option>
-              <Select.Option value="completed">已完成</Select.Option>
-              <Select.Option value="cancelled">已取消</Select.Option>
-            </Select>
+            <DataItemSelect category="drill_status" />
           </Form.Item>
           <Form.Item name="scheduled_date" label="计划日期" rules={[{ required: true }]}>
             <DatePicker style={{ width: '100%' }} placeholder="选择日期" />
           </Form.Item>
           <Form.Item name="actual_date" label="实际日期">
             <DatePicker style={{ width: '100%' }} placeholder="选择日期" />
+          </Form.Item>
+          <Form.Item name="target" label="演练目标">
+            <DataItemSelect category="drill_target" />
           </Form.Item>
           <Form.Item name="participants" label="参与人员">
             <Select mode="tags" placeholder="输入参与人员后按回车" />

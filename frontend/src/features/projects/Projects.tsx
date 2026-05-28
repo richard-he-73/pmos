@@ -4,9 +4,12 @@ import { Table, Button, Modal, Form, Input, Select, DatePicker, message, Space, 
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, CopyOutlined, ProjectOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { useGetProjectsQuery, useCreateProjectMutation, useUpdateProjectMutation, useDeleteProjectMutation, useCloneProjectMutation } from '../../store/api';
+import { useGetProjectsQuery, useCreateProjectMutation, useUpdateProjectMutation, useDeleteProjectMutation, useCloneProjectMutation, useSetDefaultProjectMutation } from '../../store/api';
 import type { Project } from '../../types/models';
 import { PROJECT_STATUS, PRIORITY } from '../../utils/constants';
+import { useDataItems } from '../../hooks/useDataItems';
+import type { DataItem } from '../../services/dataItem';
+import DataItemSelect from '../../components/common/DataItemSelect';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -19,12 +22,17 @@ const Projects: React.FC = () => {
   const [cloningProject, setCloningProject] = useState<Project | null>(null);
   const [form] = Form.useForm();
   const [cloneForm] = Form.useForm();
+  const [projectStatusItems, setProjectStatusItems] = useState<DataItem[]>([]);
+  const [priorityItems, setPriorityItems] = useState<DataItem[]>([]);
   
   const { data: projects = [], isLoading, refetch } = useGetProjectsQuery(undefined);
   const [createProject, { isLoading: isCreating }] = useCreateProjectMutation();
   const [updateProject, { isLoading: isUpdating }] = useUpdateProjectMutation();
   const [deleteProject] = useDeleteProjectMutation();
   const [cloneProject] = useCloneProjectMutation();
+  const [setDefaultProject, { isLoading: isSettingDefault }] = useSetDefaultProjectMutation();
+  const { items: statuses } = useDataItems('project_status');
+  const { items: priorities } = useDataItems('priority');
 
   const handleCreate = () => {
     setEditingProject(null);
@@ -114,6 +122,17 @@ const Projects: React.FC = () => {
     }
   };
 
+  const handleSetDefault = async (record: Project) => {
+    try {
+      await setDefaultProject(record._id).unwrap();
+      message.success('已设置为默认项目！请刷新页面查看效果');
+      refetch();
+    } catch (error) {
+      console.error('Error setting default project:', error);
+      message.error('设置失败');
+    }
+  };
+
   const columns: ColumnsType<Project> = [
     {
       title: '项目编号',
@@ -129,10 +148,13 @@ const Projects: React.FC = () => {
     {
       title: '项目名称',
       dataIndex: 'name',
-      width: 200,
+      width: 220,
       ellipsis: true,
       render: (name: string, record: Project) => (
-        <a onClick={() => navigate(`/projects/${record._id}/tasks`)} style={{ fontWeight: 600 }}>{name}</a>
+        <Space>
+          <a onClick={() => navigate(`/projects/${record._id}/tasks`)} style={{ fontWeight: 600 }}>{name}</a>
+          {record.is_default && <Tag color="blue">默认项目</Tag>}
+        </Space>
       ),
     },
     {
@@ -209,7 +231,7 @@ const Projects: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 150,
+      width: 220,
       render: (_, record) => (
         <Space>
           <Tooltip title="查看详情">
@@ -221,6 +243,18 @@ const Projects: React.FC = () => {
           <Tooltip title="克隆">
             <Button type="text" size="small" icon={<CopyOutlined />} onClick={() => handleClone(record)} />
           </Tooltip>
+          {!record.is_default && (
+            <Tooltip title="设为默认">
+              <Button
+                type="text"
+                size="small"
+                onClick={() => handleSetDefault(record)}
+                loading={isSettingDefault}
+              >
+                ⭐
+              </Button>
+            </Tooltip>
+          )}
           <Popconfirm title="确定删除此项目？" onConfirm={() => handleDelete(record._id)}>
             <Tooltip title="删除">
               <Button type="text" size="small" danger icon={<DeleteOutlined />} />
@@ -279,20 +313,10 @@ const Projects: React.FC = () => {
             <TextArea rows={3} placeholder="项目描述" />
           </Form.Item>
           <Form.Item name="status" label="状态" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="planning">规划中</Select.Option>
-              <Select.Option value="active">进行中</Select.Option>
-              <Select.Option value="on_hold">已暂停</Select.Option>
-              <Select.Option value="completed">已完成</Select.Option>
-            </Select>
+            <DataItemSelect category="project_status" placeholder="请选择状态" />
           </Form.Item>
           <Form.Item name="priority" label="优先级" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="low">低</Select.Option>
-              <Select.Option value="medium">中</Select.Option>
-              <Select.Option value="high">高</Select.Option>
-              <Select.Option value="critical">紧急</Select.Option>
-            </Select>
+            <DataItemSelect category="priority" placeholder="请选择优先级" />
           </Form.Item>
           <Form.Item name="start_date" label="开始日期" rules={[{ required: true }]}>
             <DatePicker style={{ width: '100%' }} placeholder="选择日期" />

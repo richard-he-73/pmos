@@ -10,7 +10,7 @@ class UserBase(TimestampMixin):
     email: str
     display_name: str = Field(..., min_length=1, max_length=100)
     avatar: str | None = None
-    role: str = Field(default="member", pattern="^(admin|manager|member|viewer)$")
+    role: str = Field(default="operator", pattern="^(system|operator)$")
     department: str = ""
     status: str = Field(default="active", pattern="^(active|inactive|suspended)$")
 

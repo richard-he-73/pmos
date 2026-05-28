@@ -48,23 +48,33 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   minDate: propMinDate,
   maxDate: propMaxDate,
 }) => {
-  if (!tasks.length) {
+  // 数据验证
+  if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
     return <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)' }}>暂无任务数据</div>;
+  }
+
+  // 验证每个任务的数据
+  const validTasks = tasks.filter(t => 
+    t && t.start && t.end && dayjs(t.start).isValid() && dayjs(t.end).isValid()
+  );
+
+  if (validTasks.length === 0) {
+    return <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)' }}>暂无有效任务数据</div>;
   }
 
   // 如果传入了 minDate 和 maxDate，则使用传入值，否则从任务中计算
   let minDate, maxDate;
-  if (propMinDate && propMaxDate) {
+  if (propMinDate && propMaxDate && dayjs(propMinDate).isValid() && dayjs(propMaxDate).isValid()) {
     minDate = dayjs(propMinDate).valueOf();
     maxDate = dayjs(propMaxDate).valueOf();
   } else {
-    const dates = tasks.flatMap((t) => [dayjs(t.start).valueOf(), dayjs(t.end).valueOf()]);
+    const dates = validTasks.flatMap((t) => [dayjs(t.start).valueOf(), dayjs(t.end).valueOf()]);
     minDate = Math.min(...dates);
     maxDate = Math.max(...dates);
   }
 
-  const categories = tasks.map((t) => t.name);
-  const data = tasks.map((t, index) => {
+  const categories = validTasks.map((t) => t.name);
+  const data = validTasks.map((t, index) => {
     const start = dayjs(t.start).valueOf();
     const end = dayjs(t.end).valueOf();
     const color = t.isCritical ? statusColors.critical : getColorByIndex(index);
@@ -297,7 +307,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     <ReactECharts 
       option={option} 
       style={{ height }} 
-      key={`gantt-${tasks.length}`}
+      key={`gantt-${validTasks.length}-${validTasks.map(t => t.id).join('-')}`}
       onChartReady={(chart) => {
         setTimeout(() => {
           chart.resize();

@@ -6,6 +6,8 @@ import type { ColumnsType } from 'antd/es/table';
 import { useGetRequirementsQuery, useCreateRequirementMutation, useUpdateRequirementMutation, useDeleteRequirementMutation } from '../../../store/api';
 import type { Requirement } from '../../../types/models';
 import { REQUIREMENT_STATUS, REQUIREMENT_TYPE, PRIORITY } from '../../../utils/constants';
+import { useDataItems } from '../../../hooks/useDataItems';
+import DataItemSelect from '../../../components/common/DataItemSelect';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -22,6 +24,10 @@ const ProjectRequirements: React.FC = () => {
   const [createRequirement] = useCreateRequirementMutation();
   const [updateRequirement] = useUpdateRequirementMutation();
   const [deleteRequirement] = useDeleteRequirementMutation();
+
+  const { items: requirementTypes } = useDataItems('requirement_type');
+  const { items: requirementStatuses } = useDataItems('requirement_status');
+  const { items: priorities } = useDataItems('priority');
 
   const handleCreate = () => {
     setEditingRequirement(null);
@@ -202,30 +208,13 @@ const ProjectRequirements: React.FC = () => {
             <TextArea rows={3} placeholder="需求详细描述" />
           </Form.Item>
           <Form.Item name="type" label="需求类型" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="functional">功能需求</Select.Option>
-              <Select.Option value="non_functional">非功能需求</Select.Option>
-              <Select.Option value="business">业务需求</Select.Option>
-              <Select.Option value="technical">技术需求</Select.Option>
-            </Select>
+            <DataItemSelect category="requirement_type" />
           </Form.Item>
           <Form.Item name="status" label="状态" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="draft">草稿</Select.Option>
-              <Select.Option value="reviewing">评审中</Select.Option>
-              <Select.Option value="approved">已批准</Select.Option>
-              <Select.Option value="in_progress">进行中</Select.Option>
-              <Select.Option value="done">已完成</Select.Option>
-              <Select.Option value="rejected">已拒绝</Select.Option>
-            </Select>
+            <DataItemSelect category="requirement_status" />
           </Form.Item>
           <Form.Item name="priority" label="优先级" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="low">低</Select.Option>
-              <Select.Option value="medium">中</Select.Option>
-              <Select.Option value="high">高</Select.Option>
-              <Select.Option value="critical">紧急</Select.Option>
-            </Select>
+            <DataItemSelect category="priority" />
           </Form.Item>
           <Form.Item name="source" label="来源">
             <Input placeholder="需求来源" />

@@ -657,14 +657,10 @@ const PlanningPage: React.FC = () => {
   }
 
   return (
-    <div className="planning-page">
-      {/* 固定的顶部区域 - 包括项目信息和 Tabs 标签，在 header 下方 */}
+    <div className="planning-page" style={{ height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      {/* 顶部区域 - 包括项目信息和 Tabs 标签 */}
       <div style={{ 
-        position: 'fixed',
-        top: 80,
-        left: 284,
-        right: 24,
-        zIndex: 100,
+        flexShrink: 0,
         background: '#fff',
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
       }}>
@@ -695,10 +691,11 @@ const PlanningPage: React.FC = () => {
         </Card>
 
         {/* Tabs 标签栏 - 只做导航用，不渲染内容 */}
-        <div style={{ padding: '0 16px' }}>
+        <div style={{ padding: '0 16px', flexShrink: 0 }}>
           <Tabs
             activeKey={activeTab}
             onChange={setActiveTab}
+            style={{ height: '100%' }}
             items={[
               {
                 key: 'milestone',
@@ -712,31 +709,25 @@ const PlanningPage: React.FC = () => {
                 key: 'detail',
                 label: '详细计划',
               },
-              {
-                key: 'analytics',
-                label: '计划统计',
-              },
             ]}
           />
         </div>
       </div>
 
-      {/* 下面的内容区域，给固定顶部腾出空间 */}
-      <div style={{ paddingTop: 180 }}>
+      {/* 内容区域 */}
+      <div style={{ flex: 1, overflow: 'hidden', padding: '0 16px 16px' }}>
         
         {/* ============ 项目里程碑计划内容 ============ */}
         {activeTab === 'milestone' && (
-          <div>
-            {/* 固定在下方的统计和甘特图区域 */}
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* 固定区域 - 统计卡片、按钮、甘特图 */}
             <div style={{ 
-              position: 'sticky',
-              top: 130,
-              zIndex: 50,
+              flexShrink: 0,
               background: '#fff',
               paddingBottom: 16,
               borderBottom: '1px solid #f0f0f0'
             }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20, marginTop: 16 }}>
                 <Card>
                   <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>总里程碑数</div>
                   <div style={{ fontSize: 28, fontWeight: 700 }}>{milestoneStats.total}</div>
@@ -758,7 +749,7 @@ const PlanningPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div>
                   <Tooltip title="下载模板">
-                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('milestone')} style={{ backgroundColor: '#1890ff', borderColor: '#1890ff', color: 'white' }}>下载模板</Button>
+                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('milestone')} style={{ backgroundColor: '#52c41a', borderColor: '#52c41a', color: 'white' }}>下载模板</Button>
                   </Tooltip>
                   <Upload showUploadList={false} beforeUpload={(file) => { handleImportData(file, 'milestone'); return false; }}>
                     <Tooltip title="导入数据">
@@ -786,9 +777,9 @@ const PlanningPage: React.FC = () => {
               )}
             </div>
 
-            {/* 详细列表区域 - 页面整体滚动时会跟随滚动 */}
+            {/* 详细列表区域 - 可滚动 */}
             {!loadingData && milestones.length > 0 && (
-              <div style={{ paddingTop: 16 }}>
+              <div style={{ flex: 1, overflowY: 'auto' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {milestones.map((milestone, index) => (
                     <div key={milestone.id} style={{ display: 'flex', gap: 16 }}>
@@ -856,17 +847,15 @@ const PlanningPage: React.FC = () => {
 
         {/* ============ 小组计划内容 ============ */}
         {activeTab === 'group' && (
-          <div>
-            {/* 固定在下方的统计和甘特图区域 */}
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* 固定区域 - 统计卡片、按钮、甘特图 */}
             <div style={{ 
-              position: 'sticky',
-              top: 150,
-              zIndex: 50,
+              flexShrink: 0,
               background: '#fff',
               paddingBottom: 16,
               borderBottom: '1px solid #f0f0f0'
             }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20, marginTop: 16 }}>
                 <Card>
                   <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>总计划数</div>
                   <div style={{ fontSize: 28, fontWeight: 700 }}>{groupStats.total}</div>
@@ -888,7 +877,7 @@ const PlanningPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div>
                   <Tooltip title="下载模板">
-                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('group')} style={{ backgroundColor: '#1890ff', borderColor: '#1890ff', color: 'white' }}>下载模板</Button>
+                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('group')} style={{ backgroundColor: '#52c41a', borderColor: '#52c41a', color: 'white' }}>下载模板</Button>
                   </Tooltip>
                   <Upload showUploadList={false} beforeUpload={(file) => { handleImportData(file, 'group'); return false; }}>
                     <Tooltip title="导入数据">
@@ -916,9 +905,9 @@ const PlanningPage: React.FC = () => {
               )}
             </div>
 
-            {/* 详细列表区域 */}
+            {/* 详细列表区域 - 可滚动 */}
             {!loadingData && groupPlans.length > 0 && (
-              <div style={{ paddingTop: 16 }}>
+              <div style={{ flex: 1, overflowY: 'auto' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {groupPlans.map((group) => {
                     const milestone = milestones.find(m => m.id === group.milestone_id);
@@ -998,17 +987,15 @@ const PlanningPage: React.FC = () => {
 
         {/* ============ 详细计划内容 ============ */}
         {activeTab === 'detail' && (
-          <div>
-            {/* 固定在下方的统计和甘特图区域 */}
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* 固定区域 - 统计卡片、按钮、甘特图 */}
             <div style={{ 
-              position: 'sticky',
-              top: 150,
-              zIndex: 50,
+              flexShrink: 0,
               background: '#fff',
               paddingBottom: 16,
               borderBottom: '1px solid #f0f0f0'
             }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20, marginTop: 16 }}>
                 <Card>
                   <div style={{ fontSize: 12, color: 'var(--color-muted)', marginBottom: 8 }}>总任务数</div>
                   <div style={{ fontSize: 28, fontWeight: 700 }}>{taskStats.total}</div>
@@ -1030,7 +1017,7 @@ const PlanningPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div>
                   <Tooltip title="下载模板">
-                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('detail')} style={{ backgroundColor: '#1890ff', borderColor: '#1890ff', color: 'white' }}>下载模板</Button>
+                    <Button icon={<DownloadOutlined />} onClick={() => handleDownloadTemplate('detail')} style={{ backgroundColor: '#52c41a', borderColor: '#52c41a', color: 'white' }}>下载模板</Button>
                   </Tooltip>
                   <Upload showUploadList={false} beforeUpload={(file) => { handleImportData(file, 'detail'); return false; }}>
                     <Tooltip title="导入数据">
@@ -1058,9 +1045,9 @@ const PlanningPage: React.FC = () => {
               )}
             </div>
 
-            {/* 详细列表区域 */}
+            {/* 详细列表区域 - 可滚动 */}
             {!loadingData && detailTasks.length > 0 && (
-              <div style={{ paddingTop: 16 }}>
+              <div style={{ flex: 1, overflowY: 'auto' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {detailTasks.map((task) => {
                     const group = groupPlans.find(g => g.id === task.group_id);
@@ -1148,57 +1135,7 @@ const PlanningPage: React.FC = () => {
           </div>
         )}
 
-        {/* ============ 计划统计内容 ============ */}
-        {activeTab === 'analytics' && (
-          <div style={{ padding: '0 16px 16px' }}>
-            <Tabs
-              defaultActiveKey="status"
-              items={[
-                {
-                  key: 'status',
-                  label: '状态分布',
-                  children: (
-                    <Card>
-                      {loadingData ? (
-                        <div style={{ textAlign: 'center', padding: 40 }}><Spin size="large" /></div>
-                      ) : Object.keys(taskStatusData).length > 0 ? (
-                        <BarChart
-                          title="任务状态分布"
-                          xAxis={Object.keys(taskStatusData).map((s) => TASK_STATUS[s as keyof typeof TASK_STATUS] || s)}
-                          series={[{ name: '任务数', data: Object.values(taskStatusData) }]}
-                          colors={['oklch(58% 0.16 145)', 'oklch(55% 0.14 250)', 'oklch(70% 0.12 80)', 'oklch(50% 0.05 250)', 'oklch(50% 0.02 250)']}
-                        />
-                      ) : (
-                        <Empty description="暂无任务数据" />
-                      )}
-                    </Card>
-                  ),
-                },
-                {
-                  key: 'priority',
-                  label: '优先级分布',
-                  children: (
-                    <Card>
-                      {loadingData ? (
-                        <div style={{ textAlign: 'center', padding: 40 }}><Spin size="large" /></div>
-                      ) : Object.keys(taskPriorityData).length > 0 ? (
-                        <BarChart
-                          title="任务优先级分布"
-                          xAxis={Object.keys(taskPriorityData).map((p) => PRIORITY[p as keyof typeof PRIORITY] || p)}
-                          series={[{ name: '任务数', data: Object.values(taskPriorityData) }]}
-                          colors={['oklch(50% 0.10 145)', 'oklch(55% 0.14 250)', 'oklch(70% 0.12 80)', 'oklch(50% 0.20 30)']}
-                          horizontal
-                        />
-                      ) : (
-                        <Empty description="暂无任务数据" />
-                      )}
-                    </Card>
-                  ),
-                },
-              ]}
-            />
-          </div>
-        )}
+
       </div>
 
       <Modal title={isEditingMilestone ? '编辑里程碑' : '添加里程碑'} open={milestoneModalOpen} onOk={handleMilestoneSubmit} onCancel={() => setMilestoneModalOpen(false)} okText={isEditingMilestone ? '保存' : '创建'} width={600}>

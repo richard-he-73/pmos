@@ -1,44 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Card, Typography, Form, Input, Select, Switch, Button, message, Tabs, Space, Modal, Tag, Table, Avatar, Popconfirm, InputNumber, Spin, Checkbox } from 'antd';
-import { SaveOutlined, UserOutlined, BellOutlined, IeOutlined, AlertOutlined, GlobalOutlined, PlusOutlined, EditOutlined, DeleteOutlined, LockOutlined, DatabaseOutlined } from '@ant-design/icons';
+import { Card, Typography, Form, Input, Select, Switch, Button, message, Tabs, Space, Modal, Tag, Table, Popconfirm, Checkbox } from 'antd';
+import { SaveOutlined, UserOutlined, GlobalOutlined, PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useUser } from '../../contexts/UserContext';
-import { 
-  useChangePasswordMutation,
-  useGetDataDictionariesQuery,
-  useCreateDataDictionaryMutation,
-  useUpdateDataDictionaryMutation,
-  useDeleteDataDictionaryMutation,
-  useInitializeDataDictionariesMutation
-} from '../../store/api';
-import { settingsApi, type Role, type UserGroup, type NotificationSettings, type SecuritySettings, type AppearanceSettings } from '../../api/settings';
-import type { DataDictionary } from '../../types/models';
+import { useChangePasswordMutation } from '../../store/api';
+import { settingsApi, type NotificationSettings, type SecuritySettings, type AppearanceSettings } from '../../api/settings';
+import { getRoles, getGroups, createRole, updateRole, deleteRole, createGroup, updateGroup, deleteGroup, type Role, type UserGroup } from '../../api/permissions';
+import { getDepartments, getJobLevels, createDepartment, updateDepartment, deleteDepartment, createJobLevel, updateJobLevel, deleteJobLevel, initializeOrganizationData, type Department, type JobLevel } from '../../services/organization';
+import DataItemTab from './DataItemTab';
+import { DATA_ITEM_CATEGORIES, initializeDataItems } from '../../services/dataItem';
 
 const { Title } = Typography;
 const { TextArea } = Input;
 
-const CATEGORY_NAMES: Record<string, string> = {
-  'user_role': '用户角色',
-  'project_role': '项目角色',
-  'org_level': '组织层级',
-};
-
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('profile');
-  const [dictCategoryFilter, setDictCategoryFilter] = useState<string>('');
+  const [activeDataItemTab, setActiveDataItemTab] = useState('priority');
   const [loading, setLoading] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(false);
   const { currentUser, setCurrentUser } = useUser();
   const [profileForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
   const [changePassword] = useChangePasswordMutation();
-
-  // Data Dictionaries
-  const { data: dataDictionaries = [], isLoading: dictLoading, refetch: refetchDictionaries } = useGetDataDictionariesQuery();
-  const [createDataDictionary] = useCreateDataDictionaryMutation();
-  const [updateDataDictionary] = useUpdateDataDictionaryMutation();
-  const [deleteDataDictionary] = useDeleteDataDictionaryMutation();
-  const [initializeDataDictionaries] = useInitializeDataDictionariesMutation();
 
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
     emailNotification: true,
@@ -68,9 +51,17 @@ const Settings: React.FC = () => {
   const [editingGroup, setEditingGroup] = useState<UserGroup | null>(null);
   const [activePermTab, setActivePermTab] = useState('roles');
 
-  const [dictModalOpen, setDictModalOpen] = useState(false);
-  const [editingDict, setEditingDict] = useState<DataDictionary | null>(null);
-  const [dictForm] = Form.useForm();
+  // 机构信息 (Departments & Job Levels)
+  const [activeOrgTab, setActiveOrgTab] = useState('departments');
+  const [deptModalOpen, setDeptModalOpen] = useState(false);
+  const [jobLevelModalOpen, setJobLevelModalOpen] = useState(false);
+  const [editingDept, setEditingDept] = useState<Department | null>(null);
+  const [editingJobLevel, setEditingJobLevel] = useState<JobLevel | null>(null);
+  const [deptForm] = Form.useForm();
+  const [jobLevelForm] = Form.useForm();
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [jobLevels, setJobLevels] = useState<JobLevel[]>([]);
+  const [orgLoading, setOrgLoading] = useState(false);
 
   useEffect(() => {
     loadAllSettings();
@@ -79,6 +70,13 @@ const Settings: React.FC = () => {
   const loadAllSettings = async () => {
     setSettingsLoading(true);
     try {
+      // Initialize data items first
+      try {
+        await initializeDataItems();
+      } catch (error) {
+        console.error('Failed to initialize data items:', error);
+      }
+
       const [profile, notifications, security, appearance, rolesData, groupsData] = await Promise.all([
         settingsApi.getUserProfile().catch(() => ({
           username: currentUser?.username || '',
@@ -106,8 +104,8 @@ const Settings: React.FC = () => {
           fontSize: 'medium' as const,
           compactLayout: false,
         })),
-        settingsApi.getRoles().catch(() => []),
-        settingsApi.getUserGroups().catch(() => []),
+        getRoles().catch(() => []),
+        getGroups().catch(() => []),
       ]);
 
       profileForm.setFieldsValue({
@@ -126,11 +124,8 @@ const Settings: React.FC = () => {
       setRoles(rolesData);
       setGroups(groupsData);
 
-      // Initialize data dictionaries if empty
-      if (dataDictionaries.length === 0) {
-        await initializeDataDictionaries();
-        await refetchDictionaries();
-      }
+      // Load organization data
+      await loadOrganizationData();
     } catch {
       message.error('加载设置失败');
     } finally {
@@ -138,55 +133,243 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleOpenDictModal = (dict?: DataDictionary, defaultCategory?: string) => {
-    setEditingDict(dict ? { ...dict } : null);
-    if (dict) {
-      dictForm.setFieldsValue(dict);
-    } else {
-      dictForm.resetFields();
-      const category = defaultCategory || '';
-      let sortOrder = 1000;
-      if (category) {
-        const categoryDicts = dataDictionaries.filter(d => d.category === category);
-        if (categoryDicts.length > 0) {
-          const maxSortOrder = Math.max(...categoryDicts.map(d => d.sort_order || 0));
-          sortOrder = maxSortOrder + 10;
+  const loadOrganizationData = async () => {
+    setOrgLoading(true);
+    try {
+      let [depts, levels] = await Promise.all([
+        getDepartments().catch(() => []),
+        getJobLevels().catch(() => []),
+      ]);
+      
+      if (depts.length === 0 || levels.length === 0) {
+        try {
+          await initializeOrganizationData();
+          [depts, levels] = await Promise.all([
+            getDepartments().catch(() => []),
+            getJobLevels().catch(() => []),
+          ]);
+        } catch {
+          // 初始化失败不影响加载
         }
       }
-      dictForm.setFieldsValue({ category, sort_order: sortOrder, is_active: true });
+      
+      setDepartments(depts);
+      setJobLevels(levels);
+    } catch {
+      message.error('加载组织数据失败');
+    } finally {
+      setOrgLoading(false);
     }
-    setDictModalOpen(true);
   };
 
-  const handleCloseDictModal = () => {
-    setDictModalOpen(false);
-    setEditingDict(null);
+  // Department & Job Level Handlers
+  const handleOpenDeptModal = (dept?: Department) => {
+    setEditingDept(dept ? { ...dept } : null);
+    if (dept) {
+      deptForm.setFieldsValue({
+        code: dept.code,
+        name: dept.name,
+        description: dept.description,
+        parent_id: dept.parent_id,
+        is_active: dept.is_active,
+      });
+    } else {
+      deptForm.resetFields();
+      deptForm.setFieldsValue({ is_active: true });
+    }
+    setDeptModalOpen(true);
   };
 
-  const handleSaveDict = async () => {
+  const handleCloseDeptModal = () => {
+    setDeptModalOpen(false);
+    setEditingDept(null);
+  };
+
+  const handleSaveDept = async () => {
     try {
-      const values = await dictForm.validateFields();
-      if (editingDict && editingDict._id) {
-        await updateDataDictionary({ id: editingDict._id, body: values });
-        message.success('数据字典已更新');
+      const values = await deptForm.validateFields();
+      if (editingDept && editingDept.id) {
+        await updateDepartment(editingDept.id, values);
+        message.success('部门已更新');
+        handleCloseDeptModal();
+        await loadOrganizationData();
       } else {
-        await createDataDictionary(values);
-        message.success('数据字典已创建');
+        await createDepartment(values);
+        message.success('部门已创建');
+        handleCloseDeptModal();
+        await loadOrganizationData();
       }
-      handleCloseDictModal();
     } catch (error: any) {
       message.error(error?.data?.detail || error?.message || '保存失败');
     }
   };
 
-  const handleDeleteDict = async (id: string) => {
+  const handleDeleteDept = async (id: string) => {
     try {
-      await deleteDataDictionary(id);
-      message.success('数据字典已删除');
+      await deleteDepartment(id);
+      message.success('部门已删除');
+      await loadOrganizationData();
     } catch (error: any) {
       message.error(error?.data?.detail || error?.message || '删除失败');
     }
   };
+
+  const handleOpenJobLevelModal = (jobLevel?: JobLevel) => {
+    setEditingJobLevel(jobLevel ? { ...jobLevel } : null);
+    if (jobLevel) {
+      jobLevelForm.setFieldsValue({
+        code: jobLevel.code,
+        name: jobLevel.name,
+        description: jobLevel.description,
+        is_active: jobLevel.is_active,
+      });
+    } else {
+      jobLevelForm.resetFields();
+      jobLevelForm.setFieldsValue({ is_active: true });
+    }
+    setJobLevelModalOpen(true);
+  };
+
+  const handleCloseJobLevelModal = () => {
+    setJobLevelModalOpen(false);
+    setEditingJobLevel(null);
+  };
+
+  const handleSaveJobLevel = async () => {
+    try {
+      const values = await jobLevelForm.validateFields();
+      if (editingJobLevel && editingJobLevel.id) {
+        await updateJobLevel(editingJobLevel.id, values);
+        message.success('职级已更新');
+      } else {
+        await createJobLevel(values);
+        message.success('职级已创建');
+      }
+      handleCloseJobLevelModal();
+      await loadOrganizationData();
+    } catch (error: any) {
+      message.error(error?.data?.detail || error?.message || '保存失败');
+    }
+  };
+
+  const handleDeleteJobLevel = async (id: string) => {
+    try {
+      await deleteJobLevel(id);
+      message.success('职级已删除');
+      await loadOrganizationData();
+    } catch (error: any) {
+      message.error(error?.data?.detail || error?.message || '删除失败');
+    }
+  };
+
+  // Department & Job Level Columns
+  const deptColumns: ColumnsType<Department> = [
+    { title: '部门编码', dataIndex: 'code', width: 120, sorter: (a, b) => a.code.localeCompare(b.code), sortOrder: 'ascend' },
+    { title: '部门名称', dataIndex: 'name', width: 150 },
+    { title: '上级部门', dataIndex: 'parent_id', width: 120, render: (pid: string) => {
+      if (!pid) return '-';
+      const parentDept = departments.find(d => d.id === pid);
+      return parentDept?.name || '-';
+    } },
+    { title: '描述', dataIndex: 'description', width: 200, ellipsis: true },
+    {
+      title: '状态',
+      dataIndex: 'is_active',
+      width: 80,
+      render: (isActive: boolean) => <Tag color={isActive ? 'green' : 'gray'}>{isActive ? '启用' : '禁用'}</Tag>
+    },
+    {
+      title: '操作',
+      width: 150,
+      render: (_: any, record: Department) => (
+        <Space>
+          <Button size="small" icon={<EditOutlined />} onClick={() => handleOpenDeptModal(record)}>编辑</Button>
+          <Popconfirm
+            title="确定删除此部门？"
+            onConfirm={() => handleDeleteDept(record.id)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button size="small" danger icon={<DeleteOutlined />}>删除</Button>
+          </Popconfirm>
+        </Space>
+      )
+    },
+  ];
+
+  const jobLevelColumns: ColumnsType<JobLevel> = [
+    { title: '职级编码', dataIndex: 'code', width: 120, sorter: (a, b) => a.code.localeCompare(b.code), sortOrder: 'ascend' },
+    { title: '职级名称', dataIndex: 'name', width: 150 },
+    { title: '描述', dataIndex: 'description', width: 200, ellipsis: true },
+    {
+      title: '状态',
+      dataIndex: 'is_active',
+      width: 80,
+      render: (isActive: boolean) => <Tag color={isActive ? 'green' : 'gray'}>{isActive ? '启用' : '禁用'}</Tag>
+    },
+    {
+      title: '操作',
+      width: 150,
+      render: (_: any, record: JobLevel) => (
+        <Space>
+          <Button size="small" icon={<EditOutlined />} onClick={() => handleOpenJobLevelModal(record)}>编辑</Button>
+          <Popconfirm
+            title="确定删除此职级？"
+            onConfirm={() => handleDeleteJobLevel(record.id)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button size="small" danger icon={<DeleteOutlined />}>删除</Button>
+          </Popconfirm>
+        </Space>
+      )
+    },
+  ];
+
+  const orgInfoTab = (
+    <Card>
+      <Tabs activeKey={activeOrgTab} onChange={setActiveOrgTab} items={[
+        { key: 'departments', label: '部门管理' },
+        { key: 'jobLevels', label: '职级管理' },
+      ]} />
+      {activeOrgTab === 'departments' && (
+        <>
+          <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenDeptModal()}>
+              新增部门
+            </Button>
+          </div>
+          <Table
+            columns={deptColumns}
+            dataSource={departments}
+            rowKey="id"
+            loading={orgLoading}
+            defaultSortOrder="ascend"
+            pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 个部门` }}
+            locale={{ emptyText: '暂无部门数据' }}
+          />
+        </>
+      )}
+      {activeOrgTab === 'jobLevels' && (
+        <>
+          <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenJobLevelModal()}>
+              新增职级
+            </Button>
+          </div>
+          <Table
+            columns={jobLevelColumns}
+            dataSource={jobLevels}
+            rowKey="id"
+            loading={orgLoading}
+            defaultSortOrder="ascend"
+            pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 个职级` }}
+            locale={{ emptyText: '暂无职级数据' }}
+          />
+        </>
+      )}
+    </Card>
+  );
 
   const handleSave = async () => {
     setLoading(true);
@@ -249,11 +432,11 @@ const Settings: React.FC = () => {
 
     try {
       if (editingRole.id) {
-        await settingsApi.updateRole(editingRole.id, editingRole);
+        await updateRole(editingRole.id, editingRole);
         setRoles(roles.map(r => r.id === editingRole.id ? editingRole : r));
         message.success('角色已更新');
       } else {
-        const newRole = await settingsApi.createRole(editingRole);
+        const newRole = await createRole(editingRole);
         setRoles([...roles, newRole]);
         message.success('角色已创建');
       }
@@ -265,7 +448,7 @@ const Settings: React.FC = () => {
 
   const handleDeleteRole = async (id: string) => {
     try {
-      await settingsApi.deleteRole(id);
+      await deleteRole(id);
       setRoles(roles.filter(r => r.id !== id));
       message.success('角色已删除');
     } catch (error: any) {
@@ -288,11 +471,11 @@ const Settings: React.FC = () => {
 
     try {
       if (editingGroup.id) {
-        await settingsApi.updateUserGroup(editingGroup.id, editingGroup);
+        await updateGroup(editingGroup.id, editingGroup);
         setGroups(groups.map(g => g.id === editingGroup.id ? editingGroup : g));
         message.success('用户组已更新');
       } else {
-        const newGroup = await settingsApi.createUserGroup(editingGroup);
+        const newGroup = await createGroup(editingGroup);
         setGroups([...groups, newGroup]);
         message.success('用户组已创建');
       }
@@ -304,7 +487,7 @@ const Settings: React.FC = () => {
 
   const handleDeleteGroup = async (id: string) => {
     try {
-      await settingsApi.deleteUserGroup(id);
+      await deleteGroup(id);
       setGroups(groups.filter(g => g.id !== id));
       message.success('用户组已删除');
     } catch (error: any) {
@@ -392,94 +575,58 @@ const Settings: React.FC = () => {
     },
   ];
 
-  const dictColumns: ColumnsType<DataDictionary> = [
-    { 
-      title: '分类', 
-      dataIndex: 'category', 
-      width: 120, 
-      render: (category: string) => {
-        const displayName = CATEGORY_NAMES[category] || category;
-        return <Tag color="blue">{displayName}</Tag>;
-      } 
-    },
-    { title: '编码', dataIndex: 'code', width: 120 },
-    { title: '名称', dataIndex: 'name', width: 150 },
-    { title: '值', dataIndex: 'value', width: 100 },
-    { title: '描述', dataIndex: 'description', width: 200, ellipsis: true },
-    { title: '排序', dataIndex: 'sort_order', width: 80, render: (order: number) => order || '-' },
-    {
-      title: '状态',
-      dataIndex: 'is_active',
-      width: 80,
-      render: (isActive: boolean) => <Tag color={isActive ? 'green' : 'gray'}>{isActive ? '启用' : '禁用'}</Tag>
-    },
-    {
-      title: '系统',
-      dataIndex: 'is_system',
-      width: 80,
-      render: (isSystem: boolean) => isSystem ? <Tag color="orange">系统</Tag> : '-'
-    },
-    {
-      title: '操作',
-      width: 150,
-      render: (_: any, record: DataDictionary) => (
-        <Space>
-          <Button size="small" icon={<EditOutlined />} onClick={() => handleOpenDictModal(record)}>编辑</Button>
-          {!record.is_system && (
-            <Popconfirm
-              title="确定删除此数据字典？"
-              onConfirm={() => handleDeleteDict(record._id)}
-              okText="确定"
-              cancelText="取消"
-            >
-              <Button size="small" danger icon={<DeleteOutlined />}>删除</Button>
-            </Popconfirm>
-          )}
-        </Space>
-      )
-    },
-  ];
-
-  const profileFormComponent = (
-    <Form form={profileForm} layout="vertical">
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-        <Form.Item label="用户名" name="username">
-          <Input prefix={<UserOutlined />} placeholder="用户名" disabled />
-        </Form.Item>
-        <Form.Item label="显示名称" name="display_name" rules={[{ required: true, message: '请输入显示名称' }]}>
-          <Input placeholder="显示名称" />
-        </Form.Item>
+  const profileTab = (
+    <Card>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+        <Button type="primary" icon={<SaveOutlined />} loading={loading} onClick={handleSave}>
+          保存设置
+        </Button>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-        <Form.Item label="邮箱" name="email" rules={[{ required: true, type: 'email', message: '请输入有效邮箱' }]}>
-          <Input prefix={<GlobalOutlined />} type="email" placeholder="邮箱地址" />
+      <Form form={profileForm} layout="vertical">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+          <Form.Item label="用户名" name="username">
+            <Input prefix={<UserOutlined />} placeholder="用户名" disabled />
+          </Form.Item>
+          <Form.Item label="显示名称" name="display_name" rules={[{ required: true, message: '请输入显示名称' }]}>
+            <Input placeholder="显示名称" />
+          </Form.Item>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+          <Form.Item label="邮箱" name="email" rules={[{ required: true, type: 'email', message: '请输入有效邮箱' }]}>
+            <Input prefix={<GlobalOutlined />} type="email" placeholder="邮箱地址" />
+          </Form.Item>
+          <Form.Item label="电话" name="phone">
+            <Input placeholder="手机号码" />
+          </Form.Item>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+          <Form.Item label="部门" name="department">
+            <Select placeholder="选择部门">
+              <Select.Option value="技术部">技术部</Select.Option>
+              <Select.Option value="研发部">研发部</Select.Option>
+              <Select.Option value="测试部">测试部</Select.Option>
+              <Select.Option value="产品部">产品部</Select.Option>
+              <Select.Option value="运维部">运维部</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item label="职位" name="position">
+            <Input placeholder="职位" />
+          </Form.Item>
+        </div>
+        <Form.Item label="简介" name="bio">
+          <TextArea rows={4} placeholder="个人简介" />
         </Form.Item>
-        <Form.Item label="电话" name="phone">
-          <Input placeholder="手机号码" />
-        </Form.Item>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-        <Form.Item label="部门" name="department">
-          <Select placeholder="选择部门">
-            <Select.Option value="技术部">技术部</Select.Option>
-            <Select.Option value="研发部">研发部</Select.Option>
-            <Select.Option value="测试部">测试部</Select.Option>
-            <Select.Option value="产品部">产品部</Select.Option>
-            <Select.Option value="运维部">运维部</Select.Option>
-          </Select>
-        </Form.Item>
-        <Form.Item label="职位" name="position">
-          <Input placeholder="职位" />
-        </Form.Item>
-      </div>
-      <Form.Item label="简介" name="bio">
-        <TextArea rows={4} placeholder="个人简介" />
-      </Form.Item>
-    </Form>
+      </Form>
+    </Card>
   );
 
-  const notificationFormComponent = (
-    <div>
+  const notificationTab = (
+    <Card>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+        <Button type="primary" icon={<SaveOutlined />} loading={loading} onClick={handleSave}>
+          保存设置
+        </Button>
+      </div>
       <Card title="消息通知" style={{ marginBottom: 16 }}>
         <Form layout="vertical">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f0f0f0' }}>
@@ -538,11 +685,16 @@ const Settings: React.FC = () => {
           </div>
         </Form>
       </Card>
-    </div>
+    </Card>
   );
 
-  const securityFormComponent = (
-    <div>
+  const securityTab = (
+    <Card>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+        <Button type="primary" icon={<SaveOutlined />} loading={loading} onClick={handleSave}>
+          保存设置
+        </Button>
+      </div>
       <Card title="密码安全" style={{ marginBottom: 16 }}>
         <Form form={passwordForm} layout="vertical">
           <Form.Item label="当前密码" name="currentPassword" rules={[{ required: true, message: '请输入当前密码' }]}>
@@ -585,11 +737,16 @@ const Settings: React.FC = () => {
           </div>
         </Form>
       </Card>
-    </div>
+    </Card>
   );
 
-  const appearanceFormComponent = (
-    <div>
+  const appearanceTab = (
+    <Card>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+        <Button type="primary" icon={<SaveOutlined />} loading={loading} onClick={handleSave}>
+          保存设置
+        </Button>
+      </div>
       <Card title="主题设置" style={{ marginBottom: 16 }}>
         <Form layout="vertical">
           <Form.Item label="主题模式">
@@ -664,15 +821,15 @@ const Settings: React.FC = () => {
           </div>
         </Form>
       </Card>
-    </div>
+    </Card>
   );
 
   const permissionTab = (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+    <Card>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
         <Tabs activeKey={activePermTab} onChange={setActivePermTab} items={[
-          { key: 'roles', label: '角色管理', icon: <LockOutlined /> },
-          { key: 'groups', label: '用户组管理', icon: <UserOutlined /> },
+          { key: 'roles', label: '角色管理' },
+          { key: 'groups', label: '用户组管理' },
         ]} />
         <Button
           type="primary"
@@ -704,134 +861,41 @@ const Settings: React.FC = () => {
           loading={settingsLoading}
         />
       )}
-    </div>
+    </Card>
   );
 
   const dictionaryTab = (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Select
-          value={dictCategoryFilter}
-          onChange={setDictCategoryFilter}
-          style={{ width: 200 }}
-          placeholder="筛选分类"
-        >
-          <Select.Option value="">全部</Select.Option>
-          {[...new Set(dataDictionaries.map(d => d.category))].sort().map(category => (
-            <Select.Option key={category} value={category}>
-              {CATEGORY_NAMES[category] || category}
-            </Select.Option>
-          ))}
-        </Select>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => handleOpenDictModal(undefined, dictCategoryFilter)}
-        >
-          添加数据字典
-        </Button>
-      </div>
-
-      <Spin spinning={dictLoading}>
-        <Table
-          columns={dictColumns}
-          dataSource={
-            dataDictionaries
-              .filter(d => !dictCategoryFilter || d.category === dictCategoryFilter)
-              .sort((a, b) => {
-                if (a.category !== b.category) {
-                  return a.category.localeCompare(b.category);
-                }
-                return (a.sort_order || 0) - (b.sort_order || 0);
-              })
-          }
-          rowKey="_id"
-          pagination={{ pageSize: 10 }}
-          size="small"
-          locale={{ emptyText: '暂无数据字典' }}
-        />
-      </Spin>
-    </div>
+    <Card>
+      <Tabs activeKey={activeDataItemTab} onChange={setActiveDataItemTab} items={
+        Object.entries(DATA_ITEM_CATEGORIES).map(([key, label]) => ({
+          key,
+          label,
+          children: <DataItemTab category={key} categoryName={label} />
+        }))
+      } />
+    </Card>
   );
 
   return (
-    <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>系统设置</Title>
-        <Button type="primary" icon={<SaveOutlined />} loading={loading} onClick={handleSave}>
-          保存设置
-        </Button>
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <SettingOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+          系统设置
+        </Title>
       </div>
 
-      <Card loading={settingsLoading}>
-        <Tabs activeKey={activeTab} onChange={setActiveTab} items={[
-          { key: 'profile', label: '个人信息', icon: <UserOutlined /> },
-          { key: 'notification', label: '通知设置', icon: <BellOutlined /> },
-          { key: 'security', label: '安全设置', icon: <IeOutlined /> },
-          { key: 'appearance', label: '外观设置', icon: <AlertOutlined /> },
-          { key: 'permissions', label: '权限管理', icon: <LockOutlined /> },
-          { key: 'dictionary', label: '数据字典', icon: <DatabaseOutlined /> },
-        ]} />
-
-        <div style={{ padding: 16 }}>
-          {activeTab === 'profile' && profileFormComponent}
-          {activeTab === 'notification' && notificationFormComponent}
-          {activeTab === 'security' && securityFormComponent}
-          {activeTab === 'appearance' && appearanceFormComponent}
-          {activeTab === 'permissions' && permissionTab}
-          {activeTab === 'dictionary' && dictionaryTab}
-        </div>
-      </Card>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginTop: 16 }}>
-        <Card title="系统信息">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#666' }}>系统版本</span>
-              <span style={{ fontFamily: 'monospace' }}>v1.0.0-alpha</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#666' }}>最后更新</span>
-              <span>2026-05-23 10:30:00.000</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#666' }}>数据存储</span>
-              <span>MongoDB</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#666' }}>前端框架</span>
-              <span>React 18</span>
-            </div>
-          </div>
-        </Card>
-        <Card title="快速操作">
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <Button type="primary" style={{ width: '100%' }} onClick={() => message.success('缓存已清理')}>清理缓存</Button>
-            <Button style={{ width: '100%' }} onClick={() => message.info('数据导出中...')}>导出数据</Button>
-            <Button danger style={{ width: '100%' }} onClick={() => {
-              profileForm.resetFields();
-              setNotificationSettings({
-                emailNotification: true,
-                inAppNotification: true,
-                browserNotification: false,
-                taskReminder: true,
-                riskAlert: true,
-              });
-              setSecuritySettings({
-                twoFactorAuth: false,
-                loginNotification: true,
-              });
-              setAppearanceSettings({
-                theme: 'light',
-                accentColor: '#1890ff',
-                fontSize: 'medium',
-                compactLayout: false,
-              });
-              message.success('设置已重置');
-            }}>重置设置</Button>
-          </Space>
-        </Card>
-      </div>
+      <Tabs
+        defaultActiveKey="dictionary"
+        items={[
+          { key: 'companyInfo', label: '机构信息', children: orgInfoTab },
+          { key: 'notification', label: '通知设置', children: notificationTab },
+          { key: 'security', label: '安全设置', children: securityTab },
+          { key: 'appearance', label: '外观设置', children: appearanceTab },
+          { key: 'permissions', label: '权限管理', children: permissionTab },
+          { key: 'dictionary', label: '数据字典', children: dictionaryTab },
+        ]}
+      />
 
       <Modal
         title={editingRole?.id ? '编辑角色' : '添加角色'}
@@ -957,39 +1021,63 @@ const Settings: React.FC = () => {
       </Modal>
 
       <Modal
-        title={editingDict?._id ? '编辑数据字典' : '添加数据字典'}
-        open={dictModalOpen}
-        onCancel={handleCloseDictModal}
+        title={editingDept?.id ? '编辑部门' : '添加部门'}
+        open={deptModalOpen}
+        onCancel={handleCloseDeptModal}
         footer={[
-          <Button key="back" onClick={handleCloseDictModal}>取消</Button>,
-          <Button key="submit" type="primary" onClick={handleSaveDict}>保存</Button>,
+          <Button key="back" onClick={handleCloseDeptModal}>取消</Button>,
+          <Button key="submit" type="primary" onClick={handleSaveDept}>保存</Button>,
         ]}
       >
-        <Form form={dictForm} layout="vertical">
-          <Form.Item label="分类" name="category" rules={[{ required: true, message: '请输入分类' }]}>
-            <Input placeholder="请输入分类，如：project_role" />
+        <Form form={deptForm} layout="vertical">
+          <Form.Item label="部门编码" name="code" rules={[{ required: true, message: '请输入部门编码' }]}>
+            <Input placeholder="请输入部门编码" />
           </Form.Item>
-          <Form.Item label="编码" name="code" rules={[{ required: true, message: '请输入编码' }]}>
-            <Input placeholder="请输入编码" />
+          <Form.Item label="部门名称" name="name" rules={[{ required: true, message: '请输入部门名称' }]}>
+            <Input placeholder="请输入部门名称" />
           </Form.Item>
-          <Form.Item label="名称" name="name" rules={[{ required: true, message: '请输入名称' }]}>
-            <Input placeholder="请输入名称" />
-          </Form.Item>
-          <Form.Item label="值" name="value" rules={[{ required: true, message: '请输入值' }]}>
-            <Input placeholder="请输入值" />
+          <Form.Item label="上级部门" name="parent_id">
+            <Select placeholder="请选择上级部门" style={{ width: '100%' }}>
+              <Select.Option value="">无</Select.Option>
+              {departments.filter(d => d.id !== editingDept?.id).map(d => (
+                <Select.Option key={d.id} value={d.id}>{d.name}</Select.Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item label="描述" name="description">
             <TextArea placeholder="请输入描述" rows={3} />
-          </Form.Item>
-          <Form.Item label="排序" name="sort_order">
-            <InputNumber min={1} placeholder="请输入排序号" style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item label="启用" name="is_active" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>
       </Modal>
-    </>
+
+      <Modal
+        title={editingJobLevel?.id ? '编辑职级' : '添加职级'}
+        open={jobLevelModalOpen}
+        onCancel={handleCloseJobLevelModal}
+        footer={[
+          <Button key="back" onClick={handleCloseJobLevelModal}>取消</Button>,
+          <Button key="submit" type="primary" onClick={handleSaveJobLevel}>保存</Button>,
+        ]}
+      >
+        <Form form={jobLevelForm} layout="vertical">
+          <Form.Item label="职级编码" name="code" rules={[{ required: true, message: '请输入职级编码' }]}>
+            <Input placeholder="请输入职级编码" />
+          </Form.Item>
+          <Form.Item label="职级名称" name="name" rules={[{ required: true, message: '请输入职级名称' }]}>
+            <Input placeholder="请输入职级名称" />
+          </Form.Item>
+          <Form.Item label="描述" name="description">
+            <TextArea placeholder="请输入描述" rows={3} />
+          </Form.Item>
+          <Form.Item label="启用" name="is_active" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
   );
 };
 

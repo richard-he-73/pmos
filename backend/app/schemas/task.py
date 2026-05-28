@@ -12,7 +12,7 @@ class TaskBase(TimestampMixin):
     title: str = Field(..., min_length=1, max_length=200)
     description: str = ""
     assignee_id: Optional[str] = None
-    reporter_id: str
+    reporter_id: Optional[str] = None
     status: str = Field(
         default="todo", pattern="^(todo|in_progress|review|done|cancelled)$"
     )

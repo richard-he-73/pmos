@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 30
     jwt_refresh_token_expire_days: int = 7
 
-    allowed_origins: str = "http://localhost:16001"
+    allowed_origins: str = "http://localhost:16001,http://localhost:16002,http://localhost:5173,http://localhost:3000"
 
     celery_broker_url: str = "amqp://guest:guest@localhost:5672/"
     celery_result_backend: str = "redis://localhost:6379/1"

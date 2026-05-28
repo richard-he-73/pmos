@@ -15,7 +15,8 @@ import {
   SafetyOutlined,
   RocketOutlined,
   ClockCircleOutlined,
-  ArrowLeftOutlined
+  ArrowLeftOutlined,
+  ToolOutlined
 } from '@ant-design/icons';
 
 const { Text } = Typography;
@@ -65,6 +66,15 @@ const Sidebar: React.FC = () => {
         { key: '/projects', icon: <FolderOutlined />, label: '项目列表' },
       ]
     },
+    {
+      key: 'system',
+      icon: <ToolOutlined />,
+      label: '系统管理',
+      children: [
+        { key: '/users', icon: <UserOutlined />, label: '用户管理' },
+        { key: '/settings', icon: <SettingOutlined />, label: '系统设置' },
+      ]
+    },
   ];
 
   const handleClick = (e: { key: string }) => {
@@ -77,12 +87,6 @@ const Sidebar: React.FC = () => {
 
   return (
     <div className="sidebar" style={{ width: 240, minHeight: '100vh', background: '#001529', color: '#fff', padding: '24px 0' }}>
-      <div style={{ padding: '0 24px 16px', borderBottom: '1px solid rgba(255, 255, 255, 0.12)', marginBottom: 16 }}>
-        <Text strong style={{ fontSize: 16, color: '#fff' }}>
-          PMOS 项目管理
-        </Text>
-      </div>
-
       {isProjectPage ? (
         <div>
           <div style={{ padding: '0 16px 8px' }}>

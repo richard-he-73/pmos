@@ -5,6 +5,8 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SettingOutlined } from '@an
 import type { ColumnsType } from 'antd/es/table';
 import type { ConfigItem } from '../../../types/models';
 import { useGetConfigItemsQuery, useCreateConfigItemMutation, useUpdateConfigItemMutation, useDeleteConfigItemMutation } from '../../../store/api';
+import { useDataItems } from '../../../hooks/useDataItems';
+import DataItemSelect from '../../../components/common/DataItemSelect';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -15,6 +17,8 @@ const ProjectConfiguration: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ConfigItem | null>(null);
   const [form] = Form.useForm();
+  
+  const { items: configTypes } = useDataItems('config_type');
   
   const { data: configItems = [], isLoading: loading, refetch } = useGetConfigItemsQuery({ project_id: projectId });
   const [createConfigItem, { isLoading: isCreating }] = useCreateConfigItemMutation();
@@ -119,12 +123,7 @@ const ProjectConfiguration: React.FC = () => {
             <TextArea rows={3} placeholder="配置值" />
           </Form.Item>
           <Form.Item name="type" label="类型" rules={[{ required: true }]}>
-            <Select placeholder="选择类型">
-              <Select.Option value="string">字符串</Select.Option>
-              <Select.Option value="number">数字</Select.Option>
-              <Select.Option value="boolean">布尔</Select.Option>
-              <Select.Option value="json">JSON</Select.Option>
-            </Select>
+            <DataItemSelect category="config_type" />
           </Form.Item>
           <Form.Item name="category" label="分类">
             <Input placeholder="分类" />

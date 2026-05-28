@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Table, Button, Tag, message, Space, Popconfirm, Typography, Tooltip, Modal, Form, Input, Select, DatePicker, Input as AntInput } from 'antd';
+import { Card, Table, Button, Tag, message, Space, Popconfirm, Typography, Tooltip, Modal, Form, Input, DatePicker, Input as AntInput } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, RocketOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import type { DeploymentPlan } from '../../../types/models';
 import { useGetDeploymentsQuery, useDeleteDeploymentMutation, useCreateDeploymentMutation, useUpdateDeploymentMutation } from '../../../store/api';
+import { useDataItems } from '../../../hooks/useDataItems';
+import DataItemSelect from '../../../components/common/DataItemSelect';
 
 const { Title } = Typography;
 const { TextArea } = AntInput;
@@ -21,6 +23,7 @@ const ProjectDeployment: React.FC = () => {
   const [deleteDeployment] = useDeleteDeploymentMutation();
   const [createDeployment, { isLoading: isCreating }] = useCreateDeploymentMutation();
   const [updateDeployment, { isLoading: isUpdating }] = useUpdateDeploymentMutation();
+  const { items: deploymentStatuses } = useDataItems('deployment_status');
 
   const handleCreate = () => {
     setEditingItem(null);
@@ -137,14 +140,7 @@ const ProjectDeployment: React.FC = () => {
             <Input placeholder="版本号" />
           </Form.Item>
           <Form.Item name="status" label="状态" rules={[{ required: true }]}>
-            <Select placeholder="选择状态">
-              <Select.Option value="planned">计划中</Select.Option>
-              <Select.Option value="approved">已批准</Select.Option>
-              <Select.Option value="deploying">部署中</Select.Option>
-              <Select.Option value="success">成功</Select.Option>
-              <Select.Option value="failed">失败</Select.Option>
-              <Select.Option value="rolled_back">已回滚</Select.Option>
-            </Select>
+            <DataItemSelect category="deployment_status" />
           </Form.Item>
           <Form.Item name="scheduled_date" label="计划日期" rules={[{ required: true }]}>
             <DatePicker style={{ width: '100%' }} placeholder="选择日期" />

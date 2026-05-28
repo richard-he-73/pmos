@@ -8,10 +8,12 @@ from app.api.v1 import (
     auth,
     communications,
     data_dictionaries,
+    data_item,
     development,
     export,
     modules,
     notifications,
+    organization,
     permissions,
     projects,
     requirements,
@@ -31,11 +33,19 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from app.core.database import close_mongo, connect_to_mongo
+    from app.core.database import close_mongo, connect_to_mongo, db
     from app.services.cache import cache
+    from app.api.v1.data_item import initialize_data_items_on_startup
     
     await connect_to_mongo()
     await cache.connect()
+    
+    # Initialize data items on startup
+    try:
+        await initialize_data_items_on_startup(db)
+    except Exception as e:
+        print(f"Warning: Failed to initialize data items on startup: {e}")
+    
     yield
     await close_mongo()
     await cache.disconnect()
@@ -74,6 +84,8 @@ def create_app(custom_lifespan: Callable | None = None) -> FastAPI:
     app.include_router(users.router, prefix=settings.api_prefix)
     app.include_router(plans.router, prefix=settings.api_prefix)
     app.include_router(data_dictionaries.router, prefix=settings.api_prefix)
+    app.include_router(organization.router, prefix=settings.api_prefix)
+    app.include_router(data_item.router, prefix=settings.api_prefix)
 
     @app.get("/health")
     async def health_check():

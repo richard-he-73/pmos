@@ -50,6 +50,20 @@ async def list_projects(
     return result
 
 
+
+
+@router.get("/default")
+async def get_default_project(
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: UserInDB = Depends(get_current_user),
+):
+    project = await db.projects.find_one({"is_default": True})
+    if not project:
+        return None
+    
+    project["_id"] = str(project["_id"])
+    return ProjectResponse(**project)
+
 @router.get("/{project_id}", response_model=ProjectResponse)
 async def get_project(
     project_id: str,
@@ -344,3 +358,37 @@ async def transition_project_status(
     updated = await db.projects.find_one({"_id": ObjectId(project_id)})
     updated["_id"] = str(updated["_id"])
     return ProjectResponse(**updated)
+
+
+@router.post(
+    "/{project_id}/set-default",
+    response_model=ProjectResponse,
+)
+async def set_default_project(
+    project_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: UserInDB = Depends(get_current_user),
+):
+    if not ObjectId.is_valid(project_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="无效的项目ID"
+        )
+
+    project = await db.projects.find_one({"_id": ObjectId(project_id)})
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="项目不存在")
+
+    # 先将所有项目的 is_default 设置为 False
+    await db.projects.update_many({}, {"$set": {"is_default": False}})
+    
+    # 再将当前项目设置为默认项目
+    await db.projects.update_one(
+        {"_id": ObjectId(project_id)},
+        {"$set": {"is_default": True, "updated_at": datetime.datetime.now(datetime.UTC)}},
+    )
+
+    updated = await db.projects.find_one({"_id": ObjectId(project_id)})
+    updated["_id"] = str(updated["_id"])
+    return ProjectResponse(**updated)
+
+

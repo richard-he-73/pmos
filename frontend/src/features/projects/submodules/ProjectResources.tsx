@@ -5,6 +5,8 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, WarningOutlined, SyncOutlin
 import type { ColumnsType } from 'antd/es/table';
 import { useGetResourcesQuery, useCreateResourceMutation, useUpdateResourceMutation, useDeleteResourceMutation, useCheckResourceConflictsQuery } from '../../../store/api';
 import type { Resource } from '../../../types/models';
+import { useDataItems } from '../../../hooks/useDataItems';
+import DataItemSelect from '../../../components/common/DataItemSelect';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -23,6 +25,9 @@ interface ConflictItem {
 const ProjectResources: React.FC = () => {
   const { id: projectId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  const { items: resourceTypes } = useDataItems('resource_type');
+  const { items: resourceAvailability } = useDataItems('resource_availability');
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
@@ -211,30 +216,21 @@ const ProjectResources: React.FC = () => {
 
       <Card style={{ marginBottom: 16 }}>
         <Space wrap>
-          <Select
+          <DataItemSelect
+            category="resource_type"
             placeholder="筛选类型"
             allowClear
             style={{ width: 150 }}
             value={filters.type || undefined}
             onChange={(value) => setFilters((prev) => ({ ...prev, type: value || '' }))}
-            options={[
-              { label: '人力', value: 'human' },
-              { label: '设备', value: 'equipment' },
-              { label: '物资', value: 'material' },
-              { label: '软件', value: 'software' },
-            ]}
           />
-          <Select
+          <DataItemSelect
+            category="resource_availability"
             placeholder="筛选可用性"
             allowClear
             style={{ width: 150 }}
             value={filters.availability || undefined}
             onChange={(value) => setFilters((prev) => ({ ...prev, availability: value || '' }))}
-            options={[
-              { label: '可用', value: 'available' },
-              { label: '繁忙', value: 'busy' },
-              { label: '不可用', value: 'unavailable' },
-            ]}
           />
         </Space>
       </Card>
@@ -329,12 +325,7 @@ const ProjectResources: React.FC = () => {
             <Input placeholder="资源名称" />
           </Form.Item>
           <Form.Item name="type" label="资源类型" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="human">人力</Select.Option>
-              <Select.Option value="equipment">设备</Select.Option>
-              <Select.Option value="material">物资</Select.Option>
-              <Select.Option value="software">软件</Select.Option>
-            </Select>
+            <DataItemSelect category="resource_type" placeholder="选择资源类型" />
           </Form.Item>
           <Form.Item name="description" label="描述">
             <TextArea rows={3} placeholder="资源描述" />
@@ -356,11 +347,7 @@ const ProjectResources: React.FC = () => {
               <InputNumber style={{ width: '100%' }} placeholder="容量" min={0} />
             </Form.Item>
             <Form.Item name="availability" label="可用性" rules={[{ required: true }]}>
-              <Select>
-                <Select.Option value="available">可用</Select.Option>
-                <Select.Option value="busy">繁忙</Select.Option>
-                <Select.Option value="unavailable">不可用</Select.Option>
-              </Select>
+              <DataItemSelect category="resource_availability" placeholder="选择可用性" />
             </Form.Item>
           </div>
           <Form.Item name="hourly_rate" label="成本/人天">

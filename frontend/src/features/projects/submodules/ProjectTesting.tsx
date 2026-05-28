@@ -6,6 +6,8 @@ import type { ColumnsType } from 'antd/es/table';
 import { useGetTestCasesQuery, useCreateTestCaseMutation, useUpdateTestCaseMutation, useDeleteTestCaseMutation, useGetDefectsQuery, useCreateDefectMutation, useUpdateDefectMutation, useDeleteDefectMutation, useGetTestReportsQuery, useCreateTestReportMutation, useUpdateTestReportMutation, useDeleteTestReportMutation } from '../../../store/api';
 import type { TestCase, Defect, TestReport } from '../../../types/models';
 import { TEST_CASE_STATUS, DEFECT_STATUS, SEVERITY, PRIORITY } from '../../../utils/constants';
+import { useDataItems } from '../../../hooks/useDataItems';
+import DataItemSelect from '../../../components/common/DataItemSelect';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -36,6 +38,8 @@ const ProjectTesting: React.FC = () => {
   const [createTestReport] = useCreateTestReportMutation();
   const [updateTestReport] = useUpdateTestReportMutation();
   const [deleteTestReport] = useDeleteTestReportMutation();
+  const { items: testingStatuses } = useDataItems('testing_status');
+  const { items: priorities } = useDataItems('priority');
 
   const handleCreateTestCase = () => {
     setEditingTestCase(null);
@@ -459,19 +463,10 @@ const ProjectTesting: React.FC = () => {
             <Input placeholder="所属模块" />
           </Form.Item>
           <Form.Item name="priority" label="优先级" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="low">低</Select.Option>
-              <Select.Option value="medium">中</Select.Option>
-              <Select.Option value="high">高</Select.Option>
-              <Select.Option value="critical">紧急</Select.Option>
-            </Select>
+            <DataItemSelect category="priority" />
           </Form.Item>
           <Form.Item name="status" label="状态" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="draft">草稿</Select.Option>
-              <Select.Option value="active">活跃</Select.Option>
-              <Select.Option value="deprecated">已废弃</Select.Option>
-            </Select>
+            <DataItemSelect category="testing_status" />
           </Form.Item>
           <Form.Item name="preconditions" label="前置条件">
             <TextArea rows={2} placeholder="前置条件" />
@@ -513,22 +508,10 @@ const ProjectTesting: React.FC = () => {
             </Select>
           </Form.Item>
           <Form.Item name="priority" label="优先级" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="low">低</Select.Option>
-              <Select.Option value="medium">中</Select.Option>
-              <Select.Option value="high">高</Select.Option>
-              <Select.Option value="critical">紧急</Select.Option>
-            </Select>
+            <DataItemSelect category="priority" />
           </Form.Item>
           <Form.Item name="status" label="状态" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="new">新建</Select.Option>
-              <Select.Option value="open">已打开</Select.Option>
-              <Select.Option value="in_progress">修复中</Select.Option>
-              <Select.Option value="resolved">已解决</Select.Option>
-              <Select.Option value="closed">已关闭</Select.Option>
-              <Select.Option value="rejected">已拒绝</Select.Option>
-            </Select>
+            <DataItemSelect category="testing_status" />
           </Form.Item>
           <Form.Item name="environment" label="环境">
             <Input placeholder="测试环境" />

@@ -42,6 +42,7 @@ export interface Project {
   };
   progress: number;
   tags: string[];
+  is_default?: boolean;
   created_at: string;
   updated_at: string;
 }

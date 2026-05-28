@@ -103,6 +103,17 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ['Projects'],
     }),
+    setDefaultProject: builder.mutation({
+      query: (projectId) => ({
+        url: `/projects/${projectId}/set-default`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Projects'],
+    }),
+    getDefaultProject: builder.query({
+      query: (_: void): string => '/projects/default',
+      providesTags: ['Projects'],
+    }),
     
     // Tasks
     getTasks: builder.query({
@@ -575,7 +586,12 @@ export const apiSlice = createApi({
     
     // Stats
     getStats: builder.query({
-      query: (_: void): string => '/stats',
+      query: (projectId?: string) => {
+        const params = new URLSearchParams();
+        if (projectId) params.append('project_id', projectId);
+        const queryString = params.toString();
+        return `/stats${queryString ? `?${queryString}` : ''}`;
+      },
       providesTags: ['Stats'],
     }),
     getAlerts: builder.query({
@@ -604,19 +620,49 @@ export const apiSlice = createApi({
       invalidatesTags: ['Stats'],
     }),
     getProjectStatusChart: builder.query({
-      query: (_: void): string => '/stats/chart/project-status',
+      query: (projectId?: string) => {
+        const params = new URLSearchParams();
+        if (projectId) params.append('project_id', projectId);
+        const queryString = params.toString();
+        return `/stats/chart/project-status${queryString ? `?${queryString}` : ''}`;
+      },
       providesTags: ['Stats'],
     }),
     getTaskPriorityChart: builder.query({
-      query: (_: void): string => '/stats/chart/task-priority',
+      query: (projectId?: string) => {
+        const params = new URLSearchParams();
+        if (projectId) params.append('project_id', projectId);
+        const queryString = params.toString();
+        return `/stats/chart/task-priority${queryString ? `?${queryString}` : ''}`;
+      },
+      providesTags: ['Stats'],
+    }),
+    getProjectPriorityChart: builder.query({
+      query: (projectId?: string) => {
+        const params = new URLSearchParams();
+        if (projectId) params.append('project_id', projectId);
+        const queryString = params.toString();
+        return `/stats/chart/project-priority${queryString ? `?${queryString}` : ''}`;
+      },
       providesTags: ['Stats'],
     }),
     getTaskTrendChart: builder.query({
-      query: (limit?: number): string => `/stats/chart/task-trend?limit=${limit || 30}`,
+      query: ({ limit, projectId }: { limit?: number; projectId?: string }) => {
+        const params = new URLSearchParams();
+        if (limit) params.append('limit', limit.toString());
+        if (projectId) params.append('project_id', projectId);
+        const queryString = params.toString();
+        return `/stats/chart/task-trend${queryString ? `?${queryString}` : ''}`;
+      },
       providesTags: ['Stats'],
     }),
     getBudgetUsageChart: builder.query({
-      query: (_: void): string => '/stats/chart/budget-usage',
+      query: (projectId?: string) => {
+        const params = new URLSearchParams();
+        if (projectId) params.append('project_id', projectId);
+        const queryString = params.toString();
+        return `/stats/chart/budget-usage${queryString ? `?${queryString}` : ''}`;
+      },
       providesTags: ['Stats'],
     }),
     getResourceUtilizationChart: builder.query({
@@ -1023,6 +1069,8 @@ export const {
   useRemoveTeamMemberMutation,
   useGetProjectStatusFlowQuery,
   useTransitionProjectStatusMutation,
+  useSetDefaultProjectMutation,
+  useGetDefaultProjectQuery,
   // Tasks
   useGetTasksQuery,
   useGetTaskQuery,
@@ -1105,6 +1153,7 @@ export const {
   useUpdateAlertMutation,
   useGetProjectStatusChartQuery,
   useGetTaskPriorityChartQuery,
+  useGetProjectPriorityChartQuery,
   useGetTaskTrendChartQuery,
   useGetBudgetUsageChartQuery,
   useGetResourceUtilizationChartQuery,

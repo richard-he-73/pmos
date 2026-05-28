@@ -13,23 +13,49 @@ router = APIRouter(prefix="/stats", tags=["统计"])
 
 @router.get("")
 async def get_stats(
+    project_id: str | None = None,
     db: AsyncIOMotorDatabase = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
+    # 构建查询条件
+    project_query = {}
+    task_query = {}
+    risk_query = {}
+    communication_query = {}
+    requirements_query = {}
+    test_case_query = {}
+    config_query = {}
+    drill_query = {}
+    deployment_query = {}
+    
+    if project_id and ObjectId.is_valid(project_id):
+        project_query["_id"] = ObjectId(project_id)
+        task_query["project_id"] = project_id
+        risk_query["project_id"] = project_id
+        communication_query["project_id"] = project_id
+        requirements_query["project_id"] = project_id
+        test_case_query["project_id"] = project_id
+        config_query["project_id"] = project_id
+        drill_query["project_id"] = project_id
+        deployment_query["project_id"] = project_id
+    
     project_stats = await db.projects.aggregate(
         [
+            {"$match": project_query},
             {"$group": {"_id": "$status", "count": {"$sum": 1}}},
         ]
     ).to_list(length=10)
 
     task_stats = await db.tasks.aggregate(
         [
+            {"$match": task_query},
             {"$group": {"_id": "$status", "count": {"$sum": 1}}},
         ]
     ).to_list(length=10)
 
     task_priority_stats = await db.tasks.aggregate(
         [
+            {"$match": task_query},
             {"$group": {"_id": "$priority", "count": {"$sum": 1}}},
         ]
     ).to_list(length=10)
@@ -40,9 +66,40 @@ async def get_stats(
         ]
     ).to_list(length=10)
 
-    total_projects = await db.projects.count_documents({})
-    total_tasks = await db.tasks.count_documents({})
+    total_projects = await db.projects.count_documents(project_query)
+    total_tasks = await db.tasks.count_documents(task_query)
     total_resources = await db.resources.count_documents({})
+    
+    # 各模块统计数据
+    active_projects = await db.projects.count_documents({**project_query, "status": "active"})
+    high_risk_count = await db.risks.count_documents({**risk_query, "level": {"$in": ["high", "critical"]}})
+    communication_count = await db.communication.count_documents(communication_query)
+    requirements_count = await db.requirements.count_documents(requirements_query)
+    development_count = await db.tasks.count_documents({**task_query, "type": "development"})
+    testing_count = await db.test_cases.count_documents(test_case_query)
+    configuration_count = await db.configurations.count_documents(config_query)
+    drill_count = await db.drills.count_documents(drill_query)
+    deployment_count = await db.deployments.count_documents(deployment_query)
+    human_resources = await db.resources.count_documents({"type": "human"})
+
+    # 判断状态（超过阈值显示预警）
+    def get_status(count: int, threshold: int = 10):
+        return "预警" if count >= threshold else "正常"
+
+    modules_data = {
+        "projects": {"count": active_projects, "status": get_status(active_projects, 20)},
+        "resources": {"count": human_resources, "status": get_status(human_resources, 100)},
+        "planning": {"count": total_tasks, "status": get_status(total_tasks, 200)},
+        "risks": {"count": high_risk_count, "status": get_status(high_risk_count, 5)},
+        "communication": {"count": communication_count, "status": get_status(communication_count, 100)},
+        "requirements": {"count": requirements_count, "status": get_status(requirements_count, 100)},
+        "development": {"count": development_count, "status": get_status(development_count, 500)},
+        "testing": {"count": testing_count, "status": get_status(testing_count, 500)},
+        "configuration": {"count": configuration_count, "status": get_status(configuration_count, 50)},
+        "drill": {"count": drill_count, "status": get_status(drill_count, 20)},
+        "deployment": {"count": deployment_count, "status": get_status(deployment_count, 10)},
+        "work": {"count": "-", "status": "正常"},
+    }
 
     return {
         "projects": {
@@ -58,16 +115,23 @@ async def get_stats(
             "total": total_resources,
             "by_type": {s["_id"]: s["count"] for s in resource_stats},
         },
+        "modules": modules_data,
     }
 
 
 @router.get("/chart/project-status")
 async def get_project_status_chart(
+    project_id: str | None = None,
     db: AsyncIOMotorDatabase = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
+    match_query = {}
+    if project_id and ObjectId.is_valid(project_id):
+        match_query["_id"] = ObjectId(project_id)
+    
     stats = await db.projects.aggregate(
         [
+            {"$match": match_query},
             {"$group": {"_id": "$status", "count": {"$sum": 1}}},
             {"$project": {"name": "$_id", "value": "$count", "_id": 0}},
         ]
@@ -78,15 +142,60 @@ async def get_project_status_chart(
 
 @router.get("/chart/task-priority")
 async def get_task_priority_chart(
+    project_id: str | None = None,
     db: AsyncIOMotorDatabase = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
+    match_query = {}
+    if project_id:
+        match_query["project_id"] = project_id
+    
     stats = await db.tasks.aggregate(
         [
+            {"$match": match_query},
             {"$group": {"_id": "$priority", "count": {"$sum": 1}}},
             {"$project": {"name": "$_id", "value": "$count", "_id": 0}},
         ]
     ).to_list(length=10)
+
+    # 如果没有数据，返回默认数据
+    if not stats:
+        return [
+            {"name": "low", "value": 0},
+            {"name": "medium", "value": 0},
+            {"name": "high", "value": 0},
+            {"name": "critical", "value": 0},
+        ]
+
+    return stats
+
+
+@router.get("/chart/project-priority")
+async def get_project_priority_chart(
+    project_id: str | None = None,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: UserInDB = Depends(get_current_user),
+):
+    match_query = {}
+    if project_id and ObjectId.is_valid(project_id):
+        match_query["_id"] = ObjectId(project_id)
+    
+    stats = await db.projects.aggregate(
+        [
+            {"$match": match_query},
+            {"$group": {"_id": "$priority", "count": {"$sum": 1}}},
+            {"$project": {"name": "$_id", "value": "$count", "_id": 0}},
+        ]
+    ).to_list(length=10)
+
+    # 如果没有数据，返回默认数据
+    if not stats:
+        return [
+            {"name": "low", "value": 0},
+            {"name": "medium", "value": 0},
+            {"name": "high", "value": 0},
+            {"name": "critical", "value": 0},
+        ]
 
     return stats
 
@@ -94,12 +203,17 @@ async def get_task_priority_chart(
 @router.get("/chart/task-trend")
 async def get_task_trend_chart(
     limit: int = 30,
+    project_id: str | None = None,
     db: AsyncIOMotorDatabase = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
+    query = {}
+    if project_id:
+        query["project_id"] = project_id
+    
     tasks = (
         await db.tasks.find(
-            {},
+            query,
             {"created_at": 1, "status": 1},
         )
         .sort("created_at", -1)
@@ -111,14 +225,18 @@ async def get_task_trend_chart(
 
     trend_data = []
     for t in tasks:
+        created_at = t.get("created_at")
+        if not created_at:
+            continue
+            
         trend_data.append(
             {
                 "date": (
-                    t["created_at"].strftime("%Y-%m-%d")
-                    if hasattr(t["created_at"], "strftime")
-                    else str(t["created_at"])[:10]
+                    created_at.strftime("%Y-%m-%d")
+                    if hasattr(created_at, "strftime")
+                    else str(created_at)[:10]
                 ),
-                "status": t["status"],
+                "status": t.get("status", "todo"),
             }
         )
 
@@ -127,12 +245,17 @@ async def get_task_trend_chart(
 
 @router.get("/chart/budget-usage")
 async def get_budget_usage_chart(
+    project_id: str | None = None,
     db: AsyncIOMotorDatabase = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
+    query = {"budget_total": {"$gt": 0}}
+    if project_id and ObjectId.is_valid(project_id):
+        query["_id"] = ObjectId(project_id)
+    
     projects = (
         await db.projects.find(
-            {"budget_total": {"$gt": 0}},
+            query,
             {"name": 1, "budget_total": 1, "budget_used": 1},
         )
         .limit(20)

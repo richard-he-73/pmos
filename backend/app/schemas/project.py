@@ -25,6 +25,7 @@ class ProjectBase(TimestampMixin):
     budget_currency: str = "CNY"
     progress: float = Field(default=0.0, ge=0, le=100)
     tags: list[str] = []
+    is_default: bool = Field(default=False)
 
 
 class ProjectCreate(ProjectBase):
@@ -49,6 +50,7 @@ class ProjectUpdate(BaseDocument):
     budget_currency: str | None = None
     progress: float | None = None
     tags: list[str] | None = None
+    is_default: bool | None = None
 
 
 class ProjectInDB(ProjectBase):

@@ -1,23 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Table, Button, Modal, Form, Input, Select, DatePicker, message, Space, Tag, Popconfirm, Card, Typography, Progress, Row, Col, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, WarningOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { useGetRisksQuery, useCreateRiskMutation, useUpdateRiskMutation, useDeleteRiskMutation } from '../../../store/api';
-import { RISK_STATUS, RISK_SEVERITY } from '../../../utils/constants';
-
-const RISK_LIKELIHOOD = {
-  low: '低',
-  medium: '中',
-  high: '高',
-};
-
-const RISK_IMPACT = {
-  low: '低',
-  medium: '中',
-  high: '高',
-};
+import { RISK_SEVERITY } from '../../../utils/constants';
+import { useDataItems } from '../../../hooks/useDataItems';
+import DataItemSelect from '../../../components/common/DataItemSelect';
 
 const getRiskColor = (level: string) => {
   switch (level) {
@@ -29,8 +19,10 @@ const getRiskColor = (level: string) => {
 };
 
 const getRiskLevel = (likelihood: string, impact: string) => {
-  if (likelihood === 'high' || impact === 'high') return RISK_SEVERITY.high;
-  if (likelihood === 'medium' || impact === 'medium') return RISK_SEVERITY.medium;
+  const highLevels = ['high', 'very_high'];
+  const mediumLevels = ['medium'];
+  if (highLevels.includes(likelihood) || highLevels.includes(impact)) return RISK_SEVERITY.high;
+  if (mediumLevels.includes(likelihood) || mediumLevels.includes(impact)) return RISK_SEVERITY.medium;
   return RISK_SEVERITY.low;
 };
 
@@ -49,6 +41,28 @@ const ProjectRisks: React.FC = () => {
   const [createRisk, { isLoading: isCreating }] = useCreateRiskMutation();
   const [updateRisk, { isLoading: isUpdating }] = useUpdateRiskMutation();
   const [deleteRisk] = useDeleteRiskMutation();
+
+  const { items: riskStatuses } = useDataItems('risk_status');
+  const { items: priorities } = useDataItems('priority');
+  const { items: riskLikelihoods } = useDataItems('risk_likelihood');
+  const { items: riskImpacts } = useDataItems('risk_impact');
+  
+  // 构建查找表，用于显示
+  const likelihoodMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    riskLikelihoods.forEach(item => {
+      map[item.code] = item.name;
+    });
+    return map;
+  }, [riskLikelihoods]);
+  
+  const impactMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    riskImpacts.forEach(item => {
+      map[item.code] = item.name;
+    });
+    return map;
+  }, [riskImpacts]);
 
   const handleCreate = () => {
     setEditingRisk(null);
@@ -133,25 +147,23 @@ const ProjectRisks: React.FC = () => {
       title: '可能性',
       dataIndex: 'likelihood',
       width: 100,
-      render: (value: string) => RISK_LIKELIHOOD[value as keyof typeof RISK_LIKELIHOOD],
+      render: (value: string) => likelihoodMap[value] || value,
     },
     {
       title: '影响',
       dataIndex: 'impact',
       width: 100,
-      render: (value: string) => RISK_IMPACT[value as keyof typeof RISK_IMPACT],
+      render: (value: string) => impactMap[value] || value,
     },
     {
       title: '状态',
       dataIndex: 'status',
       width: 120,
       render: (status: string, record: any) => (
-        <Select
-          size="small"
+        <DataItemSelect
+          category="risk_status"
           value={status}
-          style={{ width: 100 }}
           onChange={(newStatus: string) => handleStatusChange(record._id, newStatus)}
-          options={Object.entries(RISK_STATUS).map(([key, label]) => ({ value: key, label }))}
         />
       ),
     },
@@ -268,20 +280,12 @@ const ProjectRisks: React.FC = () => {
           <Row gutter={12}>
             <Col span={12}>
               <Form.Item name="likelihood" label="可能性" rules={[{ required: true }]}>
-                <Select>
-                  {Object.entries(RISK_LIKELIHOOD).map(([key, label]) => (
-                    <Select.Option key={key} value={key}>{label}</Select.Option>
-                  ))}
-                </Select>
+                <DataItemSelect category="risk_likelihood" placeholder="请选择可能性" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="impact" label="影响" rules={[{ required: true }]}>
-                <Select>
-                  {Object.entries(RISK_IMPACT).map(([key, label]) => (
-                    <Select.Option key={key} value={key}>{label}</Select.Option>
-                  ))}
-                </Select>
+                <DataItemSelect category="risk_impact" placeholder="请选择影响" />
               </Form.Item>
             </Col>
           </Row>
@@ -289,11 +293,7 @@ const ProjectRisks: React.FC = () => {
             <TextArea rows={2} placeholder="缓解策略" />
           </Form.Item>
           <Form.Item name="status" label="状态" rules={[{ required: true }]} initialValue="open">
-            <Select>
-              {Object.entries(RISK_STATUS).map(([key, label]) => (
-                <Select.Option key={key} value={key}>{label}</Select.Option>
-              ))}
-            </Select>
+            <DataItemSelect category="risk_status" placeholder="请选择状态" />
           </Form.Item>
           <Form.Item name="owner" label="责任人">
             <Input placeholder="责任人" />

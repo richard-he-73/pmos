@@ -14,14 +14,17 @@ import {
 import { formatDateTime } from '../../utils/formatters';
 import { useUser } from '../../contexts/UserContext';
 import type { DataDictionary } from '../../types/models';
+import { getDepartments, getJobLevels, type Department, type JobLevel } from '../../services/organization';
+import { useDataItems } from '../../hooks/useDataItems';
+import type { DataItem } from '../../services/dataItem';
+import DataItemSelect from '../../components/common/DataItemSelect';
+import pinyin from 'pinyin';
 
 const { Title } = Typography;
 
 const DEFAULT_ROLE_NAMES: Record<string, string> = {
-  admin: '管理员',
-  manager: '项目经理',
-  member: '成员',
-  viewer: '查看者',
+  system: '系统管理员',
+  operator: '操作员',
 };
 
 const Users: React.FC = () => {
@@ -31,6 +34,8 @@ const Users: React.FC = () => {
   const [resetPasswordUser, setResetPasswordUser] = useState<any>(null);
   const [form] = Form.useForm();
   const [resetPasswordForm] = Form.useForm();
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [jobLevels, setJobLevels] = useState<JobLevel[]>([]);
   const { currentUser } = useUser();
 
   const { data: users = [], isLoading, refetch } = useGetUsersQuery();
@@ -40,8 +45,10 @@ const Users: React.FC = () => {
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
   const [deleteUser] = useDeleteUserMutation();
   const [resetPassword, { isLoading: isResettingPassword }] = useResetPasswordMutation();
+  const { items: userStatuses } = useDataItems('user_status');
+  const { items: systemRoles } = useDataItems('user_role');
 
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = currentUser?.role === 'system';
 
   useEffect(() => {
     if (dataDictionaries.length === 0) {
@@ -52,30 +59,63 @@ const Users: React.FC = () => {
     }
   }, [dataDictionaries.length, initializeDataDictionaries, refetchDictionaries]);
 
+  useEffect(() => {
+    loadOrganizationData();
+  }, []);
+
+  const loadOrganizationData = async () => {
+    try {
+      const [depts, levels] = await Promise.all([
+        getDepartments().catch(() => []),
+        getJobLevels().catch(() => []),
+      ]);
+      setDepartments(depts);
+      setJobLevels(levels);
+    } catch {
+      message.error('加载组织数据失败');
+    }
+  };
+
   const userRoles = useMemo(() => {
-    return dataDictionaries.filter(
-      (dict: DataDictionary) => dict.category === 'user_role' && dict.is_active
-    ).sort((a: DataDictionary, b: DataDictionary) => 
+    return systemRoles.sort((a: DataItem, b: DataItem) => 
       (a.sort_order || 0) - (b.sort_order || 0)
     );
-  }, [dataDictionaries]);
+  }, [systemRoles]);
 
   const getRoleColor = (roleValue: string) => {
     const colors: Record<string, string> = {
-      admin: 'red',
-      manager: 'blue',
-      member: 'green',
-      viewer: 'default',
+      system: 'red',
+      operator: 'blue',
     };
     return colors[roleValue] || 'default';
   };
 
   const getRoleName = (roleValue: string) => {
     if (userRoles.length > 0) {
-      const role = userRoles.find((r: DataDictionary) => r.value === roleValue);
+      const role = userRoles.find((r: DataItem) => r.code === roleValue);
       if (role?.name) return role.name;
     }
     return DEFAULT_ROLE_NAMES[roleValue] || roleValue;
+  };
+
+  const getDeptName = (deptId: string) => {
+    const dept = departments.find(d => d.id === deptId);
+    return dept?.name || deptId || '-';
+  };
+
+  const getJobLevelName = (levelId: string) => {
+    const level = jobLevels.find(l => l.id === levelId);
+    return level?.name || levelId || '-';
+  };
+
+  const handleNameChange = (value: string) => {
+    if (value && !editingUser) {
+      const pinyinResult = pinyin(value, {
+        style: pinyin.STYLE_NORMAL,
+      });
+      const username = pinyinResult.map(item => item[0]).join('').toLowerCase();
+      form.setFieldsValue({ username });
+    }
   };
 
   const handleCreate = () => {
@@ -92,6 +132,7 @@ const Users: React.FC = () => {
       email: record.email,
       role: record.role,
       department: record.department,
+      position: record.position,
       status: record.status,
     });
     setModalOpen(true);
@@ -148,7 +189,9 @@ const Users: React.FC = () => {
       refetch();
     } catch (error: any) {
       if (error?.errorFields) return;
-      message.error(editingUser ? '更新失败' : '创建失败');
+      console.error('用户操作失败:', error);
+      const errorMessage = error?.data?.detail || error?.message || '操作失败';
+      message.error(errorMessage);
     }
   };
 
@@ -189,6 +232,18 @@ const Users: React.FC = () => {
       render: (role: string) => {
         return <Tag color={getRoleColor(role)}>{getRoleName(role)}</Tag>;
       },
+    },
+    {
+      title: '部门',
+      dataIndex: 'department',
+      width: 120,
+      render: (deptId: string) => getDeptName(deptId),
+    },
+    {
+      title: '职级',
+      dataIndex: 'position',
+      width: 120,
+      render: (position: string) => getJobLevelName(position),
     },
     {
       title: '状态',
@@ -268,12 +323,12 @@ const Users: React.FC = () => {
   };
 
   return (
-    <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Title level={4} style={{ margin: 0 }}>用户管理</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-          新增用户
-        </Button>
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={4} style={{ margin: 0, display: 'inline' }}>
+          <UserOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+          用户管理
+        </Title>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 16 }}>
@@ -288,15 +343,20 @@ const Users: React.FC = () => {
       </div>
 
       <Card>
-      <Table
-        columns={columns}
-        dataSource={Array.isArray(users) ? users : []}
-        rowKey="id"
-        loading={isLoading}
-        pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 项` }}
-        locale={{ emptyText: '暂无数据' }}
-      />
-    </Card>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+            新增用户
+          </Button>
+        </div>
+        <Table
+          columns={columns}
+          dataSource={Array.isArray(users) ? users : []}
+          rowKey="id"
+          loading={isLoading}
+          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total: number) => `共 ${total} 项` }}
+          locale={{ emptyText: '暂无数据' }}
+        />
+      </Card>
 
       <Modal
         title={editingUser ? '编辑用户' : '新增用户'}
@@ -310,10 +370,10 @@ const Users: React.FC = () => {
       >
         <Form form={form} layout="vertical">
           <Form.Item name="display_name" label="姓名" rules={[{ required: true, message: '请输入姓名' }]}>
-            <Input placeholder="姓名" />
+            <Input placeholder="姓名" onChange={(e) => handleNameChange(e.target.value)} />
           </Form.Item>
           <Form.Item name="username" label="用户名" rules={[{ required: true, message: '请输入用户名' }]}>
-            <Input placeholder="用户名" />
+            <Input placeholder="用户名（输入姓名后自动生成）" />
           </Form.Item>
           {!editingUser && (
             <Form.Item name="password" label="密码" rules={[{ required: true, message: '请输入密码' }]}>
@@ -324,18 +384,35 @@ const Users: React.FC = () => {
             <Input placeholder="邮箱" />
           </Form.Item>
           <Form.Item name="department" label="部门">
-            <Input placeholder="部门" />
+            <Select placeholder="请选择部门">
+              <Select.Option value="">无</Select.Option>
+              {departments.map((dept: Department) => (
+                <Select.Option key={dept.id} value={dept.id}>
+                  {dept.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="position" label="职级">
+            <Select placeholder="请选择职级">
+              <Select.Option value="">无</Select.Option>
+              {jobLevels.map((level: JobLevel) => (
+                <Select.Option key={level.id} value={level.id}>
+                  {level.name}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item 
             name="role" 
             label="角色" 
             rules={[{ required: true, message: '请选择角色' }]} 
-            initialValue={userRoles[0]?.value || 'member'}
+            initialValue={userRoles[0]?.code || 'operator'}
           >
             <Select placeholder="请选择角色">
               {userRoles.length > 0 ? (
-                userRoles.map((role: DataDictionary) => (
-                  <Select.Option key={role._id} value={role.value}>
+                userRoles.map((role: DataItem) => (
+                  <Select.Option key={role.id} value={role.code}>
                     {role.name}
                   </Select.Option>
                 ))
@@ -350,11 +427,7 @@ const Users: React.FC = () => {
           </Form.Item>
           {editingUser && (
             <Form.Item name="status" label="状态" rules={[{ required: true }]} initialValue="active">
-              <Select>
-                <Select.Option value="active">活跃</Select.Option>
-                <Select.Option value="inactive">未激活</Select.Option>
-                <Select.Option value="suspended">已停用</Select.Option>
-              </Select>
+              <DataItemSelect category="user_status" placeholder="请选择状态" />
             </Form.Item>
           )}
         </Form>
@@ -401,7 +474,7 @@ const Users: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </>
+    </div>
   );
 };
 

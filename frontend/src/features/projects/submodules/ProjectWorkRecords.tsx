@@ -6,6 +6,8 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import type { WorkRecord } from '../../../types/models';
 import { useGetWorkRecordsQuery, useDeleteWorkRecordMutation, useCreateWorkRecordMutation, useUpdateWorkRecordMutation } from '../../../store/api';
+import { useDataItems } from '../../../hooks/useDataItems';
+import DataItemSelect from '../../../components/common/DataItemSelect';
 
 const { Title } = Typography;
 const { TextArea } = AntInput;
@@ -21,6 +23,9 @@ const ProjectWorkRecords: React.FC = () => {
   const [deleteWorkRecord] = useDeleteWorkRecordMutation();
   const [createWorkRecord, { isLoading: isCreating }] = useCreateWorkRecordMutation();
   const [updateWorkRecord, { isLoading: isUpdating }] = useUpdateWorkRecordMutation();
+
+  const { items: workTypes } = useDataItems('work_type');
+  const { items: workStatuses } = useDataItems('work_status');
 
   const handleCreate = () => {
     setEditingItem(null);
@@ -133,22 +138,13 @@ const ProjectWorkRecords: React.FC = () => {
             <InputNumber style={{ width: '100%' }} min={0} max={24} step={0.5} placeholder="工时（人天）" />
           </Form.Item>
           <Form.Item name="type" label="类型" rules={[{ required: true }]}>
-            <Select placeholder="选择类型">
-              <Select.Option value="work">工作</Select.Option>
-              <Select.Option value="overtime">加班</Select.Option>
-              <Select.Option value="leave">请假</Select.Option>
-              <Select.Option value="training">培训</Select.Option>
-            </Select>
+            <DataItemSelect category="work_type" />
           </Form.Item>
           <Form.Item name="description" label="描述">
             <TextArea rows={3} placeholder="工作描述" />
           </Form.Item>
           <Form.Item name="status" label="状态" rules={[{ required: true }]}>
-            <Select placeholder="选择状态">
-              <Select.Option value="submitted">已提交</Select.Option>
-              <Select.Option value="approved">已批准</Select.Option>
-              <Select.Option value="rejected">已拒绝</Select.Option>
-            </Select>
+            <DataItemSelect category="work_status" />
           </Form.Item>
         </Form>
       </Modal>

@@ -6,6 +6,8 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import type { Communication } from '../../../types/models';
 import { useGetCommunicationsQuery, useCreateCommunicationMutation, useUpdateCommunicationMutation, useDeleteCommunicationMutation } from '../../../store/api';
+import { useDataItems } from '../../../hooks/useDataItems';
+import DataItemSelect from '../../../components/common/DataItemSelect';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -22,6 +24,7 @@ const ProjectCommunication: React.FC = () => {
   const [createCommunication] = useCreateCommunicationMutation();
   const [updateCommunication] = useUpdateCommunicationMutation();
   const [deleteCommunication] = useDeleteCommunicationMutation();
+  const { items: communicationTypes } = useDataItems('communication_type');
 
   const handleCreate = () => {
     setEditing(null);
@@ -125,12 +128,7 @@ const ProjectCommunication: React.FC = () => {
             <Input />
           </Form.Item>
           <Form.Item name="type" label="类型" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="meeting">会议</Select.Option>
-              <Select.Option value="call">电话</Select.Option>
-              <Select.Option value="email">邮件</Select.Option>
-              <Select.Option value="chat">聊天</Select.Option>
-            </Select>
+            <DataItemSelect category="communication_type" />
           </Form.Item>
           <Form.Item name="date" label="日期" rules={[{ required: true }]}>
             <DatePicker style={{ width: '100%' }} />

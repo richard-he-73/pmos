@@ -6,9 +6,9 @@ import { DonutChart } from '../../components/charts/DonutChart';
 import { BarChart } from '../../components/charts/BarChart';
 import { LineChart } from '../../components/charts/LineChart';
 import { GanttChart } from '../../components/charts/GanttChart';
-import { useGetStatsQuery, useGetAlertsQuery, useGetProjectStatusChartQuery, useGetTaskPriorityChartQuery, useGetTaskTrendChartQuery, useGetBudgetUsageChartQuery, useGetResourceUtilizationChartQuery, useGetTaskGanttDataQuery } from '../../store/api';
+import { useGetStatsQuery, useGetAlertsQuery, useGetProjectStatusChartQuery, useGetTaskPriorityChartQuery, useGetProjectPriorityChartQuery, useGetTaskTrendChartQuery, useGetBudgetUsageChartQuery, useGetResourceUtilizationChartQuery, useGetTaskGanttDataQuery, useGetProjectsQuery, useGetDefaultProjectQuery } from '../../store/api';
 import { formatDateTime } from '../../utils/formatters';
-import { TASK_STATUS, PRIORITY } from '../../utils/constants';
+import { TASK_STATUS, PRIORITY, PROJECT_STATUS } from '../../utils/constants';
 import { useNavigate } from 'react-router-dom';
 
 interface ChartData {
@@ -32,32 +32,22 @@ interface ResourceUtilization {
   utilization: number;
 }
 
-const modules = [
-  { name: '项目管理', icon: '🗂', stat: '48', statLabel: '个活跃项目', status: '正常', color: 'oklch(58% 0.16 145)', path: '/projects' },
-  { name: '资源管理', icon: '👥', stat: '156', statLabel: '人', status: '正常', color: 'oklch(55% 0.14 250)', path: '/resources' },
-  { name: '计划管理', icon: '📅', stat: '342', statLabel: '项任务', status: '正常', color: 'oklch(60% 0.15 170)', path: '/planning' },
-  { name: '风险管理', icon: '⚡', stat: '8', statLabel: '项高风险', status: '预警', color: 'oklch(70% 0.12 80)', path: '/risks' },
-  { name: '沟通管理', icon: '💬', stat: '56', statLabel: '条沟通记录', status: '正常', color: 'oklch(55% 0.14 250)', path: '/communication' },
-  { name: '需求管理', icon: '📝', stat: '189', statLabel: '项需求', status: '正常', color: 'oklch(58% 0.16 145)', path: '/requirements' },
-  { name: '开发管理', icon: '🔧', stat: '1,247', statLabel: '条开发任务', status: '正常', color: 'oklch(55% 0.14 250)', path: '/development' },
-  { name: '测试管理', icon: '🧪', stat: '892', statLabel: '条测试用例', status: '正常', color: 'oklch(60% 0.15 170)', path: '/testing' },
-  { name: '配置管理', icon: '⚙️', stat: '34', statLabel: '项配置项', status: '正常', color: 'oklch(58% 0.16 145)', path: '/configuration' },
-  { name: '演练管理', icon: '🎯', stat: '12', statLabel: '次演练', status: '正常', color: 'oklch(70% 0.12 80)', path: '/drill' },
-  { name: '投产管理', icon: '🚀', stat: '6', statLabel: '次投产', status: '预警', color: 'oklch(55% 0.14 250)', path: '/deployment' },
-  { name: '工作管理', icon: '📋', stat: '98%', statLabel: '考勤出勤率', status: '正常', color: 'oklch(58% 0.16 145)', path: '/work' },
-];
-
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   
-  const { data: statsData, isLoading: statsLoading } = useGetStatsQuery(undefined);
+  const { data: defaultProject } = useGetDefaultProjectQuery(undefined, { refetchOnMountOrArgChange: true });
+  const defaultProjectId = defaultProject?._id;
+  
+  const { data: statsData, isLoading: statsLoading } = useGetStatsQuery(defaultProjectId);
   const { data: alertsData, isLoading: alertsLoading } = useGetAlertsQuery(undefined);
-  const { data: projectStatusData, isLoading: projectStatusLoading } = useGetProjectStatusChartQuery(undefined);
-  const { data: taskPriorityData, isLoading: taskPriorityLoading } = useGetTaskPriorityChartQuery(undefined);
-  const { data: taskTrendData, isLoading: taskTrendLoading } = useGetTaskTrendChartQuery(30);
-  const { data: budgetData, isLoading: budgetLoading } = useGetBudgetUsageChartQuery(undefined);
+  const { data: projectStatusData, isLoading: projectStatusLoading } = useGetProjectStatusChartQuery(defaultProjectId);
+  const { data: taskPriorityData, isLoading: taskPriorityLoading } = useGetTaskPriorityChartQuery(defaultProjectId);
+  const { data: projectPriorityData, isLoading: projectPriorityLoading } = useGetProjectPriorityChartQuery(defaultProjectId);
+  const { data: taskTrendData, isLoading: taskTrendLoading } = useGetTaskTrendChartQuery({ limit: 30, projectId: defaultProjectId });
+  const { data: projects = [] } = useGetProjectsQuery(undefined);
+  const { data: budgetData, isLoading: budgetLoading } = useGetBudgetUsageChartQuery(defaultProjectId);
   const { data: resourceData, isLoading: resourceLoading } = useGetResourceUtilizationChartQuery(undefined);
-  const { data: ganttTasks, isLoading: ganttLoading } = useGetTaskGanttDataQuery(undefined);
+  const { data: ganttTasks, isLoading: ganttLoading } = useGetTaskGanttDataQuery({ project_id: defaultProjectId });
 
   const loading = statsLoading || alertsLoading || projectStatusLoading || taskPriorityLoading || taskTrendLoading || budgetLoading || resourceLoading || ganttLoading;
   
@@ -123,35 +113,64 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  // 调试日志
+  console.log('Dashboard - defaultProject:', defaultProject);
+  console.log('Dashboard - defaultProjectId:', defaultProjectId);
+  console.log('Dashboard - projects length:', projects.length);
+  console.log('Dashboard - projects[0]?._id:', projects[0]?._id);
+  
+  // 获取默认项目的ID，如果没有则使用第一个项目的ID
+  const targetProjectId = defaultProjectId || (projects.length > 0 ? projects[0]._id : null);
+
+  // 业务模块概览数据（链接到实际存在的路由）
+  const modules = [
+    { name: '项目管理', icon: '🗂', stat: statsData?.modules?.projects?.count ?? 0, statLabel: '个活跃项目', status: statsData?.modules?.projects?.status || '正常', color: 'oklch(58% 0.16 145)', path: '/projects' },
+    { name: '资源管理', icon: '👥', stat: statsData?.modules?.resources?.count ?? 0, statLabel: '人', status: statsData?.modules?.resources?.status || '正常', color: 'oklch(55% 0.14 250)', path: targetProjectId ? `/projects/${targetProjectId}/resources` : '/projects' },
+    { name: '计划管理', icon: '📅', stat: statsData?.modules?.planning?.count ?? 0, statLabel: '项任务', status: statsData?.modules?.planning?.status || '正常', color: 'oklch(60% 0.15 170)', path: targetProjectId ? `/projects/${targetProjectId}/planning` : '/projects' },
+    { name: '风险管理', icon: '⚡', stat: statsData?.modules?.risks?.count ?? 0, statLabel: '项高风险', status: statsData?.modules?.risks?.status || '正常', color: 'oklch(70% 0.12 80)', path: targetProjectId ? `/projects/${targetProjectId}/risks` : '/projects' },
+    { name: '沟通管理', icon: '💬', stat: statsData?.modules?.communication?.count ?? 0, statLabel: '条沟通记录', status: statsData?.modules?.communication?.status || '正常', color: 'oklch(55% 0.14 250)', path: targetProjectId ? `/projects/${targetProjectId}/communication` : '/projects' },
+    { name: '需求管理', icon: '📝', stat: statsData?.modules?.requirements?.count ?? 0, statLabel: '项需求', status: statsData?.modules?.requirements?.status || '正常', color: 'oklch(58% 0.16 145)', path: targetProjectId ? `/projects/${targetProjectId}/requirements` : '/projects' },
+    { name: '开发管理', icon: '🔧', stat: statsData?.modules?.development?.count ?? 0, statLabel: '条开发任务', status: statsData?.modules?.development?.status || '正常', color: 'oklch(55% 0.14 250)', path: targetProjectId ? `/projects/${targetProjectId}/development` : '/projects' },
+    { name: '测试管理', icon: '🧪', stat: statsData?.modules?.testing?.count ?? 0, statLabel: '条测试用例', status: statsData?.modules?.testing?.status || '正常', color: 'oklch(60% 0.15 170)', path: targetProjectId ? `/projects/${targetProjectId}/testing` : '/projects' },
+    { name: '配置管理', icon: '⚙️', stat: statsData?.modules?.configuration?.count ?? 0, statLabel: '项配置项', status: statsData?.modules?.configuration?.status || '正常', color: 'oklch(58% 0.16 145)', path: targetProjectId ? `/projects/${targetProjectId}/configuration` : '/projects' },
+    { name: '演练管理', icon: '🎯', stat: statsData?.modules?.drill?.count ?? 0, statLabel: '次演练', status: statsData?.modules?.drill?.status || '正常', color: 'oklch(70% 0.12 80)', path: targetProjectId ? `/projects/${targetProjectId}/drill` : '/projects' },
+    { name: '投产管理', icon: '🚀', stat: statsData?.modules?.deployment?.count ?? 0, statLabel: '次投产', status: statsData?.modules?.deployment?.status || '正常', color: 'oklch(55% 0.14 250)', path: targetProjectId ? `/projects/${targetProjectId}/deployment` : '/projects' },
+    { name: '工作管理', icon: '📋', stat: statsData?.modules?.work?.count ?? '-', statLabel: '考勤出勤率', status: statsData?.modules?.work?.status || '正常', color: 'oklch(58% 0.16 145)', path: targetProjectId ? `/projects/${targetProjectId}/work-records` : '/projects' },
+  ];
+
   return (
     <>
+      {defaultProject && (
+        <div style={{ marginBottom: 16, padding: '12px 16px', backgroundColor: '#e6f7ff', borderRadius: 4, border: '1px solid #91d5ff' }}>
+          <span style={{ color: '#1890ff' }}>📌 当前显示默认项目数据：</span>
+          <strong>{defaultProject.name}</strong>
+          <span style={{ marginLeft: 16, color: '#8c8c8c' }}>
+            (可在项目管理中修改默认项目)
+          </span>
+        </div>
+      )}
       <div className="kpi-row">
         <KPICard label="项目总数" value={statsData?.projects.total ?? 0} trend={`${(Object.values(statsData?.projects.by_status || {}) as number[]).reduce((sum, val) => sum + val, 0)} 累计`} trendDirection="up" variant="accent" />
         <KPICard label="进行中项目" value={statsData?.projects.by_status?.active ?? 0} trend="活跃项目" trendDirection="up" variant="success" />
         <KPICard label="任务总数" value={statsData?.tasks.total ?? 0} trend={`${statsData?.tasks.by_status?.in_progress ?? 0} 进行中`} trendDirection="up" variant="info" />
-        <KPICard label="团队成员" value={statsData?.resources.total ?? 0} trend={`${statsData?.resources.by_type?.human ?? 0} 人力资源`} trendDirection="up" variant="muted" />
+        <KPICard label="资源总数" value={statsData?.resources.total ?? 0} trend={`${statsData?.resources.by_type?.human ?? 0} 人力资源`} trendDirection="up" variant="muted" />
         <KPICard label="待办任务" value={statsData?.tasks.by_status?.todo ?? 0} trend={`${statsData?.tasks.by_priority?.critical ?? 0} 紧急`} trendDirection="down" variant="warning" />
-        <KPICard label="待处理预警" value={alerts.length || 8} trend="待关注" trendDirection="down" variant="danger" />
+        <KPICard label="待处理预警" value={alerts.length} trend="待关注" trendDirection="down" variant="danger" />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {critAlerts.map((alert: any) => (
-          <AlertCard key={alert._id} message={alert.message} count={alert.count || 1} level="crit" />
-        ))}
-        {warnAlerts.map((alert: any) => (
-          <AlertCard key={alert._id} message={alert.message} count={alert.count || 1} level="warn" />
-        ))}
-        {infoAlerts.map((alert: any) => (
-          <AlertCard key={alert._id} message={alert.message} count={alert.count || 1} level="info" />
-        ))}
-        {alerts.length === 0 && (
-          <>
-            <AlertCard message="今日有 3 个项目进入关键节点，2 个里程碑即将到期" count={3} level="info" />
-            <AlertCard message="资源利用率超阈值：开发组 A 负载 94%，建议调配" count={2} level="warn" />
-            <AlertCard message="高风险预警：项目「核心系统升级」已延迟 5 天，风险评级上调" count={1} level="crit" />
-          </>
-        )}
-      </div>
+      {alerts.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {critAlerts.map((alert: any) => (
+            <AlertCard key={alert._id} message={alert.message} count={alert.count || 1} level="crit" />
+          ))}
+          {warnAlerts.map((alert: any) => (
+            <AlertCard key={alert._id} message={alert.message} count={alert.count || 1} level="warn" />
+          ))}
+          {infoAlerts.map((alert: any) => (
+            <AlertCard key={alert._id} message={alert.message} count={alert.count || 1} level="info" />
+          ))}
+        </div>
+      )}
 
       <section>
         <div className="section-title"><span className="dot"></span>业务模块概览</div>
@@ -166,7 +185,10 @@ const Dashboard: React.FC = () => {
         <Card title="项目状态分布" size="small" style={{ flex: 1 }}>
           {Array.isArray(projectStatusData) && projectStatusData.length > 0 ? (
             <DonutChart
-              data={projectStatusData}
+              data={(projectStatusData as ChartData[]).map((d: ChartData) => ({
+                ...d,
+                name: PROJECT_STATUS[d.name as keyof typeof PROJECT_STATUS] || d.name,
+              }))}
               colors={(projectStatusData as ChartData[]).map((d: ChartData) => statusColorMap[d.name] || 'oklch(58% 0.16 145)')}
             />
           ) : (
@@ -174,6 +196,21 @@ const Dashboard: React.FC = () => {
           )}
         </Card>
 
+        <Card title="项目优先级分布" size="small" style={{ flex: 1 }}>
+          {Array.isArray(projectPriorityData) && projectPriorityData.length > 0 ? (
+            <BarChart
+              xAxis={(projectPriorityData as ChartData[]).map((d: ChartData) => PRIORITY[d.name as keyof typeof PRIORITY] || d.name)}
+              series={[{ name: '项目数', data: (projectPriorityData as ChartData[]).map((d: ChartData) => d.value) }]}
+              colors={(projectPriorityData as ChartData[]).map((d: ChartData) => priorityColorMap[d.name] || 'oklch(58% 0.16 145)')}
+              horizontal
+            />
+          ) : (
+            <Empty description="暂无数据" />
+          )}
+        </Card>
+      </div>
+
+      <div className="charts-row">
         <Card title="任务优先级分布" size="small" style={{ flex: 1 }}>
           {Array.isArray(taskPriorityData) && taskPriorityData.length > 0 ? (
             <BarChart
@@ -235,68 +272,11 @@ const Dashboard: React.FC = () => {
       </div>
 
       <section>
-        <div className="section-title"><span className="dot"></span>系统运行状态</div>
-        <div className="ops-row">
-          <div className="ops-card">
-            <div className="ops-grid">
-              <div className="ops-cell">
-                <div className="ops-cell-label">系统运行天数</div>
-                <div className="ops-cell-value mono-value">1,247 天</div>
-                <div className="ops-cell-sub">自 2022-03-15 上线</div>
-              </div>
-              <div className="ops-cell">
-                <div className="ops-cell-label">最后备份</div>
-                <div className="ops-cell-value mono-value" style={{ color: 'var(--color-success)' }}>今日 03:00</div>
-                <div className="ops-cell-sub">自动备份成功</div>
-              </div>
-              <div className="ops-cell">
-                <div className="ops-cell-label">今日日志量</div>
-                <div className="ops-cell-value mono-value">42,891</div>
-                <div className="ops-cell-sub">正常水平</div>
-              </div>
-              <div className="ops-cell">
-                <div className="ops-cell-label">在线用户数</div>
-                <div className="ops-cell-value mono-value">89 / 156</div>
-                <div className="ops-cell-sub">57.1% 在线率</div>
-              </div>
-            </div>
-          </div>
-          <div className="ops-card">
-            <div className="ops-grid">
-              <div className="ops-cell">
-                <div className="ops-cell-label">数据库大小</div>
-                <div className="ops-cell-value mono-value">128.4 GB</div>
-                <div className="ops-cell-sub">上月增长 4.2 GB</div>
-              </div>
-              <div className="ops-cell">
-                <div className="ops-cell-label">API 请求 / 分钟</div>
-                <div className="ops-cell-value mono-value">3,421</div>
-                <div className="ops-cell-sub">峰值 5,892 (14:32)</div>
-              </div>
-              <div className="ops-cell">
-                <div className="ops-cell-label">错误率</div>
-                <div className="ops-cell-value mono-value" style={{ color: 'var(--color-success)' }}>0.02%</div>
-                <div className="ops-cell-sub">目标 &lt; 0.05%</div>
-              </div>
-              <div className="ops-cell">
-                <div className="ops-cell-label">平均响应</div>
-                <div className="ops-cell-value mono-value" style={{ color: 'var(--color-success)' }}>42 ms</div>
-                <div className="ops-cell-sub">P99: 189 ms</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section>
         <div className="section-title"><span className="dot"></span>快捷操作</div>
         <div className="quick-row">
           <button className="quick-btn accent" onClick={() => navigate('/projects')}>➕ 新建项目</button>
-          <button className="quick-btn" onClick={() => navigate('/export')}>📤 导出报表</button>
-          <button className="quick-btn" onClick={() => navigate('/gantt')}>📊 查看统计</button>
-          <button className="quick-btn" onClick={() => navigate('/notifications')}>🔔 预警设置</button>
-          <button className="quick-btn">💾 立即备份</button>
-          <button className="quick-btn">📋 系统日志</button>
+          <button className="quick-btn" onClick={() => navigate('/users')}>👥 管理用户</button>
+          <button className="quick-btn" onClick={() => navigate('/settings')}>⚙️ 系统设置</button>
         </div>
       </section>
 

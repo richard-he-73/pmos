@@ -7,6 +7,8 @@ import dayjs from 'dayjs';
 import { useGetIterationsQuery, useCreateIterationMutation, useUpdateIterationMutation, useDeleteIterationMutation, useGetCodeReviewsQuery, useCreateCodeReviewMutation, useUpdateCodeReviewMutation } from '../../../store/api';
 import type { Iteration, CodeReview } from '../../../types/models';
 import { ITERATION_STATUS, CODE_REVIEW_STATUS } from '../../../utils/constants';
+import { useDataItems } from '../../../hooks/useDataItems';
+import DataItemSelect from '../../../components/common/DataItemSelect';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -14,6 +16,7 @@ const { TextArea } = Input;
 const ProjectDevelopment: React.FC = () => {
   const { id: projectId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { items: developmentStatuses } = useDataItems('development_status');
   
   const [iterationModalOpen, setIterationModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
