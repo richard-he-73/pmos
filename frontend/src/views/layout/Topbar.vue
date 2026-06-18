@@ -12,12 +12,12 @@
       <ThemeToggle />
       <t-dropdown>
         <t-button variant="text">
-          <t-icon name="user" /> {{ '用户' }}
+          <t-icon name="user" /> {{ authStore.currentUser?.real_name || authStore.currentUser?.username || '用户' }}
         </t-button>
         <template #dropdown>
           <t-dropdown-menu>
             <t-dropdown-item>个人中心</t-dropdown-item>
-            <t-dropdown-item>退出登录</t-dropdown-item>
+            <t-dropdown-item @click="handleLogout">退出登录</t-dropdown-item>
           </t-dropdown-menu>
         </template>
       </t-dropdown>
@@ -26,14 +26,23 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 import { useResponsiveStore } from '@/stores/responsive'
+import { useAuthStore } from '@/stores/auth'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
+const router = useRouter()
 const rStore = useResponsiveStore()
+const authStore = useAuthStore()
 
 function handleToggleMenu() {
   if (rStore.isMobile) rStore.toggleDrawer()
   else rStore.toggleSidebar()
+}
+
+function handleLogout() {
+  authStore.logout()
+  router.push('/login')
 }
 </script>
 
