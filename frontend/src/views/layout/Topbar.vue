@@ -27,17 +27,16 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { useResponsiveStore } from '@/stores/responsive'
 import { useAuthStore } from '@/stores/auth'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const router = useRouter()
-const rStore = useResponsiveStore()
 const authStore = useAuthStore()
 
+const emit = defineEmits<{ 'toggle-menu': [] }>()
+
 function handleToggleMenu() {
-  if (rStore.isMobile) rStore.toggleDrawer()
-  else rStore.toggleSidebar()
+  emit('toggle-menu')
 }
 
 function handleLogout() {
