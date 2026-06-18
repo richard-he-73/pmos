@@ -1,29 +1,30 @@
 <template>
-  <t-aside :class="['app-sidebar', { collapsed: store.sidebarCollapsed }]">
+  <aside :class="['app-sidebar', { collapsed: store.sidebarCollapsed }]">
     <div class="sidebar-logo">
       <span class="logo-text" v-show="!store.sidebarCollapsed">PMOS</span>
     </div>
     <nav class="sidebar-nav">
-      <router-link
+      <div
         v-for="item in menuItems"
         :key="item.path"
-        :to="item.path"
         class="nav-item"
-        :class="{ active: currentRoute.startsWith(item.path) }"
+        :class="{ active: isActive(item.path) }"
+        @click="navigate(item.path)"
       >
         <span class="nav-icon">{{ item.icon }}</span>
         <span class="nav-label" v-show="!store.sidebarCollapsed">{{ item.label }}</span>
-      </router-link>
+      </div>
     </nav>
-  </t-aside>
+  </aside>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useResponsiveStore } from '@/stores/responsive'
 
 const route = useRoute()
+const router = useRouter()
 const store = useResponsiveStore()
 const currentRoute = computed(() => route.path)
 
@@ -39,6 +40,15 @@ const menuItems = [
   { path: '/statistics', icon: '📊', label: '统计' },
   { path: '/system', icon: '⚙️', label: '系统' },
 ]
+
+function isActive(path: string) {
+  if (path === '/dashboard') return currentRoute.value === '/dashboard'
+  return currentRoute.value.startsWith(path)
+}
+
+function navigate(path: string) {
+  router.push(path)
+}
 </script>
 
 <style scoped>
@@ -48,42 +58,41 @@ const menuItems = [
   background: var(--td-bg-color-container, #fff);
   border-right: 1px solid var(--td-border-level-1-color, #e0e0e0);
   transition: width 0.3s;
-  width: var(--pmos-sidebar-width);
+  width: 240px;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
 }
-.app-sidebar.collapsed {
-  width: var(--pmos-sidebar-collapsed-width);
-}
+.app-sidebar.collapsed { width: 64px; }
 
 .sidebar-logo {
-  height: var(--pmos-topbar-height);
+  height: 56px;
   display: flex;
   align-items: center;
-  padding: 0 var(--pmos-spacing-md);
+  padding: 0 16px;
   font-weight: 700;
-  font-size: var(--pmos-font-size-lg);
+  font-size: 18px;
   border-bottom: 1px solid var(--td-border-level-1-color, #e0e0e0);
   flex-shrink: 0;
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: var(--pmos-spacing-xs) 0;
+  padding: 4px 0;
   overflow-y: auto;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: var(--pmos-spacing-sm);
-  padding: 10px var(--pmos-spacing-md);
-  text-decoration: none;
+  gap: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
   color: var(--td-text-color-primary, #333);
-  font-size: var(--pmos-font-size-md);
+  font-size: 14px;
   transition: background 0.2s;
-  border-radius: 0;
   margin: 2px 0;
+  user-select: none;
 }
 
 .nav-item:hover {
