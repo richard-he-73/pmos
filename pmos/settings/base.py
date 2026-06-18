@@ -26,6 +26,8 @@ INSTALLED_APPS = [
     'apps.system',
     'apps.projects',
     'apps.plans',
+    'apps.requirements',
+    'apps.testing',
 ]
 
 MIDDLEWARE = [
