@@ -1,8 +1,23 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+
+def api_root(request):
+    """API 根页面"""
+    return JsonResponse({
+        'name': 'PMOS - Project Management Operating System',
+        'version': '0.1.0',
+        'description': '企业级项目管理系统',
+        'docs': '/admin/',
+        'api': '/api/v1/',
+        'frontend': 'http://localhost:5173',
+    })
+
+
 urlpatterns = [
+    path('', api_root, name='api-root'),
     path('admin/', admin.site.urls),
     path('api/v1/auth/login/', TokenObtainPairView.as_view(), name='token_obtain'),
     path('api/v1/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
