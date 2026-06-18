@@ -61,6 +61,12 @@ const routes = [
     component: () => import('@/views/bug/Index.vue'),
   },
   {
+    path: '/work',
+    name: 'Work',
+    meta: { requiresAuth: true },
+    component: () => import('@/views/work/Index.vue'),
+  },
+  {
     path: '/documents',
     name: 'Documents',
     meta: { requiresAuth: true },
