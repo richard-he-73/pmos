@@ -1,12 +1,12 @@
 <template>
-  <t-layout class="mobile-layout">
-    <t-header class="mobile-topbar">
+  <div class="mobile-layout">
+    <header class="mobile-topbar">
       <t-button variant="text" @click="rStore.toggleDrawer">
         <t-icon :name="rStore.drawerVisible ? 'close' : 'menu'" />
       </t-button>
       <span class="mobile-title">PMOS</span>
       <ThemeToggle />
-    </t-header>
+    </header>
 
     <t-drawer
       v-model:visible="rStore.drawerVisible"
@@ -24,12 +24,12 @@
       </t-menu>
     </t-drawer>
 
-    <t-content class="mobile-content">
+    <main class="mobile-content">
       <router-view />
-    </t-content>
+    </main>
 
     <MobileBottomNav />
-  </t-layout>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -61,13 +61,14 @@ function navigate(path: string) {
 </script>
 
 <style scoped>
-.mobile-layout { height: 100vh; }
+.mobile-layout { height: 100vh; display: flex; flex-direction: column; }
 .mobile-topbar {
   display: flex;
   align-items: center;
   height: var(--pmos-topbar-height);
   padding: 0 var(--pmos-spacing-sm);
   border-bottom: 1px solid var(--pmos-border);
+  flex-shrink: 0;
 }
 .mobile-title {
   flex: 1;
@@ -76,6 +77,7 @@ function navigate(path: string) {
   font-weight: 600;
 }
 .mobile-content {
+  flex: 1;
   padding: var(--pmos-spacing-sm);
   overflow-y: auto;
   padding-bottom: calc(var(--pmos-mobile-bottom-nav-height) + var(--pmos-spacing-sm));

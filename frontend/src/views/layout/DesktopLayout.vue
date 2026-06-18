@@ -1,13 +1,13 @@
 <template>
-  <t-layout class="desktop-layout">
+  <div class="desktop-layout">
     <Sidebar />
-    <t-layout class="right-panel">
+    <div class="right-panel">
       <Topbar />
-      <t-content class="main-content">
+      <main class="main-content">
         <router-view />
-      </t-content>
-    </t-layout>
-  </t-layout>
+      </main>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -17,16 +17,18 @@ import Topbar from './Topbar.vue'
 
 <style>
 .desktop-layout {
-  height: 100vh !important;
-  flex-direction: row !important;
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
 }
-.desktop-layout .right-panel {
-  flex: 1 !important;
-  min-width: 0 !important;
-  flex-direction: column !important;
+.right-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
-.desktop-layout .main-content {
-  flex: 1 !important;
+.main-content {
+  flex: 1;
   padding: 24px;
   overflow-y: auto;
 }

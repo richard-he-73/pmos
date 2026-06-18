@@ -4,29 +4,28 @@
       <span class="logo-text" v-show="!store.sidebarCollapsed">PMOS</span>
     </div>
     <nav class="sidebar-nav">
-      <div
+      <a
         v-for="item in menuItems"
         :key="item.path"
+        :href="item.path"
         class="nav-item"
         :class="{ active: isActive(item.path) }"
-        @click="navigate(item.path)"
+        @click="navigate($event, item.path)"
       >
         <span class="nav-icon">{{ item.icon }}</span>
         <span class="nav-label" v-show="!store.sidebarCollapsed">{{ item.label }}</span>
-      </div>
+      </a>
     </nav>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useResponsiveStore } from '@/stores/responsive'
 
 const route = useRoute()
 const router = useRouter()
 const store = useResponsiveStore()
-const currentRoute = computed(() => route.path)
 
 const menuItems = [
   { path: '/dashboard', icon: '📊', label: '首页' },
@@ -42,11 +41,13 @@ const menuItems = [
 ]
 
 function isActive(path: string) {
-  if (path === '/dashboard') return currentRoute.value === '/dashboard'
-  return currentRoute.value.startsWith(path)
+  if (path === '/dashboard') return route.path === '/dashboard'
+  return route.path.startsWith(path)
 }
 
-function navigate(path: string) {
+function navigate(event: MouseEvent, path: string) {
+  event.preventDefault()
+  console.log('Navigating to:', path)
   router.push(path)
 }
 </script>
@@ -87,12 +88,14 @@ function navigate(path: string) {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
+  text-decoration: none;
   cursor: pointer;
   color: var(--td-text-color-primary, #333);
   font-size: 14px;
   transition: background 0.2s;
   margin: 2px 0;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 .nav-item:hover {

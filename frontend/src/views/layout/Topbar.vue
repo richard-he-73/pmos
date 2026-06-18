@@ -1,5 +1,5 @@
 <template>
-  <t-header class="app-topbar">
+  <header class="app-topbar">
     <div class="topbar-left">
       <t-button variant="text" @click="handleToggleMenu">
         <t-icon name="menu" />
@@ -22,7 +22,7 @@
         </template>
       </t-dropdown>
     </div>
-  </t-header>
+  </header>
 </template>
 
 <script setup lang="ts">
