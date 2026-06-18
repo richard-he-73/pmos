@@ -1,0 +1,24 @@
+/* 移动端 (< 768px) */
+@media (max-width: 767px) {
+  .desktop-only { display: none !important; }
+
+  .page-container { padding: var(--pmos-spacing-sm); }
+  .page-header { flex-direction: column; gap: var(--pmos-spacing-sm); }
+
+  .data-table { display: none; }
+  .data-card-list { display: block; }
+}
+
+/* 平板 (768px ~ 1200px) */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .page-container { padding: var(--pmos-spacing-md); }
+  .data-card-list { display: none; }
+  .data-table { display: table; }
+}
+
+/* 桌面端 (> 1200px) */
+@media (min-width: 1200px) {
+  .page-container { padding: var(--pmos-spacing-lg); }
+  .data-card-list { display: none; }
+  .data-table { display: table; }
+}
