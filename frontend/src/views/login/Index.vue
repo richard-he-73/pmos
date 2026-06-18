@@ -1,29 +1,32 @@
 <template>
-  <div class="login-page" :style="{ background: themeBg }">
-    <t-card class="login-card" :bordered="false">
-      <div class="login-header">
-        <h1>PMOS</h1>
-        <p>Project Management Operating System</p>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 p-4">
+    <div class="w-full max-w-sm bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">PMOS</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Project Management Operating System</p>
       </div>
-      <t-form :data="formData" :rules="rules" ref="formRef" @submit="handleLogin">
-        <t-form-item name="username" label="用户名">
-          <t-input v-model="formData.username" placeholder="请输入用户名" size="large">
-            <template #prefix-icon><t-icon name="user" /></template>
-          </t-input>
-        </t-form-item>
-        <t-form-item name="password" label="密码">
-          <t-input v-model="formData.password" type="password" placeholder="请输入密码" size="large">
-            <template #prefix-icon><t-icon name="lock" /></template>
-          </t-input>
-        </t-form-item>
-        <t-form-item>
-          <t-button theme="primary" type="submit" block size="large" :loading="loading">
-            {{ loading ? '登录中...' : '登 录' }}
-          </t-button>
-        </t-form-item>
-      </t-form>
-      <p v-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
-    </t-card>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">用户名</label>
+          <input v-model="form.username" type="text" placeholder="请输入用户名"
+            class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">密码</label>
+          <input v-model="form.password" type="password" placeholder="请输入密码"
+            class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            @keyup.enter="handleLogin" />
+        </div>
+
+        <p v-if="errorMsg" class="text-red-500 text-sm text-center">{{ errorMsg }}</p>
+
+        <button @click="handleLogin" :disabled="loading"
+          class="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm transition disabled:opacity-50">
+          {{ loading ? '登录中...' : '登 录' }}
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -31,77 +34,25 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useThemeStore } from '@/stores/theme'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const themeStore = useThemeStore()
 const loading = ref(false)
 const errorMsg = ref('')
 
-const themeBg = ref(
-  themeStore.currentTheme === 'dark'
-    ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
-    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-)
+const form = reactive({ username: '', password: '' })
 
-const formData = reactive({
-  username: '',
-  password: '',
-})
-
-const rules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-}
-
-async function handleLogin({ validateResult }: { validateResult: boolean }) {
-  if (!validateResult) return
+async function handleLogin() {
+  if (!form.username || !form.password) { errorMsg.value = '请输入用户名和密码'; return }
   loading.value = true
   errorMsg.value = ''
   try {
-    await authStore.loginAction(formData)
+    await authStore.loginAction(form)
     router.push('/dashboard')
-  } catch (err: any) {
-    errorMsg.value = err.response?.data?.detail || '登录失败，请检查用户名和密码'
+  } catch {
+    errorMsg.value = '登录失败，请检查用户名和密码'
   } finally {
     loading.value = false
   }
 }
 </script>
-
-<style scoped>
-.login-page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-}
-.login-card {
-  width: 400px;
-  max-width: 90vw;
-  padding: var(--pmos-spacing-xl);
-}
-.login-header {
-  text-align: center;
-  margin-bottom: var(--pmos-spacing-lg);
-}
-.login-header h1 {
-  margin: 0;
-  font-size: 32px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.login-header p {
-  margin: var(--pmos-spacing-sm) 0 0;
-  color: var(--pmos-text-secondary);
-  font-size: var(--pmos-font-size-sm);
-}
-.error-msg {
-  color: var(--pmos-error);
-  text-align: center;
-  font-size: var(--pmos-font-size-sm);
-}
-</style>

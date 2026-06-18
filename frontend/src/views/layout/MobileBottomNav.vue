@@ -1,55 +1,24 @@
 <template>
-  <t-footer class="mobile-bottom-nav">
-    <div
-      v-for="item in navItems"
-      :key="item.path"
-      class="nav-item"
-      :class="{ active: route.path.startsWith(item.path) }"
-      @click="router.push(item.path)"
-    >
-      <t-icon :name="item.icon" />
+  <footer class="fixed bottom-0 left-0 right-0 h-14 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex items-center justify-around z-40 text-xs">
+    <a v-for="item in navItems" :key="item.path" :href="item.path"
+       class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors"
+       :class="$route.path.startsWith(item.path) ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'"
+       @click="go($event, item.path)">
+      <span class="text-lg">{{ item.icon }}</span>
       <span>{{ item.label }}</span>
-    </div>
-  </t-footer>
+    </a>
+  </footer>
 </template>
 
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router'
-
-const route = useRoute()
+import { useRouter } from 'vue-router'
 const router = useRouter()
-
 const navItems = [
-  { path: '/dashboard', icon: 'dashboard', label: '首页' },
-  { path: '/projects', icon: 'folder', label: '项目' },
-  { path: '/tasks', icon: 'check-circle', label: '任务' },
-  { path: '/notifications', icon: 'notification', label: '通知' },
-  { path: '/system', icon: 'user', label: '我的' },
+  { path: '/dashboard', icon: '🏠', label: '首页' },
+  { path: '/projects', icon: '📁', label: '项目' },
+  { path: '/tasks', icon: '✅', label: '任务' },
+  { path: '/notifications', icon: '🔔', label: '通知' },
+  { path: '/system', icon: '⚙️', label: '设置' },
 ]
+function go(e: MouseEvent, path: string) { e.preventDefault(); router.push(path) }
 </script>
-
-<style scoped>
-.mobile-bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: var(--pmos-mobile-bottom-nav-height);
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  background: var(--pmos-bg-primary);
-  border-top: 1px solid var(--pmos-border);
-  z-index: 1000;
-}
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  font-size: var(--pmos-font-size-xs);
-  cursor: pointer;
-  color: var(--pmos-text-secondary);
-}
-.nav-item.active { color: var(--td-brand-color, #0052d9); }
-</style>

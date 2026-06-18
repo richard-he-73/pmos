@@ -1,23 +1,37 @@
 <template>
-  <div class="app-root">
-    <Sidebar class="layout-desktop" />
-    <div class="right-panel">
-      <Topbar @toggle-menu="drawerVisible = !drawerVisible" />
-      <main class="main-content">
+  <div class="h-screen flex">
+    <!-- 桌面端侧栏 -->
+    <Sidebar class="hidden md:flex" />
+
+    <!-- 主区域 -->
+    <div class="flex-1 flex flex-col min-w-0">
+      <Topbar @toggle-menu="drawerOpen = !drawerOpen" />
+      <main class="flex-1 overflow-y-auto p-4 md:p-6">
         <router-view />
       </main>
     </div>
-    <MobileBottomNav class="layout-mobile" />
-    <t-drawer v-model:visible="drawerVisible" placement="left" show-overlay header="PMOS">
-      <t-menu :value="$route.path">
-        <template v-for="item in menuItems" :key="item.path">
-          <t-menu-item :name="item.path" :value="item.path" @click="navigate(item.path)">
-            <template #icon><t-icon :name="item.icon" /></template>
-            {{ item.label }}
-          </t-menu-item>
-        </template>
-      </t-menu>
-    </t-drawer>
+
+    <!-- 移动端底部导航 -->
+    <MobileBottomNav class="md:hidden" />
+
+    <!-- 移动端抽屉 -->
+    <div v-if="drawerOpen" class="fixed inset-0 z-50 md:hidden" @click="drawerOpen = false">
+      <div class="absolute inset-0 bg-black/50" />
+      <aside class="absolute left-0 top-0 h-full w-64 bg-white dark:bg-slate-900 shadow-xl" @click.stop>
+        <div class="h-14 flex items-center px-4 border-b border-slate-200 dark:border-slate-700 font-bold text-lg">
+          PMOS
+        </div>
+        <nav class="p-2 space-y-1">
+          <a v-for="item in menuItems" :key="item.path" :href="item.path"
+             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
+             :class="$route.path.startsWith(item.path) ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-medium' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'"
+             @click="navigate($event, item.path)">
+            <span class="text-lg">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        </nav>
+      </aside>
+    </div>
   </div>
 </template>
 
@@ -29,41 +43,24 @@ import Topbar from './Topbar.vue'
 import MobileBottomNav from './MobileBottomNav.vue'
 
 const router = useRouter()
-const drawerVisible = ref(false)
+const drawerOpen = ref(false)
 
-function navigate(path: string) {
+function navigate(e: MouseEvent, path: string) {
+  e.preventDefault()
   router.push(path)
-  drawerVisible.value = false
+  drawerOpen.value = false
 }
 
 const menuItems = [
-  { path: '/dashboard', icon: 'dashboard', label: '首页' },
-  { path: '/projects', icon: 'folder', label: '项目' },
-  { path: '/tasks', icon: 'check-circle', label: '任务' },
-  { path: '/plans', icon: 'timeline', label: '计划' },
-  { path: '/testing', icon: 'bug', label: '测试' },
-  { path: '/documents', icon: 'file', label: '文档' },
-  { path: '/system', icon: 'settings', label: '设置' },
+  { path: '/dashboard', icon: '📊', label: '首页' },
+  { path: '/projects', icon: '📁', label: '项目' },
+  { path: '/plans', icon: '📅', label: '计划' },
+  { path: '/tasks', icon: '✅', label: '任务' },
+  { path: '/requirements', icon: '📝', label: '需求' },
+  { path: '/testing', icon: '🧪', label: '测试' },
+  { path: '/work', icon: '🔧', label: '工作' },
+  { path: '/documents', icon: '📄', label: '文档' },
+  { path: '/statistics', icon: '📊', label: '统计' },
+  { path: '/system', icon: '⚙️', label: '系统' },
 ]
 </script>
-
-<style>
-.app-root {
-  height: 100vh;
-  display: flex;
-  flex-direction: row;
-}
-.right-panel {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-.main-content {
-  flex: 1;
-  padding: 24px;
-  overflow-y: auto;
-}
-@media (min-width: 768px) { .layout-desktop { display: flex; } .layout-mobile { display: none; } }
-@media (max-width: 767px) { .layout-desktop { display: none; } .layout-mobile { display: flex; } }
-</style>

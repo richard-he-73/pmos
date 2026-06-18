@@ -36,12 +36,12 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach((to, _from) => {
   const authStore = useAuthStore()
-  if (to.meta.requiresAuth === false) { next(); return }
-  if (!authStore.isLoggedIn && !authStore.token) { next('/login'); return }
+  if (to.meta.requiresAuth === false) return true
+  if (!authStore.isLoggedIn && !authStore.token) return '/login'
   if (!authStore.currentUser && authStore.token) { authStore.fetchCurrentUser() }
-  next()
+  return true
 })
 
 export default router

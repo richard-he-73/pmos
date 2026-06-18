@@ -1,132 +1,52 @@
 <template>
-  <div class="project-detail">
-    <t-card :bordered="false" :loading="loading">
-      <template v-if="project">
-        <div class="detail-header">
-          <t-button variant="text" @click="$router.back()">
-            <t-icon name="chevron-left" /> 返回
-          </t-button>
-          <div class="header-info">
-            <h1>{{ project.name }}</h1>
-            <t-tag :theme="statusTag.theme">{{ statusTag.text }}</t-tag>
-            <span class="code">{{ project.code }}</span>
+  <div v-if="project">
+    <button @click="router.back()" class="text-sm text-blue-600 mb-3">&larr; 返回</button>
+    <div class="flex items-center gap-3 mb-6">
+      <h1 class="text-xl font-bold">{{ project.name }}</h1>
+      <span class="px-2 py-0.5 rounded text-xs" :class="stCls(project.status)">{{ stTxt(project.status) }}</span>
+      <span class="text-sm text-slate-400">{{ project.code }}</span>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 space-y-4">
+        <Card title="基本信息">
+          <div class="grid grid-cols-2 gap-3 text-sm">
+            <div><span class="text-slate-400">负责人</span><p>{{ project.owner_name }}</p></div>
+            <div><span class="text-slate-400">状态</span><p>{{ stTxt(project.status) }}</p></div>
+            <div><span class="text-slate-400">开始日期</span><p>{{ project.start_date || '-' }}</p></div>
+            <div><span class="text-slate-400">结束日期</span><p>{{ project.end_date || '-' }}</p></div>
+            <div class="col-span-2"><span class="text-slate-400">描述</span><p>{{ project.description || '暂无描述' }}</p></div>
           </div>
-          <t-button variant="outline">编辑</t-button>
+        </Card>
+      </div>
+      <Card title="项目统计">
+        <div class="grid grid-cols-2 gap-2 text-center">
+          <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><div class="text-xl font-bold text-blue-600">{{ stats.tasks.total }}</div><div class="text-xs text-slate-400">任务</div></div>
+          <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><div class="text-xl font-bold text-green-600">{{ stats.tasks.completed }}</div><div class="text-xs text-slate-400">已完成</div></div>
+          <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><div class="text-xl font-bold text-orange-600">{{ stats.bugs.total }}</div><div class="text-xs text-slate-400">缺陷</div></div>
+          <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><div class="text-xl font-bold text-red-600">{{ stats.bugs.open }}</div><div class="text-xs text-slate-400">未关闭</div></div>
         </div>
-
-        <t-row :gutter="[24, 24]">
-          <t-col :span="16">
-            <t-card :bordered="false" title="基本信息" class="section">
-              <t-descriptions :column="2" bordered>
-                <t-descriptions-item label="负责人">{{ project.owner_name }}</t-descriptions-item>
-                <t-descriptions-item label="状态">{{ statusTag.text }}</t-descriptions-item>
-                <t-descriptions-item label="开始日期">{{ project.start_date || '-' }}</t-descriptions-item>
-                <t-descriptions-item label="结束日期">{{ project.end_date || '-' }}</t-descriptions-item>
-                <t-descriptions-item label="描述" :span="2">{{ project.description || '暂无描述' }}</t-descriptions-item>
-              </t-descriptions>
-            </t-card>
-
-            <t-card :bordered="false" title="计划与任务" class="section">
-              <t-table :data="plans" :columns="planColumns" row-key="id" size="small" />
-              <t-empty v-if="plans.length === 0" description="暂无计划数据" />
-            </t-card>
-          </t-col>
-
-          <t-col :span="8">
-            <t-card :bordered="false" title="项目成员" class="section">
-              <t-list v-if="members.length > 0">
-                <t-list-item v-for="m in members" :key="m.id">
-                  <span>{{ m.user_name }}</span>
-                </t-list-item>
-              </t-list>
-              <t-empty v-else description="暂无成员" />
-            </t-card>
-
-            <t-card :bordered="false" title="项目统计" class="section">
-              <div class="stat-grid">
-                <div class="stat-item">
-                  <span class="stat-num blue">{{ stats.tasks.total }}</span>
-                  <span class="stat-lbl">任务</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-num green">{{ stats.tasks.completed }}</span>
-                  <span class="stat-lbl">已完成</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-num orange">{{ stats.bugs.total }}</span>
-                  <span class="stat-lbl">缺陷</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-num red">{{ stats.bugs.open }}</span>
-                  <span class="stat-lbl">未关闭</span>
-                </div>
-              </div>
-            </t-card>
-          </t-col>
-        </t-row>
-      </template>
-    </t-card>
+      </Card>
+    </div>
   </div>
 </template>
-
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import Card from '@/components/Card.vue'
 import { getProject } from '@/api/modules/projects'
 import { getProjectDetailStats } from '@/api/modules/statistics'
-import type { Project } from '@/api/modules/projects'
-
 const route = useRoute()
-const loading = ref(true)
-const project = ref<Project | null>(null)
-const plans = ref<any[]>([])
-const members = ref<any[]>([])
+const router = useRouter()
+const project = ref<any>(null)
 const stats = ref({ tasks: { total: 0, completed: 0 }, bugs: { total: 0, open: 0 } })
-
-const statusTag = computed(() => {
-  const map: Record<string, { theme: string; text: string }> = {
-    planning: { theme: 'warning', text: '规划中' },
-    active: { theme: 'primary', text: '进行中' },
-    closed: { theme: 'default', text: '已结束' },
-  }
-  return map[project.value?.status || ''] || { theme: 'default', text: '未知' }
-})
-
-const planColumns = [
-  { colKey: 'name', title: '计划名称' },
-  { colKey: 'type', title: '类型', width: 80 },
-  { colKey: 'progress', title: '进度', width: 80 },
-  { colKey: 'start_date', title: '开始', width: 100 },
-  { colKey: 'end_date', title: '结束', width: 100 },
-]
-
+function stCls(s: string) { return { planning: 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/20', active: 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20', closed: 'text-slate-500 bg-slate-50' }[s] || '' }
+function stTxt(s: string) { return { planning: '规划中', active: '进行中', closed: '已结束' }[s] || s }
 onMounted(async () => {
-  const id = Number(route.params.id)
   try {
-    const [projRes] = await Promise.all([
-      getProject(id),
-      getProjectDetailStats(id).catch(() => null),
-    ])
-    project.value = projRes.data
-  } finally {
-    loading.value = false
-  }
+    const id = Number(route.params.id)
+    const [pr, st] = await Promise.all([getProject(id), getProjectDetailStats(id).catch(() => null)])
+    project.value = pr.data
+    if (st) stats.value = st.data
+  } catch {}
 })
 </script>
-
-<style scoped>
-.project-detail { padding: var(--pmos-spacing-md); }
-.detail-header { display: flex; align-items: center; gap: var(--pmos-spacing-md); margin-bottom: var(--pmos-spacing-lg); }
-.header-info { flex: 1; display: flex; align-items: center; gap: var(--pmos-spacing-sm); }
-.header-info h1 { margin: 0; font-size: var(--pmos-font-size-lg); }
-.code { color: var(--pmos-text-secondary); font-size: var(--pmos-font-size-sm); }
-.section { margin-bottom: var(--pmos-spacing-md); }
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--pmos-spacing-sm); }
-.stat-item { text-align: center; padding: var(--pmos-spacing-sm); border-radius: 6px; background: var(--pmos-bg-secondary); }
-.stat-num { display: block; font-size: 24px; font-weight: 700; }
-.stat-lbl { font-size: var(--pmos-font-size-sm); color: var(--pmos-text-secondary); }
-.blue { color: var(--pmos-info); }
-.green { color: var(--pmos-success); }
-.orange { color: var(--pmos-warning); }
-.red { color: var(--pmos-error); }
-</style>

@@ -1,46 +1,39 @@
 <template>
-  <div class="page-with-tabs">
-    <div class="page-header"><h1>需求管理</h1></div>
-    <t-tabs v-model="tab">
-      <t-tab-panel value="business" label="业务需求">
-        <t-table :data="businessReqs" :columns="bizColumns" row-key="id" size="small" />
-      </t-tab-panel>
-      <t-tab-panel value="software" label="软件需求">
-        <t-table :data="softwareReqs" :columns="swColumns" row-key="id" size="small" />
-      </t-tab-panel>
-    </t-tabs>
+  <div>
+    <h1 class="text-xl font-bold mb-4">需求管理</h1>
+    <div class="flex gap-2 mb-4">
+      <button class="px-3 py-1.5 rounded-lg text-sm" :class="tab==='biz'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" @click="tab='biz'">业务需求</button>
+      <button class="px-3 py-1.5 rounded-lg text-sm" :class="tab==='sw'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" @click="tab='sw'">软件需求</button>
+    </div>
+    <Card>
+      <table class="w-full text-sm">
+        <thead><tr class="border-b border-slate-200 dark:border-slate-700 text-slate-500">
+          <th class="text-left py-2 px-2">编号</th><th class="text-left py-2 px-2">名称</th><th class="text-left py-2 px-2">状态</th>
+        </tr></thead>
+        <tbody>
+          <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50">
+            <td class="py-2 px-2 font-mono text-xs">{{ r.code }}</td>
+            <td class="py-2 px-2">{{ r.name }}</td>
+            <td class="py-2 px-2">{{ r.status }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-if="items.length===0" class="text-center py-8 text-slate-400">暂无数据</div>
+    </Card>
   </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-const tab = ref('business')
-const businessReqs = ref<any[]>([])
-const softwareReqs = ref<any[]>([])
-const bizColumns = [
-  { colKey: 'code', title: '编号', width: 150 },
-  { colKey: 'name', title: '需求名称' },
-  { colKey: 'status', title: '状态', width: 100 },
-  { colKey: 'priority', title: '优先级', width: 80 },
-]
-const swColumns = [
-  { colKey: 'code', title: '编号', width: 150 },
-  { colKey: 'name', title: '需求名称' },
-  { colKey: 'module', title: '模块', width: 120 },
-  { colKey: 'status', title: '状态', width: 100 },
-]
-onMounted(async () => {
+import { ref, watch, onMounted } from 'vue'
+import Card from '@/components/Card.vue'
+const tab = ref('biz')
+const items = ref<any[]>([])
+async function load() {
   try {
-    const [biz, sw] = await Promise.all([
-      fetch('/api/v1/business-requirements/').then(r => r.json()),
-      fetch('/api/v1/software-requirements/').then(r => r.json()),
-    ])
-    businessReqs.value = biz
-    softwareReqs.value = sw
-  } catch {}
-})
+    const ep = tab.value === 'biz' ? 'business-requirements' : 'software-requirements'
+    const r = await fetch('/api/v1/' + ep + '/')
+    items.value = await r.json()
+  } catch { items.value = [] }
+}
+watch(tab, load)
+onMounted(load)
 </script>
-<style scoped>
-.page-with-tabs { padding: var(--pmos-spacing-md); }
-.page-header { margin-bottom: var(--pmos-spacing-md); }
-.page-header h1 { margin: 0; }
-</style>

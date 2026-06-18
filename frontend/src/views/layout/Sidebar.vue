@@ -1,19 +1,15 @@
 <template>
-  <aside :class="['app-sidebar', { collapsed: store.sidebarCollapsed }]">
-    <div class="sidebar-logo">
-      <span class="logo-text" v-show="!store.sidebarCollapsed">PMOS</span>
+  <aside class="w-60 h-screen bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 flex flex-col flex-shrink-0">
+    <div class="h-14 flex items-center px-4 border-b border-slate-200 dark:border-slate-700 font-bold text-xl text-blue-600">
+      PMOS
     </div>
-    <nav class="sidebar-nav">
-      <a
-        v-for="item in menuItems"
-        :key="item.path"
-        :href="item.path"
-        class="nav-item"
-        :class="{ active: isActive(item.path) }"
-        @click="navigate($event, item.path)"
-      >
-        <span class="nav-icon">{{ item.icon }}</span>
-        <span class="nav-label" v-show="!store.sidebarCollapsed">{{ item.label }}</span>
+    <nav class="flex-1 p-2 space-y-1 overflow-y-auto">
+      <a v-for="item in menuItems" :key="item.path" :href="item.path"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
+         :class="isActive(item.path) ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-medium' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'"
+         @click="go($event, item.path)">
+        <span class="text-lg">{{ item.icon }}</span>
+        <span>{{ item.label }}</span>
       </a>
     </nav>
   </aside>
@@ -21,11 +17,8 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { useResponsiveStore } from '@/stores/responsive'
-
 const route = useRoute()
 const router = useRouter()
-const store = useResponsiveStore()
 
 const menuItems = [
   { path: '/dashboard', icon: '📊', label: '首页' },
@@ -45,79 +38,8 @@ function isActive(path: string) {
   return route.path.startsWith(path)
 }
 
-function navigate(event: MouseEvent, path: string) {
-  event.preventDefault()
-  console.log('Navigating to:', path)
+function go(e: MouseEvent, path: string) {
+  e.preventDefault()
   router.push(path)
 }
 </script>
-
-<style scoped>
-.app-sidebar {
-  height: 100vh;
-  overflow-y: auto;
-  background: var(--td-bg-color-container, #fff);
-  border-right: 1px solid var(--td-border-level-1-color, #e0e0e0);
-  transition: width 0.3s;
-  width: 240px;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-}
-.app-sidebar.collapsed { width: 64px; }
-
-.sidebar-logo {
-  height: 56px;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  font-weight: 700;
-  font-size: 18px;
-  border-bottom: 1px solid var(--td-border-level-1-color, #e0e0e0);
-  flex-shrink: 0;
-}
-
-.sidebar-nav {
-  flex: 1;
-  padding: 4px 0;
-  overflow-y: auto;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  text-decoration: none;
-  cursor: pointer;
-  color: var(--td-text-color-primary, #333);
-  font-size: 14px;
-  transition: background 0.2s;
-  margin: 2px 0;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.nav-item:hover {
-  background: var(--td-bg-color-secondary, #f5f5f5);
-}
-
-.nav-item.active {
-  background: var(--td-brand-color-light, #e8f0fe);
-  color: var(--td-brand-color, #0052d9);
-  font-weight: 600;
-}
-
-.nav-icon {
-  font-size: 18px;
-  width: 24px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.nav-label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-</style>
