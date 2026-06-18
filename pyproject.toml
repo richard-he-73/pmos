@@ -28,3 +28,7 @@ dev = [
     "pytest-cov>=5.0",
     "ruff>=0.4",
 ]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "pmos.settings.dev"
+python_files = ["tests.py", "test_*.py"]

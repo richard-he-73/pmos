@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'simple_history',
     # Apps
     'apps.accounts',
+    'apps.system',
 ]
 
 MIDDLEWARE = [
