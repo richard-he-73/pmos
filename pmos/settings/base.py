@@ -24,6 +24,8 @@ INSTALLED_APPS = [
     # Apps
     'apps.accounts',
     'apps.system',
+    'apps.projects',
+    'apps.plans',
 ]
 
 MIDDLEWARE = [
