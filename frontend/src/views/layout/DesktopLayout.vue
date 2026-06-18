@@ -1,7 +1,7 @@
 <template>
   <t-layout class="desktop-layout">
     <Sidebar />
-    <t-layout>
+    <t-layout class="right-panel">
       <Topbar />
       <t-content class="main-content">
         <router-view />
@@ -15,10 +15,19 @@ import Sidebar from './Sidebar.vue'
 import Topbar from './Topbar.vue'
 </script>
 
-<style scoped>
-.desktop-layout { height: 100vh; }
-.main-content {
-  padding: var(--pmos-spacing-lg);
+<style>
+.desktop-layout {
+  height: 100vh !important;
+  flex-direction: row !important;
+}
+.desktop-layout .right-panel {
+  flex: 1 !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+}
+.desktop-layout .main-content {
+  flex: 1 !important;
+  padding: 24px;
   overflow-y: auto;
 }
 </style>
