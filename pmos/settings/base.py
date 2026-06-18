@@ -28,6 +28,9 @@ INSTALLED_APPS = [
     'apps.plans',
     'apps.requirements',
     'apps.testing',
+    'apps.resources',
+    'apps.communications',
+    'apps.documents',
 ]
 
 MIDDLEWARE = [
