@@ -3,9 +3,9 @@
     <div class="sidebar-logo">
       <span class="logo-text" v-show="!store.sidebarCollapsed">PMOS</span>
     </div>
-    <t-menu :collapsed="store.sidebarCollapsed">
+    <t-menu :value="currentRoute" :collapsed="store.sidebarCollapsed">
       <template v-for="item in menuItems" :key="item.path">
-        <t-menu-item :name="item.path" :to="item.path">
+        <t-menu-item :value="item.path" :to="item.path">
           <template #icon><t-icon :name="item.icon" /></template>
           {{ item.label }}
         </t-menu-item>
@@ -15,9 +15,13 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useResponsiveStore } from '@/stores/responsive'
 
+const route = useRoute()
 const store = useResponsiveStore()
+const currentRoute = computed(() => route.path)
 
 const menuItems = [
   { path: '/dashboard', icon: 'dashboard', label: '首页' },
@@ -26,6 +30,7 @@ const menuItems = [
   { path: '/tasks', icon: 'check-circle', label: '任务' },
   { path: '/requirements', icon: 'file-text', label: '需求' },
   { path: '/testing', icon: 'bug', label: '测试' },
+  { path: '/work', icon: 'tool', label: '工作' },
   { path: '/documents', icon: 'file', label: '文档' },
   { path: '/statistics', icon: 'chart', label: '统计' },
   { path: '/system', icon: 'settings', label: '系统' },
