@@ -90,7 +90,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { getProjects } from '@/api/modules/projects'
-import { getPlans, getTasks, createPlan, getPlanTasks } from '@/api/modules/plans'
+import { getPlans, createPlan, getPlanTasks } from '@/api/modules/plans'
 import type { Project } from '@/api/modules/projects'
 import type { Plan, Task } from '@/api/modules/plans'
 
