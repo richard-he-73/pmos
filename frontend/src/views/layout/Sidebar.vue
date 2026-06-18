@@ -28,6 +28,8 @@ const menuItems = [
   { path: '/requirements', icon: '📝', label: '需求' },
   { path: '/testing', icon: '🧪', label: '测试' },
   { path: '/work', icon: '🔧', label: '工作' },
+  { path: '/organization', icon: '🏛️', label: '组织' },
+  { path: '/resource', icon: '👥', label: '资源' },
   { path: '/documents', icon: '📄', label: '文档' },
   { path: '/statistics', icon: '📊', label: '统计' },
   { path: '/system', icon: '⚙️', label: '系统' },

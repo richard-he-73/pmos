@@ -32,4 +32,5 @@ urlpatterns = [
     path('api/v1/', include('apps.work_management.urls')),
     path('api/v1/', include('apps.notifications.urls')),
     path('api/v1/', include('apps.statistics.urls')),
+    path('api/v1/', include('apps.organizations.urls')),
 ]
