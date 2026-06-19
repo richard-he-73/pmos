@@ -54,6 +54,8 @@ function navigate(e: MouseEvent, path: string) {
 const menuItems = [
   { path: '/dashboard', icon: '📊', label: '首页' },
   { path: '/projects', icon: '📁', label: '项目' },
+  { path: '/organization', icon: '🏛️', label: '组织' },
+  { path: '/resource', icon: '👥', label: '资源' },
   { path: '/plans', icon: '📅', label: '计划' },
   { path: '/tasks', icon: '✅', label: '任务' },
   { path: '/requirements', icon: '📝', label: '需求' },
