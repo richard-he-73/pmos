@@ -155,10 +155,20 @@ async function handleSave() {
   if (!form.name || !form.code) return
   saving.value = true
   try {
-    if (isEdit.value && editingId.value) { await updateProject(editingId.value, form as any) }
-    else { await createProject(form as any) }
+    const payload = {
+      ...form,
+      start_date: form.start_date || null,
+      end_date: form.end_date || null,
+      contract_price: form.contract_price || null,
+      budget_price: form.budget_price || null,
+    }
+    if (isEdit.value && editingId.value) { await updateProject(editingId.value, payload as any) }
+    else { await createProject(payload as any) }
     showForm.value = false; fetchData()
-  } catch (e) { console.error(e) }
+  } catch (e: any) {
+    const msg = e?.response?.data ? Object.entries(e.response.data).map(([k,v]) => `${k}: ${v}`).join('\n') : '保存失败'
+    alert(msg)
+  }
   finally { saving.value = false }
 }
 async function handleDelete(p: Project) {
