@@ -65,7 +65,8 @@ class Project(models.Model):
     end_date = models.DateField('结束日期', null=True, blank=True)
 
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
         related_name='owned_projects', verbose_name='项目负责人',
     )
 
