@@ -19,6 +19,7 @@ dependencies = [
     "whitenoise>=6.6",
     "openpyxl>=3.1",
     "xlsxwriter>=3.2",
+    "pypinyin>=0.55",
 ]
 
 [project.optional-dependencies]
