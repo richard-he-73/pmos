@@ -27,8 +27,8 @@
           </tr></thead>
           <tbody>
             <tr v-for="p in items" :key="p.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
-              <td class="py-3 px-3 font-mono text-xs text-slate-500">{{ p.code }}</td>
-              <td class="py-3 px-3 font-medium cursor-pointer" @click="viewDetail(p)">{{ p.name }}</td>
+              <td class="py-3 px-3 font-mono text-xs text-slate-500 whitespace-nowrap">{{ p.code }}</td>
+              <td class="py-3 px-3 font-medium cursor-pointer whitespace-nowrap" @click="viewDetail(p)">{{ p.name }}</td>
               <td class="py-3 px-3 hidden sm:table-cell"><span class="px-2 py-0.5 rounded text-xs" :class="typeClass(p.project_type)">{{ typeText(p.project_type) }}</span></td>
               <td class="py-3 px-3 hidden sm:table-cell"><span class="px-2 py-0.5 rounded text-xs font-medium" :class="statusClass(p.status)">{{ statusText(p.status) }}</span></td>
               <td class="py-3 px-3 hidden md:table-cell text-slate-500">{{ p.owner_name || '—' }}</td>

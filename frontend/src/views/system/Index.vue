@@ -18,17 +18,17 @@
           <thead>
             <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
               <th v-for="c in cols" :key="c.k" class="text-left py-3 px-3 font-medium">{{ c.t }}</th>
-              <th class="text-left py-3 px-3 font-medium w-48">操作</th>
+              <th class="text-left py-3 px-3 font-medium w-60 whitespace-nowrap">操作</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
-              <td v-for="c in cols" :key="c.k" class="py-3 px-3">
+              <td v-for="c in cols" :key="c.k" class="py-3 px-3 whitespace-nowrap">
                 <span v-if="c.k==='is_superuser'" class="px-2 py-0.5 rounded text-xs" :class="r.is_superuser ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400'">{{ r.is_superuser ? '管理员' : '用户' }}</span>
                 <span v-else>{{ r[c.k] ?? '' }}</span>
               </td>
-              <td class="py-3 px-3">
-                <div class="flex flex-wrap gap-1.5">
+              <td class="py-3 px-3 whitespace-nowrap">
+                <div class="flex gap-1.5 whitespace-nowrap">
                   <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 transition">编辑</button>
                   <button @click="changePwd(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 transition">修改密码</button>
                   <button v-if="isAdmin" @click="resetPwd(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 transition">重置密码</button>
