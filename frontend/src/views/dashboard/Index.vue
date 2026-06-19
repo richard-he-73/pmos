@@ -50,13 +50,13 @@ const authStore = useAuthStore()
 const username = computed(() => authStore.currentUser?.real_name || authStore.currentUser?.username || '用户')
 const time = ref(new Date().toLocaleString('zh-CN'))
 const projects = ref<any[]>([])
-const stats = ref([{ icon: '📁', label: '项目总数', value: '-', path: '/projects' }, { icon: '✅', label: '待完成任务', value: '-', path: '/tasks' }, { icon: '🐛', label: '未关闭缺陷', value: '-', path: '/bugs' }, { icon: '📊', label: '系统概览', value: '—', path: '/statistics' }])
-function statusClass(s: string) { return { planning: 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/20', active: 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20', closed: 'text-slate-500 bg-slate-50 dark:text-slate-400 dark:bg-slate-800' }[s] + ' px-2 py-0.5 rounded text-xs' }
-function statusText(s: string) { return { planning: '规划中', active: '进行中', closed: '已结束' }[s] || s }
+const stats = ref([{ icon: '📁', label: '项目总数', value: '0', path: '/projects' }, { icon: '✅', label: '待完成任务', value: '0', path: '/tasks' }, { icon: '🐛', label: '未关闭缺陷', value: '0', path: '/bugs' }, { icon: '📊', label: '系统概览', value: '0', path: '/statistics' }])
+function statusClass(s: string) { return { planning: 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/20', active: 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20', pending_acceptance: 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/20', closed: 'text-slate-500 bg-slate-50 dark:text-slate-400 dark:bg-slate-800' }[s] + ' px-2 py-0.5 rounded text-xs' }
+function statusText(s: string) { return { planning: '计划中', active: '进行中', pending_acceptance: '待验收', closed: '已结项' }[s] || s }
 onMounted(async () => {
   try {
     const [ov, pj] = await Promise.all([getProjectOverview(), getProjects({ limit: 10 }).catch(() => null)])
-    if (ov?.data?.total) stats.value[0].value = String(ov.data.total)
+    if (ov?.data?.total !== undefined) stats.value[0].value = String(ov.data.total)
     if (pj?.data?.results) projects.value = pj.data.results
   } catch {}
 })
