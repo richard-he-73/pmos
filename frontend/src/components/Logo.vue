@@ -11,10 +11,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   size?: 'sm' | 'md' | 'lg'
   showText?: boolean
-}>()
+}>(), {
+  size: 'md',
+  showText: true,
+})
 
 const sizeClass = computed(() => ({
   sm: '',
