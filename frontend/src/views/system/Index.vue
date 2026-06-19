@@ -65,6 +65,14 @@ const showForm = ref(false)
 const editing = ref<any>(null)
 const form = ref<Record<string,string>>({})
 
+async function api(url: string, options: RequestInit = {}) {
+  const token = localStorage.getItem('pmos-token')
+  const headers = { ...(options.headers || {}), 'Content-Type': 'application/json' } as Record<string,string>
+  if (token) headers['Authorization'] = 'Bearer ' + token
+  const res = await api(url, { ...options, headers })
+  return res
+}
+
 const tabs = [
   { k:'users', l:'用户管理', e:'users', cols:[{k:'username',t:'用户名'},{k:'real_name',t:'姓名'},{k:'department',t:'部门'},{k:'position',t:'职位'}], fields:[{k:'username',t:'用户名'},{k:'real_name',t:'姓名'},{k:'email',t:'邮箱'},{k:'department',t:'部门'},{k:'position',t:'职位'}] },
   { k:'roles', l:'角色管理', e:'roles', cols:[{k:'name',t:'角色'},{k:'code',t:'编码'},{k:'is_system',t:'内置'}], fields:[{k:'name',t:'角色名称'},{k:'code',t:'编码'}] },
@@ -78,7 +86,7 @@ async function load() {
   try {
     let url = '/api/v1/' + cur.value.e + '/'
     if (search.value) url += '?search=' + encodeURIComponent(search.value)
-    const r = await fetch(url)
+    const r = await api(url)
     const d = await r.json()
     items.value = d.results ?? []
   } catch { items.value = [] }
@@ -88,16 +96,16 @@ function editItem(r: any) { editing.value = r; form.value = {...r}; showForm.val
 async function saveItem() {
   try {
     if (editing.value) {
-      await fetch('/api/v1/' + cur.value!.e + '/' + editing.value.id + '/', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(form.value) })
+      await api('/api/v1/' + cur.value!.e + '/' + editing.value.id + '/', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(form.value) })
     } else {
-      await fetch('/api/v1/' + cur.value!.e + '/', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(form.value) })
+      await api('/api/v1/' + cur.value!.e + '/', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(form.value) })
     }
     showForm.value = false; load()
   } catch (e) { console.error(e) }
 }
 async function deleteItem(id: number) {
   if (!confirm('确认删除？')) return
-  try { await fetch('/api/v1/' + cur.value!.e + '/' + id + '/', { method:'DELETE' }); load() } catch {}
+  try { await api('/api/v1/' + cur.value!.e + '/' + id + '/', { method:'DELETE' }); load() } catch {}
 }
 watch(tab, () => { search.value = ''; load() })
 onMounted(load)
