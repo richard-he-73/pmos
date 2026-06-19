@@ -38,7 +38,8 @@ async function load() {
   try {
     const ep = tab.value === 'biz' ? 'business-requirements' : 'software-requirements'
     const r = await fetch('/api/v1/' + ep + '/')
-    items.value = await r.json()
+    const d = await r.json()
+    items.value = d.results ?? []
   } catch { items.value = [] }
 }
 watch(tab, load)
