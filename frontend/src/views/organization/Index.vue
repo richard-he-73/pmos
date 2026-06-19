@@ -21,7 +21,7 @@
               <span v-if="c.k==='is_active'" class="inline-block w-2 h-2 rounded-full mr-1.5" :class="r[c.k] ? 'bg-green-500' : 'bg-red-400'"></span>
               <span :class="c.k==='is_active' ? 'text-xs '+(r[c.k]?'text-green-600':'text-red-400'):''">{{ c.k==='is_active' ? (r[c.k]?'启用':'禁用') : (r[c.k] ?? '') }}</span>
             </td>
-            <td class="py-3 px-4">
+            <td class="py-3 px-4 whitespace-nowrap">
               <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
               <button @click="deleteItem(r.id)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
             </td>
@@ -119,8 +119,14 @@ async function saveItem() {
     else { await request.post('/' + cur.value!.e + '/', payload) }
     showForm.value=false; load()
   } catch (e: any) {
-    const msg = e?.response?.data ? JSON.stringify(e.response.data) : '保存失败'
-    alert(msg)
+    console.error('saveItem error', e)
+    if (e?.response) {
+      alert('错误 ' + e.response.status + ': ' + JSON.stringify(e.response.data))
+    } else if (e?.message) {
+      alert('网络错误: ' + e.message)
+    } else {
+      alert('保存失败')
+    }
   }
 }
 async function deleteItem(id: number) {
