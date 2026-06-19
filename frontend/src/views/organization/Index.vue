@@ -82,6 +82,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import request from '@/api/request'
 const tab = ref('dept')
 const items = ref<any[]>([])
 const depts = ref<any[]>([])
@@ -100,10 +101,10 @@ const curFields = computed(() => cur.value?.fields || [])
 
 async function load() {
   if (!cur.value) return
-  try { const r = await fetch('/api/v1/' + cur.value.e + '/'); const d = await r.json(); items.value = d.results ?? [] } catch { items.value = [] }
+  try { const r = await request.get('/' + cur.value.e + '/'); items.value = (r.data.results ?? r.data) as any[] } catch { items.value = [] }
 }
-async function loadDepts() { try { const r=await fetch('/api/v1/departments/'); const d=await r.json(); depts.value = d.results ?? d } catch {} }
-async function loadUsers() { try { const r=await fetch('/api/v1/users/'); const d=await r.json(); users.value = d.results ?? d } catch {} }
+async function loadDepts() { try { const r=await request.get('/departments/'); depts.value = r.data.results ?? r.data } catch {} }
+async function loadUsers() { try { const r=await request.get('/users/'); users.value = r.data.results ?? r.data } catch {} }
 
 function openForm() { editing.value=null; form.value={ is_active: true }; showForm.value=true }
 function editItem(r: any) { editing.value=r; form.value={...r}; showForm.value=true }
@@ -113,15 +114,18 @@ async function saveItem() {
   for (const k of ['parent', 'manager', 'user', 'department']) {
     if (k in payload && payload[k] === '') payload[k] = null
   }
-  const url = editing.value ? '/api/v1/'+cur.value!.e+'/'+editing.value.id+'/' : '/api/v1/'+cur.value!.e+'/'
-  const method = editing.value ? 'PATCH' : 'POST'
-  const r = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
-  if (!r.ok) { const text = await r.text(); alert(text || '保存失败'); return }
-  showForm.value=false; load()
+  try {
+    if (editing.value) { await request.patch('/' + cur.value!.e + '/' + editing.value.id + '/', payload) }
+    else { await request.post('/' + cur.value!.e + '/', payload) }
+    showForm.value=false; load()
+  } catch (e: any) {
+    const msg = e?.response?.data ? JSON.stringify(e.response.data) : '保存失败'
+    alert(msg)
+  }
 }
 async function deleteItem(id: number) {
   if (!confirm('确认删除？')) return
-  try { await fetch('/api/v1/'+cur.value!.e+'/'+id+'/', { method:'DELETE' }); load() } catch {}
+  try { await request.delete('/' + cur.value!.e + '/' + id + '/'); load() } catch {}
 }
 watch(tab, () => { load(); if (tab.value==='members') loadDepts() })
 onMounted(() => { load(); loadDepts(); loadUsers() })
