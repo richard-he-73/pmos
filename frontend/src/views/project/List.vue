@@ -13,7 +13,7 @@
 
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <div v-if="loading" class="text-center py-12 text-slate-400 text-sm">加载中...</div>
-      <div v-else-if="items.length === 0" class="text-center py-12 text-slate-400 text-sm">暂无项目</div>
+      
       <div v-else class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">

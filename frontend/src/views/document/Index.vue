@@ -3,7 +3,7 @@
     <h1 class="text-xl font-bold mb-4">文档管理</h1>
     <Card>
       <div v-if="loading" class="text-center py-8 text-slate-400">加载中...</div>
-      <div v-else-if="items.length === 0" class="text-center py-8 text-slate-400">暂无数据</div>
+      
       <div v-else class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead><tr class="border-b border-slate-200 dark:border-slate-700 text-slate-500">
@@ -15,6 +15,12 @@
             </tr>
           </tbody>
         </table>
+<div v-if="items.length===0" class="flex flex-col items-center justify-center py-16 text-slate-400">
+    <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+    </svg>
+    <span class="text-sm">暂无数据</span>
+  </div>
       </div>
     </Card>
   </div>
