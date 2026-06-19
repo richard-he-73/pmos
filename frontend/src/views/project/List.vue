@@ -34,8 +34,8 @@
               <td class="py-3 px-3 hidden md:table-cell text-slate-500">{{ p.owner_name || '—' }}</td>
               <td class="py-3 px-3 hidden lg:table-cell text-slate-400 text-xs">{{ p.start_date || '—' }} ~ {{ p.end_date || '—' }}</td>
               <td class="py-3 px-3 text-right whitespace-nowrap">
-                <button @click="openEdit(p)" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-xs mr-3">编辑</button>
-                <button @click="handleDelete(p)" class="text-red-500 hover:text-red-700 text-xs">删除</button>
+                <button @click="openEdit(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
+                <button @click="handleDelete(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
               </td>
             </tr>
           </tbody>
