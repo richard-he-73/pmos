@@ -34,7 +34,7 @@ import { ref, watch, onMounted } from 'vue'
 import Card from '@/components/Card.vue'
 
 const api = async (url: string, opts: any = {}): Promise<Response> => {
-  const token = localStorage.getItem('pmos-token')
+  const token = sessionStorage.getItem('pmos-token')
   const headers: Record<string,string> = { "Content-Type": "application/json" }
   if (token) headers['Authorization'] = 'Bearer ' + token
   if (opts.headers) Object.assign(headers, opts.headers)

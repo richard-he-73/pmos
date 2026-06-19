@@ -4,8 +4,8 @@ import { login, getCurrentUser } from '@/api/modules/auth'
 import type { LoginData, UserInfo } from '@/api/modules/auth'
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref(localStorage.getItem('pmos-token') || '')
-  const refreshToken = ref(localStorage.getItem('pmos-refresh-token') || '')
+  const token = ref(sessionStorage.getItem('pmos-token') || '')
+  const refreshToken = ref(sessionStorage.getItem('pmos-refresh-token') || '')
   const currentUser = ref<UserInfo | null>(null)
   const isLoggedIn = ref(!!token.value)
 
@@ -13,8 +13,8 @@ export const useAuthStore = defineStore('auth', () => {
     const res = await login(data)
     token.value = res.data.access
     refreshToken.value = res.data.refresh
-    localStorage.setItem('pmos-token', res.data.access)
-    localStorage.setItem('pmos-refresh-token', res.data.refresh)
+    sessionStorage.setItem('pmos-token', res.data.access)
+    sessionStorage.setItem('pmos-refresh-token', res.data.refresh)
     isLoggedIn.value = true
     await fetchCurrentUser()
   }
@@ -33,8 +33,8 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken.value = ''
     currentUser.value = null
     isLoggedIn.value = false
-    localStorage.removeItem('pmos-token')
-    localStorage.removeItem('pmos-refresh-token')
+    sessionStorage.removeItem('pmos-token')
+    sessionStorage.removeItem('pmos-refresh-token')
   }
 
   return { token, refreshToken, currentUser, isLoggedIn, loginAction, fetchCurrentUser, logout }

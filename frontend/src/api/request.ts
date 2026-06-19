@@ -12,7 +12,7 @@ const request: AxiosInstance = axios.create({
 // 请求拦截器：注入 Token
 request.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('pmos-token')
+    const token = sessionStorage.getItem('pmos-token')
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -28,18 +28,18 @@ request.interceptors.response.use(
     const originalRequest = error.config
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
-      const refreshToken = localStorage.getItem('pmos-refresh-token')
+      const refreshToken = sessionStorage.getItem('pmos-refresh-token')
       if (refreshToken) {
         try {
           const res = await axios.post(`${BASE_URL}/auth/refresh/`, {
             refresh: refreshToken,
           })
-          localStorage.setItem('pmos-token', res.data.access)
+          sessionStorage.setItem('pmos-token', res.data.access)
           originalRequest.headers.Authorization = `Bearer ${res.data.access}`
           return request(originalRequest)
         } catch {
-          localStorage.removeItem('pmos-token')
-          localStorage.removeItem('pmos-refresh-token')
+          sessionStorage.removeItem('pmos-token')
+          sessionStorage.removeItem('pmos-refresh-token')
           window.location.href = '/login'
         }
       } else {
