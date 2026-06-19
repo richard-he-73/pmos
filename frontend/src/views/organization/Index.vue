@@ -146,8 +146,8 @@ async function load() {
   if (!cur.value) return
   try { const r = await request.get('/' + cur.value.e + '/'); items.value = (r.data.results ?? r.data) as any[] } catch { items.value = [] }
 }
-async function loadDepts() { try { const r=await request.get('/departments/'); depts.value = r.data.results ?? r.data } catch {} }
-async function loadUsers() { try { const r=await request.get('/users/'); users.value = r.data.results ?? r.data } catch {} }
+async function loadDepts() { try { const r=await request.get('/departments/', { params: { page_size: 9999 } }); depts.value = r.data.results ?? r.data } catch {} }
+async function loadUsers() { try { const r=await request.get('/users/', { params: { page_size: 9999 } }); users.value = r.data.results ?? r.data } catch {} }
 
 function openForm() { editing.value=null; form.value={ is_active: true }; showForm.value=true }
 function editItem(r: any) { editing.value=r; form.value={...r}; showForm.value=true }
@@ -160,7 +160,7 @@ async function saveItem() {
   try {
     if (editing.value) { await request.patch('/' + cur.value!.e + '/' + editing.value.id + '/', payload) }
     else { await request.post('/' + cur.value!.e + '/', payload) }
-    showForm.value=false; load()
+    showForm.value=false; load(); loadDepts()
   } catch (e: any) {
     console.error('saveItem error', e)
     if (e?.response) {
@@ -183,7 +183,7 @@ async function toggleActive(r: any) {
 }
 async function deleteItem(id: number) {
   if (!(await confirm.show('确认删除此部门？'))) return
-  try { await request.delete('/' + cur.value!.e + '/' + id + '/'); toast.show('删除成功', 'success'); load() } catch { toast.show('删除失败', 'error') }
+  try { await request.delete('/' + cur.value!.e + '/' + id + '/'); toast.show('删除成功', 'success'); load(); loadDepts() } catch { toast.show('删除失败', 'error') }
 }
 watch(tab, () => { load(); if (tab.value==='members') loadDepts() })
 onMounted(() => { load(); loadDepts(); loadUsers() })
