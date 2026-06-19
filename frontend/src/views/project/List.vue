@@ -126,7 +126,7 @@
           </div>
           <div>
             <span class="text-slate-400 block text-xs mb-0.5">咨询方向</span>
-            <span>{{ ({ core: '核心', credit: '信贷', credit_card: '信用卡', payment: '支付', channel: '渠道', operations: '运营', finance_accounting: '财会', digital_transform: '数字化转型', ai: '人工智能' })[detailItem.consulting_direction] || detailItem.consulting_direction || '—' }}</span>
+            <span>{{ ({ core: '核心', credit: '信贷', credit_card: '信用卡', payment: '支付', channel: '渠道', operations: '运营', finance_accounting: '财会', digital_transform: '数字化转型', ai: '人工智能', other: '其他' })[detailItem.consulting_direction] || detailItem.consulting_direction || '—' }}</span>
           </div>
           <div>
             <span class="text-slate-400 block text-xs mb-0.5">项目类型</span>

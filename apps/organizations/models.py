@@ -16,6 +16,7 @@ class Department(models.Model):
     )
     sort_order = models.IntegerField('排序', default=0)
     is_active = models.BooleanField('启用', default=True)
+    description = models.TextField('部门职责', blank=True, default='')
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
 
     class Meta:

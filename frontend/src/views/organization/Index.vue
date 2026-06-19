@@ -17,7 +17,10 @@
           <th class="text-left py-3 px-4 font-medium w-24">操作</th>
         </tr></thead><tbody>
           <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
-            <td v-for="c in cols" :key="c.k" class="py-3 px-4">{{ r[c.k] ?? '' }}</td>
+            <td v-for="c in cols" :key="c.k" class="py-3 px-4">
+              <span v-if="c.k==='is_active'" class="inline-block w-2 h-2 rounded-full mr-1.5" :class="r[c.k] ? 'bg-green-500' : 'bg-red-400'"></span>
+              <span :class="c.k==='is_active' ? 'text-xs '+(r[c.k]?'text-green-600':'text-red-400'):''">{{ c.k==='is_active' ? (r[c.k]?'启用':'禁用') : (r[c.k] ?? '') }}</span>
+            </td>
             <td class="py-3 px-4">
               <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
               <button @click="deleteItem(r.id)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
@@ -42,11 +45,31 @@
         <div class="space-y-3">
           <div v-for="f in curFields" :key="f.k">
             <label class="block text-sm font-medium mb-1">{{ f.t }}</label>
-            <input v-model="form[f.k]" v-if="f.k!=='parent'&&f.k!=='department'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-            <select v-model="form[f.k]" v-if="f.k==='parent'||f.k==='department'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+
+            <!-- Switch / 开关 -->
+            <label v-if="f.type==='switch'" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" v-model="form[f.k]" class="sr-only peer" />
+              <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+              <span class="ml-2 text-sm text-slate-600 dark:text-slate-300">{{ form[f.k] ? '已启用' : '已禁用' }}</span>
+            </label>
+
+            <!-- Textarea -->
+            <textarea v-model="form[f.k]" v-else-if="f.type==='textarea'" rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+
+            <!-- Select: parent / department (depts list) -->
+            <select v-model="form[f.k]" v-else-if="f.k==='parent'||f.k==='department'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option value="">无</option>
               <option v-for="d in depts" :key="d.id" :value="d.id">{{ d.name }}</option>
             </select>
+
+            <!-- Select: manager (users list) -->
+            <select v-model="form[f.k]" v-else-if="f.k==='manager'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option value="">不指定</option>
+              <option v-for="u in users" :key="u.id" :value="u.id">{{ u.real_name || u.username }}</option>
+            </select>
+
+            <!-- Default: text input -->
+            <input v-model="form[f.k]" v-else class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
         </div>
         <div class="flex justify-end gap-2 mt-6">
@@ -62,12 +85,13 @@ import { ref, computed, watch, onMounted } from 'vue'
 const tab = ref('dept')
 const items = ref<any[]>([])
 const depts = ref<any[]>([])
+const users = ref<any[]>([])
 const showForm = ref(false)
 const editing = ref<any>(null)
 const form = ref<Record<string,any>>({})
 
-const views: Record<string,{e:string;cols:{k:string;t:string}[];fields:{k:string;t:string}[]}> = {
-  dept: { e:'departments', cols:[{k:'name',t:'名称'},{k:'parent',t:'上级部门'},{k:'manager',t:'负责人'},{k:'is_active',t:'启用'}], fields:[{k:'name',t:'名称'},{k:'parent',t:'上级部门'},{k:'sort_order',t:'排序'}] },
+const views: Record<string,{e:string;cols:{k:string;t:string}[];fields:{k:string;t:string;type?:string}[]}> = {
+  dept: { e:'departments', cols:[{k:'name',t:'名称'},{k:'parent_name',t:'上级部门'},{k:'manager_name',t:'负责人'},{k:'description',t:'职责'},{k:'is_active',t:'启用'}], fields:[{k:'name',t:'名称'},{k:'parent',t:'上级部门'},{k:'manager',t:'部门负责人'},{k:'description',t:'部门职责',type:'textarea'},{k:'is_active',t:'是否启用',type:'switch'}] },
   members: { e:'org-members', cols:[{k:'user_name',t:'用户'},{k:'dept_name',t:'部门'},{k:'position',t:'职位'},{k:'is_leader',t:'主管'}], fields:[{k:'user',t:'用户ID'},{k:'department',t:'部门'},{k:'position',t:'职位'}] },
 }
 const cur = computed(() => views[tab.value])
@@ -78,9 +102,10 @@ async function load() {
   if (!cur.value) return
   try { const r = await fetch('/api/v1/' + cur.value.e + '/'); const d = await r.json(); items.value = d.results ?? [] } catch { items.value = [] }
 }
-async function loadDepts() { try { const r=await fetch('/api/v1/departments/'); depts.value = await r.json() } catch {} }
+async function loadDepts() { try { const r=await fetch('/api/v1/departments/'); const d=await r.json(); depts.value = d.results ?? d } catch {} }
+async function loadUsers() { try { const r=await fetch('/api/v1/users/'); const d=await r.json(); users.value = d.results ?? d } catch {} }
 
-function openForm() { editing.value=null; form.value={}; showForm.value=true }
+function openForm() { editing.value=null; form.value={ is_active: true }; showForm.value=true }
 function editItem(r: any) { editing.value=r; form.value={...r}; showForm.value=true }
 async function saveItem() {
   try {
@@ -94,5 +119,5 @@ async function deleteItem(id: number) {
   try { await fetch('/api/v1/'+cur.value!.e+'/'+id+'/', { method:'DELETE' }); load() } catch {}
 }
 watch(tab, () => { load(); if (tab.value==='members') loadDepts() })
-onMounted(() => { load(); loadDepts() })
+onMounted(() => { load(); loadDepts(); loadUsers() })
 </script>
