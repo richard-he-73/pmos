@@ -80,7 +80,7 @@ async function load() {
     if (search.value) url += '?search=' + encodeURIComponent(search.value)
     const r = await fetch(url)
     const d = await r.json()
-    items.value = d.results || d || []
+    items.value = d.results ?? []
   } catch { items.value = [] }
 }
 function openCreate() { editing.value = null; form.value = {}; showForm.value = true }

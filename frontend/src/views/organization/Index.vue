@@ -76,7 +76,7 @@ const curFields = computed(() => cur.value?.fields || [])
 
 async function load() {
   if (!cur.value) return
-  try { const r = await fetch('/api/v1/' + cur.value.e + '/'); const d = await r.json(); items.value = d.results || d || [] } catch { items.value = [] }
+  try { const r = await fetch('/api/v1/' + cur.value.e + '/'); const d = await r.json(); items.value = d.results ?? [] } catch { items.value = [] }
 }
 async function loadDepts() { try { const r=await fetch('/api/v1/departments/'); depts.value = await r.json() } catch {} }
 

@@ -78,7 +78,7 @@ async function load() {
   try {
     const r = await fetch('/api/v1/' + v.e + '/')
     const d = await r.json()
-    items.value = d.results || d || []
+    items.value = d.results ?? []
   } catch { items.value = [] }
 }
 function openBugForm() { bugForm.value = { title:'', severity:'minor', module:'', description:'' }; showBugForm.value = true }

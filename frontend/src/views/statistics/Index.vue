@@ -36,7 +36,7 @@ onMounted(async () => {
   try {
     const r = await fetch('/api/v1/statistics/project_overview/')
     const d = await r.json()
-    items.value = d.results || d || []
+    items.value = d.results ?? []
   } catch {}
   finally { loading.value = false }
 })
