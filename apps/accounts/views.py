@@ -8,13 +8,30 @@ from .serializers import UserSerializer, UserCreateSerializer, RoleSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_queryset(self):
+        """管理员看到所有用户，普通用户只能看到自己"""
+        if self.request.user.is_superuser:
+            return User.objects.all()
+        return User.objects.filter(id=self.request.user.id)
 
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreateSerializer
         return UserSerializer
+
+    def perform_update(self, serializer):
+        """非管理员只能修改自己的信息"""
+        if not self.request.user.is_superuser and serializer.instance.id != self.request.user.id:
+            self.permission_denied(self.request)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        """非管理员不能删除用户"""
+        if not self.request.user.is_superuser:
+            self.permission_denied(self.request)
+        instance.delete()
 
     @action(detail=False, methods=['get', 'patch'])
     def me(self, request):
