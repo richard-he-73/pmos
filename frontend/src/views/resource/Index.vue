@@ -50,6 +50,8 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useConfirmStore } from '@/stores/confirm'
+const confirm = useConfirmStore()
 const tab = ref('resources')
 const items = ref<any[]>([])
 const showForm = ref(false)
@@ -71,7 +73,7 @@ async function saveItem() {
   try { await fetch('/api/v1/'+cur.value!.e+'/', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(form.value) }); showForm.value=false; load() } catch {}
 }
 async function deleteItem(id: number) {
-  if(!confirm('确认删除？')) return
+  if(!(await confirm.show('确认删除？'))) return
   try { await fetch('/api/v1/'+cur.value!.e+'/'+id+'/', { method:'DELETE' }); load() } catch {}
 }
 watch(tab, load)

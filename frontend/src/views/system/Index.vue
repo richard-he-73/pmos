@@ -102,6 +102,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useConfirmStore } from '@/stores/confirm'
+const confirm = useConfirmStore()
 
 
 // ── API helper ──
@@ -193,7 +195,7 @@ async function saveItem() {
 }
 
 async function deleteItem(id: number) {
-  if (!confirm('确认删除此用户？')) return
+  if (!(await confirm.show('确认删除此用户？'))) return
   try { await api('/api/v1/users/' + id + '/', { method: 'DELETE' }); load() } catch {}
 }
 

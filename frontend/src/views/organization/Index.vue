@@ -84,6 +84,8 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import request from '@/api/request'
 import { useToastStore } from '@/stores/toast'
+import { useConfirmStore } from '@/stores/confirm'
+const confirm = useConfirmStore()
 const toast = useToastStore()
 const tab = ref('dept')
 const items = ref<any[]>([])
@@ -133,7 +135,7 @@ async function saveItem() {
   }
 }
 async function deleteItem(id: number) {
-  if (!confirm('确认删除此部门？')) return
+  if (!(await confirm.show('确认删除此部门？'))) return
   try { await request.delete('/' + cur.value!.e + '/' + id + '/'); toast.show('删除成功', 'success'); load() } catch { toast.show('删除失败', 'error') }
 }
 watch(tab, () => { load(); if (tab.value==='members') loadDepts() })
