@@ -32,12 +32,21 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import Card from '@/components/Card.vue'
+
+const api = async (url: string, opts: any = {}): Promise<Response> => {
+  const token = localStorage.getItem('pmos-token')
+  const headers: Record<string,string> = { "Content-Type": "application/json" }
+  if (token) headers['Authorization'] = 'Bearer ' + token
+  if (opts.headers) Object.assign(headers, opts.headers)
+  return fetch(url, { ...opts, headers })
+}
+
 const tab = ref('biz')
 const items = ref<any[]>([])
 async function load() {
   try {
     const ep = tab.value === 'biz' ? 'business-requirements' : 'software-requirements'
-    const r = await fetch('/api/v1/' + ep + '/')
+    const r = await api('/api/v1/' + ep + '/')
     const d = await r.json()
     items.value = d.results ?? []
   } catch { items.value = [] }

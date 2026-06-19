@@ -58,20 +58,21 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import Card from '@/components/Card.vue'
+
+const api = async (url: string, opts: any = {}): Promise<Response> => {
+  const token = localStorage.getItem('pmos-token')
+  const headers: Record<string,string> = { "Content-Type": "application/json" }
+  if (token) headers['Authorization'] = 'Bearer ' + token
+  if (opts.headers) Object.assign(headers, opts.headers)
+  return fetch(url, { ...opts, headers })
+}
+
 const tab = ref('users')
 const search = ref('')
 const items = ref<any[]>([])
 const showForm = ref(false)
 const editing = ref<any>(null)
 const form = ref<Record<string,string>>({})
-
-async function api(url: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('pmos-token')
-  const headers = { ...(options.headers || {}), 'Content-Type': 'application/json' } as Record<string,string>
-  if (token) headers['Authorization'] = 'Bearer ' + token
-  const res = await api(url, { ...options, headers })
-  return res
-}
 
 const tabs = [
   { k:'users', l:'用户管理', e:'users', cols:[{k:'username',t:'用户名'},{k:'real_name',t:'姓名'},{k:'department',t:'部门'},{k:'position',t:'职位'}], fields:[{k:'username',t:'用户名'},{k:'real_name',t:'姓名'},{k:'email',t:'邮箱'},{k:'department',t:'部门'},{k:'position',t:'职位'}] },
