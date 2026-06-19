@@ -108,11 +108,16 @@ async function loadUsers() { try { const r=await fetch('/api/v1/users/'); const 
 function openForm() { editing.value=null; form.value={ is_active: true }; showForm.value=true }
 function editItem(r: any) { editing.value=r; form.value={...r}; showForm.value=true }
 async function saveItem() {
-  try {
-    if (editing.value) { await fetch('/api/v1/'+cur.value!.e+'/'+editing.value.id+'/', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(form.value) }) }
-    else { await fetch('/api/v1/'+cur.value!.e+'/', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(form.value) }) }
-    showForm.value=false; load()
-  } catch (e) { console.error(e) }
+  // 空字符串外键转为 null
+  const payload = { ...form.value }
+  for (const k of ['parent', 'manager', 'user', 'department']) {
+    if (k in payload && payload[k] === '') payload[k] = null
+  }
+  const url = editing.value ? '/api/v1/'+cur.value!.e+'/'+editing.value.id+'/' : '/api/v1/'+cur.value!.e+'/'
+  const method = editing.value ? 'PATCH' : 'POST'
+  const r = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
+  if (!r.ok) { const text = await r.text(); alert(text || '保存失败'); return }
+  showForm.value=false; load()
 }
 async function deleteItem(id: number) {
   if (!confirm('确认删除？')) return
