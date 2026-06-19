@@ -1,9 +1,15 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from .models import Project, ProjectMember
+
+User = get_user_model()
 
 
 class ProjectSerializer(serializers.ModelSerializer):
     owner_name = serializers.CharField(source='owner.real_name', read_only=True)
+    owner = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), allow_null=True, required=False,
+    )
 
     class Meta:
         model = Project

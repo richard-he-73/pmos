@@ -1,5 +1,6 @@
 <template>
   <div class="h-screen flex">
+    <Toast />
     <!-- 桌面端侧栏 -->
     <Sidebar class="hidden md:flex" />
 
@@ -37,6 +38,7 @@
 
 <script setup lang="ts">
 import Logo from '@/components/Logo.vue'
+import Toast from '@/components/Toast.vue'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Sidebar from './Sidebar.vue'

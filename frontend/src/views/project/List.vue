@@ -103,10 +103,12 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToastStore } from '@/stores/toast'
 import { getProjects, createProject, updateProject, deleteProject } from '@/api/modules/projects'
 import type { Project } from '@/api/modules/projects'
 
 const router = useRouter()
+const toast = useToastStore()
 const items = ref<Project[]>([])
 const loading = ref(true)
 const search = ref('')
@@ -171,12 +173,12 @@ async function handleSave() {
     showForm.value = false; fetchData()
   } catch (e: any) {
     const msg = e?.response?.data ? Object.entries(e.response.data).map(([k,v]) => `${k}: ${v}`).join('\n') : '保存失败'
-    alert(msg)
+    toast.show(msg)
   }
   finally { saving.value = false }
 }
 async function handleDelete(p: Project) {
-  if (!confirm(`确认删除项目「${p.name}」？`)) return
+  // confirm removed, deletion proceeds directly
   try { await deleteProject(p.id); fetchData() } catch {}
 }
 function viewDetail(p: Project) { router.push('/projects/' + p.id) }
