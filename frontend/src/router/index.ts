@@ -28,6 +28,7 @@ const routes = [
       { path: 'notifications', name: 'Notifications', component: () => import('@/views/notification/Index.vue') },
       { path: 'organization', name: 'Organization', component: () => import('@/views/organization/Index.vue') },
       { path: 'resource', name: 'Resource', component: () => import('@/views/resource/Index.vue') },
+      { path: 'releases', name: 'Releases', component: () => import('@/views/release/Index.vue') },
       { path: 'system', name: 'System', component: () => import('@/views/system/Index.vue') },
     ],
   },

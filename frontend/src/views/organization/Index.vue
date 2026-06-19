@@ -52,7 +52,6 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import Card from '@/components/Card.vue'
 const tab = ref('dept')
 const items = ref<any[]>([])
 const depts = ref<any[]>([])
