@@ -22,6 +22,8 @@
               <span :class="c.k==='is_active' ? 'text-xs '+(r[c.k]?'text-green-600':'text-red-400'):''">{{ c.k==='is_active' ? (r[c.k]?'启用':'禁用') : (r[c.k] ?? '') }}</span>
             </td>
             <td class="py-3 px-4 whitespace-nowrap">
+              <button @click="openDetail(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
+              <button @click="toggleActive(r)" class="px-2.5 py-1 rounded-full text-xs font-medium" :class="r.is_active ? 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400'">{{ r.is_active ? '停用' : '启用' }}</button>
               <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
               <button @click="deleteItem(r.id)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
             </td>
@@ -78,6 +80,41 @@
         </div>
       </div>
     </div>
+
+    <!-- 详情弹窗 -->
+    <div v-if="showDetail && detailItem" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" @click.self="showDetail=false">
+      <div class="w-full max-w-lg bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg font-bold">部门详情</h2>
+          <button @click="showDetail=false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xl leading-none">&times;</button>
+        </div>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+          <div class="col-span-2 sm:col-span-1">
+            <span class="text-slate-400 block text-xs mb-0.5">部门名称</span>
+            <span class="font-medium">{{ detailItem.name }}</span>
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <span class="text-slate-400 block text-xs mb-0.5">上级部门</span>
+            <span>{{ detailItem.parent_name || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">负责人</span>
+            <span>{{ detailItem.manager_name || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">状态</span>
+            <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full" :class="detailItem.is_active ? 'bg-green-500' : 'bg-red-400'"></span><span class="text-xs" :class="detailItem.is_active ? 'text-green-600' : 'text-red-400'">{{ detailItem.is_active ? '启用' : '禁用' }}</span></span>
+          </div>
+          <div class="col-span-2">
+            <span class="text-slate-400 block text-xs mb-0.5">部门职责</span>
+            <span class="text-slate-600 dark:text-slate-300">{{ detailItem.description || '—' }}</span>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <button @click="showDetail=false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">关闭</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -94,6 +131,8 @@ const users = ref<any[]>([])
 const showForm = ref(false)
 const editing = ref<any>(null)
 const form = ref<Record<string,any>>({})
+const showDetail = ref(false)
+const detailItem = ref<any>(null)
 
 const views: Record<string,{e:string;cols:{k:string;t:string}[];fields:{k:string;t:string;type?:string}[]}> = {
   dept: { e:'departments', cols:[{k:'name',t:'名称'},{k:'parent_name',t:'上级部门'},{k:'manager_name',t:'负责人'},{k:'description',t:'职责'},{k:'is_active',t:'启用'}], fields:[{k:'name',t:'名称'},{k:'parent',t:'上级部门'},{k:'manager',t:'部门负责人'},{k:'description',t:'部门职责',type:'textarea'},{k:'is_active',t:'是否启用',type:'switch'}] },
@@ -133,6 +172,14 @@ async function saveItem() {
       toast.show('保存失败', 'error')
     }
   }
+}
+function openDetail(r: any) { detailItem.value = r; showDetail.value = true }
+async function toggleActive(r: any) {
+  try {
+    await request.patch('/departments/' + r.id + '/', { is_active: !r.is_active })
+    r.is_active = !r.is_active
+    toast.show(r.is_active ? '已启用' : '已停用', 'success')
+  } catch { toast.show('操作失败', 'error') }
 }
 async function deleteItem(id: number) {
   if (!(await confirm.show('确认删除此部门？'))) return
