@@ -11,32 +11,61 @@
     </div>
 
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-      <div class="overflow-x-auto">
+      <!-- 部门列表：树形架构图 -->
+      <div v-if="tab==='dept'" class="py-2">
+        <div v-if="loading" class="text-center py-12 text-slate-400 text-sm">加载中...</div>
+        <div v-else-if="treeItems.length===0" class="flex flex-col items-center justify-center py-16 text-slate-400">
+          <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          <span class="text-sm">暂无数据</span>
+        </div>
+        <div v-for="(t, i) in treeItems" :key="t.item.id" class="flex items-center gap-1 px-4 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition text-sm" style="position:relative">
+          <!-- 树形连接线 -->
+          <svg class="shrink-0" :width="t.depth * 20 + 16" height="32" style="display:block">
+            <!-- 垂直线 -->
+            <line v-for="j in t.depth" :key="'v'+j" :x1="(j-1)*20+8" y1="0" :x2="(j-1)*20+8" y2="16" stroke="#cbd5e1" stroke-width="1.5" v-show="hasNextSiblingInTree(t, j)" />
+            <!-- 水平线 -->
+            <line :x1="(t.depth-1)*20+8" y1="16" :x2="t.depth*20+8" y2="16" stroke="#cbd5e1" stroke-width="1.5" v-if="t.depth>0" />
+            <!-- 展开/折叠图标 -->
+            <g v-if="t.hasChildren" @click.stop="toggleExpand(t.item.id)" class="cursor-pointer">
+              <rect :x="t.depth*20+1" y="8" width="14" height="14" rx="3" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1"/>
+              <line :x1="t.depth*20+4" y1="15" :x2="t.depth*20+12" y2="15" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"/>
+              <line v-if="!t.expanded" :x1="t.depth*20+8" y1="11" :x2="t.depth*20+8" y2="19" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"/>
+            </g>
+          </svg>
+          <!-- 节点内容 -->
+          <div class="flex items-center gap-2 flex-1 min-w-0" style="margin-left:2px">
+            <span class="font-medium truncate" :class="t.depth===0?'text-base font-bold':''">{{ t.item.name }}</span>
+            <span v-if="t.item.manager_name" class="text-slate-400 text-xs truncate">({{ t.item.manager_name }})</span>
+            <span class="inline-block w-2 h-2 rounded-full shrink-0" :class="t.item.is_active ? 'bg-green-500' : 'bg-red-400'"></span>
+          </div>
+          <!-- 操作按钮 -->
+          <div class="shrink-0 opacity-0 group-hover:opacity-100 flex gap-1" :class="i===treeItems.length-1||treeItems[i+1].depth<=t.depth?'opacity-100':'opacity-0'" style="transition:opacity .15s">
+            <button @click="openDetail(t.item)" class="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
+            <button @click="toggleActive(t.item)" class="px-2 py-0.5 rounded text-xs font-medium" :class="t.item.is_active ? 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400'">{{ t.item.is_active ? '停用' : '启用' }}</button>
+            <button @click="editItem(t.item)" class="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
+            <button @click="deleteItem(t.item.id)" class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 组织成员：表格 -->
+      <div v-if="tab==='members'" class="overflow-x-auto">
         <table class="w-full text-sm"><thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500">
           <th v-for="c in cols" :key="c.k" class="text-left py-3 px-4 font-medium">{{ c.t }}</th>
           <th class="text-left py-3 px-4 font-medium w-24">操作</th>
         </tr></thead><tbody>
           <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
-            <td v-for="c in cols" :key="c.k" class="py-3 px-4">
-              <span v-if="c.k==='is_active'" class="inline-block w-2 h-2 rounded-full mr-1.5" :class="r[c.k] ? 'bg-green-500' : 'bg-red-400'"></span>
-              <span :class="c.k==='is_active' ? 'text-xs '+(r[c.k]?'text-green-600':'text-red-400'):''">{{ c.k==='is_active' ? (r[c.k]?'启用':'禁用') : (r[c.k] ?? '') }}</span>
-            </td>
+            <td v-for="c in cols" :key="c.k" class="py-3 px-4">{{ r[c.k] ?? '' }}</td>
             <td class="py-3 px-4 whitespace-nowrap">
-              <button @click="openDetail(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
-              <button @click="toggleActive(r)" class="px-2.5 py-1 rounded-full text-xs font-medium" :class="r.is_active ? 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400'">{{ r.is_active ? '停用' : '启用' }}</button>
               <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
               <button @click="deleteItem(r.id)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
             </td>
           </tr>
         </tbody></table>
-
-<div v-if="items.length===0" class="flex flex-col items-center justify-center py-16 text-slate-400">
-    <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-    </svg>
-    <span class="text-sm">暂无数据</span>
-  </div>
-        
+        <div v-if="items.length===0" class="flex flex-col items-center justify-center py-16 text-slate-400">
+          <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          <span class="text-sm">暂无数据</span>
+        </div>
       </div>
     </div>
 
@@ -128,6 +157,7 @@ const tab = ref('dept')
 const items = ref<any[]>([])
 const depts = ref<any[]>([])
 const users = ref<any[]>([])
+const loading = ref(false)
 const showForm = ref(false)
 const editing = ref<any>(null)
 const form = ref<Record<string,any>>({})
@@ -142,9 +172,68 @@ const cur = computed(() => views[tab.value])
 const cols = computed(() => cur.value?.cols || [])
 const curFields = computed(() => cur.value?.fields || [])
 
+// 树形结构计算
+const expandedIds = ref<Set<number>>(new Set())
+function toggleExpand(id: number) {
+  const s = new Set(expandedIds.value)
+  if (s.has(id)) s.delete(id); else s.add(id)
+  expandedIds.value = s
+}
+const treeItems = computed(() => {
+  const idMap = new Map<number, any>()
+  for (const item of items.value) idMap.set(item.id, item)
+  const depthMap = new Map<number, number>()
+  function getDepth(id: number): number {
+    if (depthMap.has(id)) return depthMap.get(id)!
+    const item = idMap.get(id)
+    if (!item || !item.parent) { depthMap.set(id, 0); return 0 }
+    const d = getDepth(item.parent) + 1
+    depthMap.set(id, d)
+    return d
+  }
+  // 父id → 子列表
+  const childrenOf = new Map<number, any[]>()
+  for (const item of items.value) {
+    const pid = item.parent ?? 0
+    if (!childrenOf.has(pid)) childrenOf.set(pid, [])
+    childrenOf.get(pid)!.push(item)
+  }
+  function hasChildren(id: number) { return childrenOf.has(id) }
+  
+  const result: Array<{item: any, depth: number, hasChildren: boolean, expanded: boolean}> = []
+  function walk(items: any[]) {
+    for (const item of items) {
+      const depth = getDepth(item.id)
+      const hc = hasChildren(item.id)
+      const exp = expandedIds.value.has(item.id)
+      result.push({ item, depth, hasChildren: hc, expanded: exp })
+      if (exp && hc) walk(childrenOf.get(item.id)!)
+    }
+  }
+  walk(childrenOf.get(0) || [])
+  return result
+})
+function hasNextSiblingInTree(t: any, ancestorDepth: number): boolean {
+  // 在 treeItems 中查找同层级的后续节点
+  const idx = treeItems.value.indexOf(t)
+  if (idx < 0) return false
+  for (let i = idx + 1; i < treeItems.value.length; i++) {
+    const next = treeItems.value[i]
+    if (next.depth < ancestorDepth) return false
+    if (next.depth === ancestorDepth) return true
+  }
+  return false
+}
+
 async function load() {
   if (!cur.value) return
+  loading.value = true
   try { const r = await request.get('/' + cur.value.e + '/'); items.value = (r.data.results ?? r.data) as any[] } catch { items.value = [] }
+  finally { loading.value = false }
+  // 默认展开所有节点
+  const s = new Set<number>()
+  for (const item of items.value) s.add(item.id)
+  expandedIds.value = s
 }
 async function loadDepts() { try { const r=await request.get('/departments/', { params: { page_size: 9999 } }); depts.value = r.data.results ?? r.data } catch {} }
 async function loadUsers() { try { const r=await request.get('/users/', { params: { page_size: 9999 } }); users.value = r.data.results ?? r.data } catch {} }
