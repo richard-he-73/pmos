@@ -11,7 +11,24 @@ class Project(models.Model):
         FIXED = 'fixed', '项目制'
         RESOURCE_POOL = 'resource_pool', '资源池'
 
-    # ── 项目状态 ──
+    # ── 项目领域 ──
+    class Domain(models.TextChoices):
+        OVERALL_PLANNING = 'overall_planning', '整体规划'
+        PROJECT_MANAGEMENT = 'project_management', '项目管理'
+        PROFESSIONAL_CONSULTING = 'professional_consulting', '专业咨询'
+
+    # ── 咨询方向 ──
+    class ConsultingDirection(models.TextChoices):
+        CORE = 'core', '核心'
+        CREDIT = 'credit', '信贷'
+        CREDIT_CARD = 'credit_card', '信用卡'
+        PAYMENT = 'payment', '支付'
+        CHANNEL = 'channel', '渠道'
+        OPERATIONS = 'operations', '运营'
+        FINANCE_ACCOUNTING = 'finance_accounting', '财会'
+        DIGITAL_TRANSFORM = 'digital_transform', '数字化转型'
+        AI = 'ai', '人工智能'
+        OTHER = 'other', '其他'
     class Status(models.TextChoices):
         PLANNING = 'planning', '计划中'
         ACTIVE = 'active', '进行中'
@@ -29,6 +46,15 @@ class Project(models.Model):
     code = models.CharField('项目编号', max_length=50, unique=True)
     name = models.CharField('项目名称', max_length=200)
     description = models.TextField('描述', blank=True)
+
+    project_domain = models.CharField(
+        '项目领域', max_length=30, choices=Domain.choices,
+        default=Domain.OVERALL_PLANNING,
+    )
+    consulting_direction = models.CharField(
+        '咨询方向', max_length=30, choices=ConsultingDirection.choices,
+        default=ConsultingDirection.OTHER,
+    )
 
     project_type = models.CharField(
         '项目类型', max_length=20, choices=ProjectType.choices,

@@ -50,6 +50,18 @@
           <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">项目编号 *</label><input v-model="form.code" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" /></div>
           <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">项目名称 *</label><input v-model="form.name" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" /></div>
           <div class="col-span-2"><label class="block text-sm font-medium mb-1">项目描述</label><textarea v-model="form.description" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500"></textarea></div>
+          <!-- 项目领域 -->
+          <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">项目领域</label>
+            <select v-model="form.project_domain" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option value="overall_planning">整体规划</option><option value="project_management">项目管理</option><option value="professional_consulting">专业咨询</option>
+            </select>
+          </div>
+          <!-- 咨询方向 -->
+          <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">咨询方向</label>
+            <select v-model="form.consulting_direction" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option value="core">核心</option><option value="credit">信贷</option><option value="credit_card">信用卡</option><option value="payment">支付</option><option value="channel">渠道</option><option value="operations">运营</option><option value="finance_accounting">财会</option><option value="digital_transform">数字化转型</option><option value="ai">人工智能</option><option value="other">其他</option>
+            </select>
+          </div>
           <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">项目类型</label>
             <select v-model="form.project_type" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option value="monthly">人月型</option><option value="fixed">项目制</option><option value="resource_pool">资源池</option>
@@ -102,7 +114,9 @@ const saving = ref(false)
 const users = ref<any[]>([])
 
 const form = reactive({
-  code: '', name: '', description: '', project_type: 'monthly',
+  code: '', name: '', description: '',
+  project_domain: 'overall_planning', consulting_direction: 'other',
+  project_type: 'monthly',
   start_date: '', end_date: '', owner: null as number | null,
   status: 'planning', contract_price: null as number | null,
   budget_price: null as number | null, contract_status: 'draft',

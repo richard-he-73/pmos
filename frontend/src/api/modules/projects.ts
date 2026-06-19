@@ -5,6 +5,8 @@ export interface Project {
   code: string
   name: string
   description: string
+  project_domain: 'overall_planning' | 'project_management' | 'professional_consulting'
+  consulting_direction: 'core' | 'credit' | 'credit_card' | 'payment' | 'channel' | 'operations' | 'finance_accounting' | 'digital_transform' | 'ai' | 'other'
   project_type: 'monthly' | 'fixed' | 'resource_pool'
   start_date: string | null
   end_date: string | null
