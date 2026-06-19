@@ -8,8 +8,9 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = [
-            'id', 'name', 'code', 'description', 'status',
+            'id', 'code', 'name', 'description', 'project_type',
             'start_date', 'end_date', 'owner', 'owner_name',
+            'status', 'contract_price', 'budget_price', 'contract_status',
             'created_at', 'updated_at',
         ]
         read_only_fields = ['created_at', 'updated_at']
@@ -28,11 +29,12 @@ class ProjectDetailSerializer(ProjectSerializer):
 
 class ProjectMemberSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.real_name', read_only=True)
+    role_name = serializers.CharField(source='role.name', read_only=True)
 
     class Meta:
         model = ProjectMember
         fields = [
-            'id', 'user', 'user_name', 'project', 'role',
+            'id', 'user', 'user_name', 'project', 'role', 'role_name',
             'join_date', 'leave_date', 'is_active',
         ]
         read_only_fields = ['join_date']

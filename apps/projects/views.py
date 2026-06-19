@@ -18,9 +18,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = Project.objects.all()
         status = self.request.query_params.get('status')
+        project_type = self.request.query_params.get('project_type')
+        contract_status = self.request.query_params.get('contract_status')
         search = self.request.query_params.get('search')
         if status:
             qs = qs.filter(status=status)
+        if project_type:
+            qs = qs.filter(project_type=project_type)
+        if contract_status:
+            qs = qs.filter(contract_status=contract_status)
         if search:
             qs = qs.filter(
                 models.Q(name__icontains=search) |

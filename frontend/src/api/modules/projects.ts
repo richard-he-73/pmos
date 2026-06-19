@@ -2,14 +2,18 @@ import request from '../request'
 
 export interface Project {
   id: number
-  name: string
   code: string
+  name: string
   description: string
-  status: 'planning' | 'active' | 'closed'
+  project_type: 'monthly' | 'fixed' | 'resource_pool'
   start_date: string | null
   end_date: string | null
   owner: number
   owner_name: string
+  status: 'planning' | 'active' | 'pending_acceptance' | 'closed'
+  contract_price: number | null
+  budget_price: number | null
+  contract_status: 'draft' | 'pending_legal' | 'pending_sign' | 'signed' | 'archived'
   created_at: string
   updated_at: string
 }

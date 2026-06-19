@@ -4,8 +4,10 @@ from .models import Project, ProjectMember
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ['name', 'code', 'status', 'owner', 'start_date', 'end_date']
-    list_filter = ['status']
+    list_display = ['code', 'name', 'project_type', 'status', 'owner',
+                    'start_date', 'end_date', 'contract_price',
+                    'budget_price', 'contract_status']
+    list_filter = ['status', 'project_type', 'contract_status']
     search_fields = ['name', 'code']
 
 
