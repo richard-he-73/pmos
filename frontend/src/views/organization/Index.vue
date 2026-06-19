@@ -83,6 +83,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import request from '@/api/request'
+import { useToastStore } from '@/stores/toast'
+const toast = useToastStore()
 const tab = ref('dept')
 const items = ref<any[]>([])
 const depts = ref<any[]>([])
@@ -121,17 +123,18 @@ async function saveItem() {
   } catch (e: any) {
     console.error('saveItem error', e)
     if (e?.response) {
-      alert('错误 ' + e.response.status + ': ' + JSON.stringify(e.response.data))
+      const errData = typeof e.response.data === 'object' ? Object.values(e.response.data).flat().join('; ') : JSON.stringify(e.response.data)
+      toast.show(errData || '保存失败', 'error')
     } else if (e?.message) {
-      alert('网络错误: ' + e.message)
+      toast.show('网络错误: ' + e.message, 'error')
     } else {
-      alert('保存失败')
+      toast.show('保存失败', 'error')
     }
   }
 }
 async function deleteItem(id: number) {
-  if (!confirm('确认删除？')) return
-  try { await request.delete('/' + cur.value!.e + '/' + id + '/'); load() } catch {}
+  if (!confirm('确认删除此部门？')) return
+  try { await request.delete('/' + cur.value!.e + '/' + id + '/'); toast.show('删除成功', 'success'); load() } catch { toast.show('删除失败', 'error') }
 }
 watch(tab, () => { load(); if (tab.value==='members') loadDepts() })
 onMounted(() => { load(); loadDepts(); loadUsers() })
