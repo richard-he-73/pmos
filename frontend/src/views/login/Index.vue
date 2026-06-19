@@ -1,9 +1,9 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 p-4">
     <div class="w-full max-w-sm bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">PMOS</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Project Management Operating System</p>
+      <div class="text-center mb-8 flex flex-col items-center">
+        <Logo :size="'lg'" />
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Project Management Operating System</p>
       </div>
 
       <div class="space-y-4">
@@ -31,6 +31,7 @@
 </template>
 
 <script setup lang="ts">
+import Logo from '@/components/Logo.vue'
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'

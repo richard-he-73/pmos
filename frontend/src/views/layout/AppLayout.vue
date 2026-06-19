@@ -18,8 +18,8 @@
     <div v-if="drawerOpen" class="fixed inset-0 z-50 md:hidden" @click="drawerOpen = false">
       <div class="absolute inset-0 bg-black/50" />
       <aside class="absolute left-0 top-0 h-full w-64 bg-white dark:bg-slate-900 shadow-xl" @click.stop>
-        <div class="h-14 flex items-center px-4 border-b border-slate-200 dark:border-slate-700 font-bold text-lg">
-          PMOS
+        <div class="h-14 flex items-center px-4 border-b border-slate-200 dark:border-slate-700">
+          <Logo />
         </div>
         <nav class="p-2 space-y-1">
           <a v-for="item in menuItems" :key="item.path" :href="item.path"
@@ -36,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+import Logo from '@/components/Logo.vue'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Sidebar from './Sidebar.vue'

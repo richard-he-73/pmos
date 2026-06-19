@@ -12,7 +12,7 @@ def api_root(request):
         'description': '企业级项目管理系统',
         'docs': '/admin/',
         'api': '/api/v1/',
-        'frontend': 'http://localhost:5173',
+        'frontend': 'http://localhost:16001',
     })
 
 
