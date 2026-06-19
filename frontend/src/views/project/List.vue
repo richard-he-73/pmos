@@ -34,6 +34,7 @@
               <td class="py-3 px-3 hidden md:table-cell text-slate-500">{{ p.owner_name || '—' }}</td>
               <td class="py-3 px-3 hidden lg:table-cell text-slate-400 text-xs">{{ p.start_date || '—' }} ~ {{ p.end_date || '—' }}</td>
               <td class="py-3 px-3 text-right whitespace-nowrap">
+                <button @click="openDetail(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
                 <button @click="openEdit(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
                 <button @click="handleDelete(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
               </td>
@@ -98,6 +99,69 @@
         </div>
       </div>
     </div>
+
+    <!-- 项目详情弹窗 -->
+    <div v-if="showDetail && detailItem" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" @click.self="showDetail=false">
+      <div class="w-full max-w-3xl bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg font-bold">项目详情</h2>
+          <button @click="showDetail=false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xl leading-none">&times;</button>
+        </div>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+          <div class="col-span-2 sm:col-span-1">
+            <span class="text-slate-400 block text-xs mb-0.5">项目编号</span>
+            <span class="font-mono font-medium">{{ detailItem.code }}</span>
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <span class="text-slate-400 block text-xs mb-0.5">项目名称</span>
+            <span class="font-medium">{{ detailItem.name }}</span>
+          </div>
+          <div class="col-span-2">
+            <span class="text-slate-400 block text-xs mb-0.5">项目描述</span>
+            <span class="text-slate-600 dark:text-slate-300">{{ detailItem.description || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">项目领域</span>
+            <span>{{ ({ overall_planning: '整体规划', project_management: '项目管理', professional_consulting: '专业咨询' })[detailItem.project_domain] || detailItem.project_domain || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">咨询方向</span>
+            <span>{{ ({ core: '核心', credit: '信贷', credit_card: '信用卡', payment: '支付', channel: '渠道', operations: '运营', finance_accounting: '财会', digital_transform: '数字化转型', ai: '人工智能' })[detailItem.consulting_direction] || detailItem.consulting_direction || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">项目类型</span>
+            <span class="px-2 py-0.5 rounded text-xs font-medium" :class="typeClass(detailItem.project_type)">{{ typeText(detailItem.project_type) }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">项目状态</span>
+            <span class="px-2 py-0.5 rounded text-xs font-medium" :class="statusClass(detailItem.status)">{{ statusText(detailItem.status) }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">负责人</span>
+            <span>{{ detailItem.owner_name || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">日期范围</span>
+            <span>{{ detailItem.start_date || '—' }} ~ {{ detailItem.end_date || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">合同价格</span>
+            <span>{{ detailItem.contract_price != null ? '¥' + Number(detailItem.contract_price).toLocaleString() : '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">预算价格</span>
+            <span>{{ detailItem.budget_price != null ? '¥' + Number(detailItem.budget_price).toLocaleString() : '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">合同签署状态</span>
+            <span>{{ ({ draft: '草拟中', pending_legal: '待法审', pending_sign: '待签章', signed: '已签署', archived: '已归档' })[detailItem.contract_status] || detailItem.contract_status || '—' }}</span>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <button @click="showDetail=false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">关闭</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -118,6 +182,8 @@ const isEdit = ref(false)
 const editingId = ref<number | null>(null)
 const saving = ref(false)
 const users = ref<any[]>([])
+const showDetail = ref(false)
+const detailItem = ref<Project | null>(null)
 
 const form = reactive({
   code: '', name: '', description: '',
@@ -180,6 +246,10 @@ async function handleSave() {
 async function handleDelete(p: Project) {
   // confirm removed, deletion proceeds directly
   try { await deleteProject(p.id); fetchData() } catch {}
+}
+function openDetail(p: Project) {
+  detailItem.value = p
+  showDetail.value = true
 }
 function viewDetail(p: Project) { router.push('/projects/' + p.id) }
 
