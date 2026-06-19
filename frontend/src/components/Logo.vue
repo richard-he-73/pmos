@@ -4,7 +4,7 @@
          :class="iconSize">
       P
     </div>
-    <span v-if="showText" class="font-bold" :class="textSize">MOS</span>
+    <span v-if="showText" class="font-bold" :class="textSize">PMOS</span>
   </div>
 </template>
 
