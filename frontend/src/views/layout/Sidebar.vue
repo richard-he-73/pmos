@@ -31,6 +31,7 @@ const menuItems = [
   { path: '/requirements', icon: '📝', label: '需求' },
   { path: '/testing', icon: '🧪', label: '测试' },
   { path: '/releases', icon: '🚀', label: '投产' },
+  { path: '/communication', icon: '💬', label: '沟通' },
   { path: '/work', icon: '🔧', label: '工作' },
   { path: '/documents', icon: '📄', label: '文档' },
   { path: '/statistics', icon: '📊', label: '统计' },
