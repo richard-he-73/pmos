@@ -19,8 +19,8 @@
           <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
             <td v-for="c in cols" :key="c.k" class="py-3 px-4">{{ r[c.k] ?? '' }}</td>
             <td class="py-3 px-4">
-              <button @click="editItem(r)" class="text-blue-600 hover:text-blue-800 text-xs mr-2">编辑</button>
-              <button @click="deleteItem(r.id)" class="text-red-500 hover:text-red-700 text-xs">删除</button>
+              <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
+              <button @click="deleteItem(r.id)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
             </td>
           </tr>
         </tbody></table>
