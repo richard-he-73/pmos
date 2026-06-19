@@ -18,12 +18,13 @@
           <th class="text-left py-2 px-2 w-24">操作</th>
         </tr></thead><tbody>
           <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
-            <td v-for="c in cols" :key="c.k" class="py-2 px-2">{{ r[c.k] ?? '—' }}</td>
+            <td v-for="c in cols" :key="c.k" class="py-2 px-2">{{ r[c.k] ?? '' }}</td>
             <td class="py-2 px-2">
               <button @click="editItem(r)" class="text-blue-600 hover:text-blue-800 text-xs">编辑</button>
             </td>
           </tr>
         </tbody></table>
+
 <div v-if="items.length===0" class="flex flex-col items-center justify-center py-16 text-slate-400">
     <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
