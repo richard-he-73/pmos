@@ -4,9 +4,8 @@
     <div class="flex gap-2 mb-4">
       <button :class="tab==='drill'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm transition" @click="tab='drill'">投产演练</button>
       <button :class="tab==='deploy'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm transition" @click="tab='deploy'">投产指挥</button>
-    </div>
-    <div class="flex justify-end mb-3">
-      <button @click="openForm" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新建</button>
+      <div class="flex-1"></div>
+      <button @click="openForm" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新建{{ tab==='drill' ? '演练' : '投产' }}</button>
     </div>
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <div class="overflow-x-auto">
