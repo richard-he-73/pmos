@@ -9,7 +9,7 @@
       <button :class="planTab==='gantt'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'"
         class="px-3 py-1.5 rounded-lg text-sm transition" @click="planTab='gantt'">甘特图</button>
       <div class="flex-1"></div>
-      <button @click="openForm" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新建计划</button>
+      <button v-if="planTab!=='gantt'" @click="openForm" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新建计划</button>
     </div>
 
     <div v-if="planTab!=='gantt'" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -311,7 +311,9 @@ const ganttMonths = computed(() => {
   const end = new Date(ganttMaxDate.value)
   const months: { label: string; days: number }[] = []
   const cur = new Date(start.getFullYear(), start.getMonth(), 1)
-  while (cur <= end) {
+  // 包含完整月
+  const endOfLast = new Date(end.getFullYear(), end.getMonth() + 1, 0)
+  while (cur <= endOfLast) {
     const year = cur.getFullYear()
     const month = cur.getMonth()
     const lastDay = new Date(year, month + 1, 0).getDate()
@@ -321,10 +323,17 @@ const ganttMonths = computed(() => {
   return months
 })
 
+// 时间轴原点 = 首个月第1天（与月份列对齐）
+const ganttOrigin = computed(() => {
+  if (!ganttMinDate.value) return ''
+  const d = new Date(ganttMinDate.value)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+})
+
 function dateToPx(dateStr: string): number {
-  if (!ganttMinDate.value) return 0
+  if (!ganttOrigin.value) return 0
   const d = new Date(dateStr)
-  const ref = new Date(ganttMinDate.value)
+  const ref = new Date(ganttOrigin.value)
   const diff = (d.getTime() - ref.getTime()) / (1000 * 60 * 60 * 24)
   return Math.round(diff * monthWidth)
 }
