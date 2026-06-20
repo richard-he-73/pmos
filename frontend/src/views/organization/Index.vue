@@ -85,8 +85,8 @@
             <!-- Textarea -->
             <textarea v-model="form[f.k]" v-else-if="f.type==='textarea'" rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500"></textarea>
 
-            <!-- Select: parent / department (depts list) -->
-            <select v-model="form[f.k]" v-else-if="f.k==='parent'||f.k==='department'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+            <!-- Select: parent (depts list) -->
+            <select v-model="form[f.k]" v-else-if="f.k==='parent'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option value="">无</option>
               <option v-for="d in depts" :key="d.id" :value="d.id">{{ d.name }}</option>
             </select>
@@ -96,6 +96,32 @@
               <option value="">不指定</option>
               <option v-for="u in users" :key="u.id" :value="u.id">{{ u.real_name || u.username }}</option>
             </select>
+
+            <!-- Consultant select (members tab): auto-populate name/gender/age/rank -->
+            <select v-model="form.consultant" v-else-if="f.type==='consultant_select'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" @change="onConsultantSelect">
+              <option value="">请选择资源</option>
+              <option v-for="c in consultants" :key="c.id" :value="c.id">{{ c.name }} ({{ {male:'男',female:'女'}[c.gender] || c.gender }} / {{ ({director:'咨询总监',senior:'高级咨询师',consultant:'咨询师',assistant:'咨询助理',other:'其他'})[c.rank] || c.rank }})</option>
+            </select>
+
+            <!-- Department select (members tab) -->
+            <select v-model="form.department" v-else-if="f.type==='dept_select'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option value="">请选择部门</option>
+              <option v-for="d in depts" :key="d.id" :value="d.id">{{ d.name }}</option>
+            </select>
+
+            <!-- Project role select (members tab) -->
+            <select v-model="form.project_role" v-else-if="f.type==='project_role_select'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option value="">请选择</option>
+              <option value="project_director">项目总监</option>
+              <option value="project_manager">项目经理</option>
+              <option value="consulting_expert">咨询专家</option>
+              <option value="consulting_advisor">咨询顾问</option>
+              <option value="consulting_assistant">咨询助理</option>
+              <option value="other">其他</option>
+            </select>
+
+            <!-- Number input -->
+            <input v-model="form[f.k]" v-else-if="f.type==='number'" type="number" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
 
             <!-- Default: text input -->
             <input v-model="form[f.k]" v-else class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
@@ -165,7 +191,7 @@ const detailItem = ref<any>(null)
 
 const views: Record<string,{e:string;cols:{k:string;t:string}[];fields:{k:string;t:string;type?:string}[]}> = {
   dept: { e:'departments', cols:[{k:'name',t:'名称'},{k:'parent_name',t:'上级部门'},{k:'manager_name',t:'负责人'},{k:'description',t:'职责'},{k:'is_active',t:'启用'}], fields:[{k:'name',t:'名称'},{k:'parent',t:'上级部门'},{k:'manager',t:'部门负责人'},{k:'description',t:'部门职责',type:'textarea'},{k:'is_active',t:'是否启用',type:'switch'}] },
-  members: { e:'org-members', cols:[{k:'user_name',t:'用户'},{k:'dept_name',t:'部门'},{k:'position',t:'职位'},{k:'is_leader',t:'主管'}], fields:[{k:'user',t:'用户ID'},{k:'department',t:'部门'},{k:'position',t:'职位'}] },
+  members: { e:'org-members', cols:[{k:'consultant_name',t:'姓名'},{k:'dept_name',t:'所属部门'},{k:'project_role',t:'项目岗位'},{k:'phone',t:'联系电话'}], fields:[{k:'consultant',t:'选择资源',type:'consultant_select'},{k:'name',t:'姓名'},{k:'gender',t:'性别'},{k:'age',t:'年龄',type:'number'},{k:'rank',t:'职级'},{k:'department',t:'所属部门',type:'dept_select'},{k:'project_role',t:'项目岗位',type:'project_role_select'},{k:'phone',t:'联系电话'},{k:'email',t:'联系邮箱',type:'email'}] },
 }
 const cur = computed(() => views[tab.value])
 const cols = computed(() => cur.value?.cols || [])
@@ -229,20 +255,41 @@ async function load() {
   loading.value = true
   try { const r = await request.get('/' + cur.value.e + '/'); items.value = (r.data.results ?? r.data) as any[] } catch { items.value = [] }
   finally { loading.value = false }
-  // 默认展开所有节点
-  const s = new Set<number>()
-  for (const item of items.value) s.add(item.id)
-  expandedIds.value = s
+  // 默认展开所有部门节点（仅 dept 标签有效）
+  if (tab.value === 'dept') {
+    const s = new Set<number>()
+    for (const item of items.value) s.add(item.id)
+    expandedIds.value = s
+  }
 }
 async function loadDepts() { try { const r=await request.get('/departments/', { params: { page_size: 9999 } }); depts.value = r.data.results ?? r.data } catch {} }
 async function loadUsers() { try { const r=await request.get('/users/', { params: { page_size: 9999 } }); users.value = r.data.results ?? r.data } catch {} }
+const consultants = ref<any[]>([])
+async function loadConsultants() { try { const r=await request.get('/consultants/', { params: { page_size: 9999 } }); consultants.value = r.data.results ?? r.data } catch {} }
 
-function openForm() { editing.value=null; form.value={ is_active: true }; showForm.value=true }
-function editItem(r: any) { editing.value=r; form.value={...r}; showForm.value=true }
+function onConsultantSelect() {
+  const c = consultants.value.find(c => c.id === form.value.consultant)
+  if (c) {
+    form.value.name = c.name
+    form.value.gender = c.gender
+    form.value.age = c.age
+    form.value.rank = c.rank
+  } else {
+    form.value.name = ''; form.value.gender = ''; form.value.age = null; form.value.rank = ''
+  }
+}
+
+function openForm() {
+  editing.value = null
+  if (tab.value === 'dept') { form.value = { is_active: true } }
+  else { form.value = {} }
+  showForm.value = true
+}
+function editItem(r: any) { editing.value = r; form.value = { ...r }; showForm.value = true }
 async function saveItem() {
   // 空字符串外键转为 null
   const payload = { ...form.value }
-  for (const k of ['parent', 'manager', 'user', 'department']) {
+  for (const k of ['parent', 'manager', 'user', 'department', 'consultant']) {
     if (k in payload && payload[k] === '') payload[k] = null
   }
   try {
@@ -270,9 +317,10 @@ async function toggleActive(r: any) {
   } catch { toast.show('操作失败', 'error') }
 }
 async function deleteItem(id: number) {
-  if (!(await confirm.show('确认删除此部门？'))) return
-  try { await request.delete('/' + cur.value!.e + '/' + id + '/'); toast.show('删除成功', 'success'); load(); loadDepts() } catch { toast.show('删除失败', 'error') }
+  const msg = tab.value === 'dept' ? '确认删除此部门？' : '确认删除此成员？'
+  if (!(await confirm.show(msg))) return
+  try { await request.delete('/' + cur.value!.e + '/' + id + '/'); toast.show('删除成功', 'success'); load(); if (tab.value==='dept') loadDepts() } catch { toast.show('删除失败', 'error') }
 }
 watch(tab, () => { load(); if (tab.value==='members') loadDepts() })
-onMounted(() => { load(); loadDepts(); loadUsers() })
+onMounted(() => { load(); loadDepts(); loadUsers(); loadConsultants() })
 </script>

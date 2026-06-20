@@ -10,5 +10,5 @@ class DepartmentAdmin(admin.ModelAdmin):
 
 @admin.register(UserOrganization)
 class UserOrganizationAdmin(admin.ModelAdmin):
-    list_display = ['user', 'department', 'position', 'is_leader']
-    list_filter = ['department']
+    list_display = ['name', 'department', 'project_role', 'phone']
+    list_filter = ['department', 'project_role']

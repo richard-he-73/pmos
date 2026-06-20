@@ -13,8 +13,8 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 
 class UserOrganizationSerializer(serializers.ModelSerializer):
-    user_name = serializers.CharField(source='user.real_name', read_only=True)
     dept_name = serializers.CharField(source='department.name', read_only=True)
+    consultant_name = serializers.CharField(source='consultant.name', read_only=True, allow_null=True)
 
     class Meta:
         model = UserOrganization
