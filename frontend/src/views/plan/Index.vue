@@ -10,7 +10,7 @@
       <button @click="openForm" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新建计划</button>
     </div>
 
-    <Card>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <!-- 列表 -->
       <div v-if="loading" class="text-center py-12 text-slate-400 text-sm">加载中...</div>
       <div v-else-if="filteredPlans.length===0" class="flex flex-col items-center justify-center py-16 text-slate-400">
@@ -49,7 +49,7 @@
           </div>
         </div>
       </div>
-    </Card>
+    </div>
 
     <!-- 新建/编辑弹窗 -->
     <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showForm=false">
@@ -186,7 +186,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import request from '@/api/request'
-import Card from '@/components/Card.vue'
 import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
 const toast = useToastStore()
