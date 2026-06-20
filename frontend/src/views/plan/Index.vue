@@ -340,7 +340,7 @@ function dateToPx(dateStr: string): number {
 
 async function load() {
   loading.value = true
-  try { const r = await request.get('/plans/'); allPlans.value = (r.data.results ?? r.data) as any[] } catch { allPlans.value = [] }
+  try { const r = await request.get('/plans/', { params: { page_size: 9999 } }); allPlans.value = (r.data.results ?? r.data) as any[] } catch { allPlans.value = [] }
   finally { loading.value = false }
 }
 async function loadMembers() { try { const r=await request.get('/org-members/', { params: { page_size: 9999 } }); orgMembers.value = r.data.results ?? r.data } catch {} }
