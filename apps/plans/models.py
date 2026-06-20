@@ -1,20 +1,24 @@
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 
 class Plan(models.Model):
-    """计划（三级结构：里程碑→分组→详细计划）"""
+    """计划（三级结构：里程碑计划→中层计划→详细计划）"""
 
     class PlanType(models.TextChoices):
-        MILESTONE = 'milestone', '里程碑'
-        GROUP = 'group', '分组计划'
+        MILESTONE = 'milestone', '里程碑计划'
+        MIDDLE = 'middle', '中层计划'
         DETAIL = 'detail', '详细计划'
 
     class Status(models.TextChoices):
-        DRAFT = 'draft', '草稿'
-        IN_PROGRESS = 'in_progress', '进行中'
-        COMPLETED = 'completed', '已完成'
+        NOT_STARTED = 'not_started', '未开始'
+        IN_PROGRESS = 'in_progress', '执行中'
+        SUSPENDED = 'suspended', '已挂起'
         DELAYED = 'delayed', '已延期'
+        COMPLETED_LATE = 'completed_late', '延期完成'
+        COMPLETED_ON_TIME = 'completed_on_time', '按期完成'
+        COMPLETED_EARLY = 'completed_early', '提前完成'
 
     name = models.CharField('计划名称', max_length=200)
     type = models.CharField('类型', max_length=20, choices=PlanType.choices)
@@ -24,20 +28,23 @@ class Plan(models.Model):
     )
     project = models.ForeignKey(
         'projects.Project', on_delete=models.CASCADE,
+        null=True, blank=True,
         related_name='plans', verbose_name='所属项目',
     )
-    start_date = models.DateField('计划开始日期')
-    end_date = models.DateField('计划结束日期')
-    actual_end_date = models.DateField('实际结束日期', null=True, blank=True)
-    status = models.CharField(
-        '状态', max_length=20, choices=Status.choices, default=Status.DRAFT,
-    )
-    progress = models.IntegerField('进度(%)', default=0)
+    description = models.TextField('计划描述', blank=True)
     assignee = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, blank=True, verbose_name='负责人',
+        null=True, blank=True, related_name='assigned_plans',
+        verbose_name='责任人',
     )
-    description = models.TextField('描述', blank=True)
+    stakeholders = models.TextField('干系人', blank=True, help_text='多个干系人用逗号分隔')
+    start_date = models.DateField('计划开始日期', null=True, blank=True)
+    end_date = models.DateField('计划结束日期', null=True, blank=True)
+    actual_end_date = models.DateField('实际结束日期', null=True, blank=True)
+    status = models.CharField(
+        '状态', max_length=30, choices=Status.choices, default=Status.NOT_STARTED,
+    )
+    progress = models.IntegerField('进度(%)', default=0)
     sort_order = models.IntegerField('排序', default=0)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
