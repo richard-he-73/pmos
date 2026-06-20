@@ -48,6 +48,32 @@ class UserOrganizationViewSet(viewsets.ModelViewSet):
     serializer_class = UserOrganizationSerializer
 
     def get_queryset(self):
+        # 部门层级排序（与 DepartmentViewSet 先序遍历一致）
+        all_depts = list(Department.objects.all())
+        children = {}
+        root = []
+        for d in all_depts:
+            if d.parent_id is None:
+                root.append(d)
+            else:
+                children.setdefault(d.parent_id, []).append(d)
+        def py_key(d):
+            return ''.join(lazy_pinyin(d.name)) if d.name else ''
+        root.sort(key=py_key)
+        for pid in children:
+            children[pid].sort(key=py_key)
+        dept_order_list = []
+        def dfs(nodes):
+            for d in nodes:
+                dept_order_list.append(d.id)
+                if d.id in children:
+                    dfs(children[d.id])
+        dfs(root)
+        dept_order = Case(
+            *[When(department_id=id, then=Value(i)) for i, id in enumerate(dept_order_list)],
+            default=Value(9999),
+            output_field=IntegerField(),
+        )
         role_order = Case(
             When(project_role='project_director', then=Value(0)),
             When(project_role='project_manager', then=Value(1)),
@@ -59,9 +85,10 @@ class UserOrganizationViewSet(viewsets.ModelViewSet):
             output_field=IntegerField(),
         )
         return UserOrganization.objects.all().annotate(
-            role_order=role_order
+            dept_order=dept_order,
+            role_order=role_order,
         ).order_by(
-            'department__name',
+            'dept_order',
             'role_order',
             'name',
         )
