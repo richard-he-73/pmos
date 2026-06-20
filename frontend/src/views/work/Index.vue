@@ -6,7 +6,7 @@
       <div class="flex-1"></div>
       <button @click="openForm" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新增{{ cur?.l || '' }}</button>
     </div>
-    <Card>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm"><thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
           <th v-for="c in cols" :key="c.k" class="text-left py-3 px-3 font-medium">{{ c.t }}</th>
@@ -28,7 +28,7 @@
   </div>
         
       </div>
-    </Card>
+    </div>
     <!-- 新建弹窗 -->
     <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showForm=false">
       <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
@@ -49,7 +49,6 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import Card from '@/components/Card.vue'
 import { useConfirmStore } from '@/stores/confirm'
 const confirm = useConfirmStore()
 const tab = ref('equipment')

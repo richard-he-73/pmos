@@ -5,7 +5,7 @@
       <button class="px-3 py-1.5 rounded-lg text-sm" :class="tab==='biz'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" @click="tab='biz'">业务需求</button>
       <button class="px-3 py-1.5 rounded-lg text-sm" :class="tab==='sw'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" @click="tab='sw'">软件需求</button>
     </div>
-    <Card>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <table class="w-full text-sm">
         <thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
           <th class="text-left py-3 px-3 font-medium">编号</th><th class="text-left py-3 px-3 font-medium">名称</th><th class="text-left py-3 px-3 font-medium">状态</th>
@@ -26,12 +26,11 @@
     <span class="text-sm">暂无数据</span>
   </div>
       
-    </Card>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import Card from '@/components/Card.vue'
 
 const api = async (url: string, opts: any = {}): Promise<Response> => {
   const token = sessionStorage.getItem('pmos-token')

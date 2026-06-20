@@ -8,7 +8,7 @@
       <button v-if="tab==='bugs'" @click="openBugForm" class="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700">+ 报告缺陷</button>
     </div>
 
-    <Card>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm"><thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
           <th v-for="c in cols" :key="c.k" class="text-left py-3 px-3 font-medium">{{ c.t }}</th>
@@ -30,7 +30,7 @@
   </div>
         
       </div>
-    </Card>
+    </div>
 
     <!-- 缺陷报告弹窗 -->
     <div v-if="showBugForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showBugForm=false">
@@ -56,7 +56,6 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import Card from '@/components/Card.vue'
 import { createBug } from '@/api/modules/testing'
 const tab = ref('bugs')
 const items = ref<any[]>([])

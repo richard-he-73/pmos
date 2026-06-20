@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1 class="text-xl font-bold mb-4">任务管理</h1>
-    <Card>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <div v-if="loading" class="text-center py-8 text-slate-400">加载中...</div>
       
       <div v-else class="overflow-x-auto">
@@ -23,12 +23,11 @@
     <span class="text-sm">暂无数据</span>
   </div>
       </div>
-    </Card>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import Card from '@/components/Card.vue'
 const items = ref<any[]>([])
 const loading = ref(true)
 const columns = [{k:"name",t:"名称"},{k:"status",t:"状态"},{k:"priority",t:"优先级"},{k:"assignee_name",t:"负责人"}]
