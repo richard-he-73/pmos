@@ -55,6 +55,7 @@
           <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
             <td v-for="c in cols" :key="c.k" class="py-3 px-4">{{ c.k==='project_role' ? projectRoleText(r[c.k]) : r[c.k] ?? '' }}</td>
             <td class="py-3 px-4 whitespace-nowrap">
+              <button @click="openDetail(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
               <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
               <button @click="deleteItem(r.id)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
             </td>
@@ -155,10 +156,12 @@
     <div v-if="showDetail && detailItem" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" @click.self="showDetail=false">
       <div class="w-full max-w-lg bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-bold">部门详情</h2>
+          <h2 class="text-lg font-bold">{{ tab==='dept' ? '部门详情' : '成员详情' }}</h2>
           <button @click="showDetail=false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xl leading-none">&times;</button>
         </div>
-        <div class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+
+        <!-- 部门详情 -->
+        <div v-if="tab==='dept'" class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
           <div class="col-span-2 sm:col-span-1">
             <span class="text-slate-400 block text-xs mb-0.5">部门名称</span>
             <span class="font-medium">{{ detailItem.name }}</span>
@@ -178,6 +181,42 @@
           <div class="col-span-2">
             <span class="text-slate-400 block text-xs mb-0.5">部门职责</span>
             <span class="text-slate-600 dark:text-slate-300">{{ detailItem.description || '—' }}</span>
+          </div>
+        </div>
+
+        <!-- 成员详情 -->
+        <div v-if="tab==='members'" class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+          <div class="col-span-2 sm:col-span-1">
+            <span class="text-slate-400 block text-xs mb-0.5">姓名</span>
+            <span class="font-medium">{{ detailItem.name }}</span>
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <span class="text-slate-400 block text-xs mb-0.5">所属部门</span>
+            <span>{{ detailItem.dept_name || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">性别</span>
+            <span>{{ {male:'男',female:'女'}[detailItem.gender] || detailItem.gender || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">年龄</span>
+            <span>{{ detailItem.age ?? '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">职级</span>
+            <span>{{ ({director:'咨询总监',senior:'高级咨询师',consultant:'咨询师',assistant:'咨询助理',other:'其他'})[detailItem.rank] || detailItem.rank || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">项目岗位</span>
+            <span>{{ projectRoleText(detailItem.project_role) || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">联系电话</span>
+            <span>{{ detailItem.phone || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">联系邮箱</span>
+            <span>{{ detailItem.email || '—' }}</span>
           </div>
         </div>
         <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
