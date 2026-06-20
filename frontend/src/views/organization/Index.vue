@@ -120,6 +120,23 @@
               <option value="other">其他</option>
             </select>
 
+            <!-- Gender select (members tab) -->
+            <select v-model="form.gender" v-else-if="f.type==='gender_select'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option value="">请选择</option>
+              <option value="male">男</option>
+              <option value="female">女</option>
+            </select>
+
+            <!-- Rank select (members tab) -->
+            <select v-model="form.rank" v-else-if="f.type==='rank_select'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option value="">请选择</option>
+              <option value="director">咨询总监</option>
+              <option value="senior">高级咨询师</option>
+              <option value="consultant">咨询师</option>
+              <option value="assistant">咨询助理</option>
+              <option value="other">其他</option>
+            </select>
+
             <!-- Number input -->
             <input v-model="form[f.k]" v-else-if="f.type==='number'" type="number" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
 
@@ -191,7 +208,7 @@ const detailItem = ref<any>(null)
 
 const views: Record<string,{e:string;cols:{k:string;t:string}[];fields:{k:string;t:string;type?:string}[]}> = {
   dept: { e:'departments', cols:[{k:'name',t:'名称'},{k:'parent_name',t:'上级部门'},{k:'manager_name',t:'负责人'},{k:'description',t:'职责'},{k:'is_active',t:'启用'}], fields:[{k:'name',t:'名称'},{k:'parent',t:'上级部门'},{k:'manager',t:'部门负责人'},{k:'description',t:'部门职责',type:'textarea'},{k:'is_active',t:'是否启用',type:'switch'}] },
-  members: { e:'org-members', cols:[{k:'consultant_name',t:'姓名'},{k:'dept_name',t:'所属部门'},{k:'project_role',t:'项目岗位'},{k:'phone',t:'联系电话'}], fields:[{k:'consultant',t:'选择资源',type:'consultant_select'},{k:'name',t:'姓名'},{k:'gender',t:'性别'},{k:'age',t:'年龄',type:'number'},{k:'rank',t:'职级'},{k:'department',t:'所属部门',type:'dept_select'},{k:'project_role',t:'项目岗位',type:'project_role_select'},{k:'phone',t:'联系电话'},{k:'email',t:'联系邮箱',type:'email'}] },
+  members: { e:'org-members', cols:[{k:'consultant_name',t:'姓名'},{k:'dept_name',t:'所属部门'},{k:'project_role',t:'项目岗位'},{k:'phone',t:'联系电话'}], fields:[{k:'consultant',t:'选择资源',type:'consultant_select'},{k:'name',t:'姓名'},{k:'gender',t:'性别',type:'gender_select'},{k:'age',t:'年龄',type:'number'},{k:'rank',t:'职级',type:'rank_select'},{k:'department',t:'所属部门',type:'dept_select'},{k:'project_role',t:'项目岗位',type:'project_role_select'},{k:'phone',t:'联系电话'},{k:'email',t:'联系邮箱',type:'email'}] },
 }
 const cur = computed(() => views[tab.value])
 const cols = computed(() => cur.value?.cols || [])
