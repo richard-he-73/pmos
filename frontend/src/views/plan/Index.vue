@@ -54,14 +54,14 @@
     </div>
 
     <!-- 甘特图 -->
-    <div v-if="planTab==='gantt'" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div v-if="planTab==='gantt'">
       <div v-if="loading" class="text-center py-12 text-slate-400 text-sm">加载中...</div>
       <div v-else-if="allPlans.length===0" class="flex flex-col items-center justify-center py-16 text-slate-400">
         <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
         <span class="text-sm">暂无数据</span>
       </div>
-      <div v-else class="overflow-x-auto">
-        <div class="flex" style="min-width:800px">
+      <div v-else class="overflow-x-auto" style="border:1px solid #e2e8f0; border-radius:0.75rem; background:white">
+        <div class="flex dark:bg-slate-800" style="min-width:800px; border-radius:0.75rem">
           <!-- 左侧计划名称列 -->
           <div class="shrink-0" style="width:200px">
             <div class="h-10 flex items-center px-3 text-xs font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">计划名称</div>
