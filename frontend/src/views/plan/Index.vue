@@ -19,7 +19,7 @@
       </div>
       <div v-else>
         <!-- 表头 -->
-        <div class="flex items-center gap-3 py-3 px-3 font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
+        <div class="flex items-center gap-3 py-3 px-3 text-sm font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
           <span class="w-5 shrink-0"></span>
           <span class="min-w-[120px]">名称</span>
           <span class="w-20 shrink-0">状态</span>
