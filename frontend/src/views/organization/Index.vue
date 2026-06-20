@@ -53,7 +53,7 @@
           <th class="text-left py-3 px-4 font-medium w-24">操作</th>
         </tr></thead><tbody>
           <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
-            <td v-for="c in cols" :key="c.k" class="py-3 px-4">{{ r[c.k] ?? '' }}</td>
+            <td v-for="c in cols" :key="c.k" class="py-3 px-4">{{ c.k==='project_role' ? projectRoleText(r[c.k]) : r[c.k] ?? '' }}</td>
             <td class="py-3 px-4 whitespace-nowrap">
               <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
               <button @click="deleteItem(r.id)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
@@ -337,6 +337,9 @@ async function deleteItem(id: number) {
   const msg = tab.value === 'dept' ? '确认删除此部门？' : '确认删除此成员？'
   if (!(await confirm.show(msg))) return
   try { await request.delete('/' + cur.value!.e + '/' + id + '/'); toast.show('删除成功', 'success'); load(); if (tab.value==='dept') loadDepts() } catch { toast.show('删除失败', 'error') }
+}
+function projectRoleText(v: string) {
+  return ({ project_director: '项目总监', project_manager: '项目经理', consulting_expert: '咨询专家', consulting_advisor: '咨询顾问', consulting_assistant: '咨询助理', other: '其他' })[v] || v || ''
 }
 watch(tab, () => { load(); if (tab.value==='members') loadDepts() })
 onMounted(() => { load(); loadDepts(); loadUsers(); loadConsultants() })
