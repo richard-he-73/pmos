@@ -23,26 +23,26 @@
           <span class="w-5 shrink-0"></span>
           <span class="min-w-[120px]">名称</span>
           <span class="w-20 shrink-0">状态</span>
-          <span class="flex-1" style="max-width:120px">进度</span>
+          <span class="flex-1" style="max-width:600px">进度</span>
           <span class="w-10 text-right shrink-0">%</span>
           <span class="w-44 hidden md:block shrink-0">日期范围</span>
           <span class="w-28 hidden lg:block shrink-0">归属</span>
           <span class="w-20 hidden lg:block shrink-0">责任人</span>
-          <span class="shrink-0" style="width:146px">操作</span>
+          <span class="ml-auto shrink-0" style="width:146px">操作</span>
         </div>
         <div v-for="p in filteredPlans" :key="p.id"
           class="flex items-center gap-3 py-2.5 px-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
           <span class="text-sm w-5 shrink-0 text-center">{{ p.type==='milestone'?'📌':p.type==='middle'?'📋':'📝' }}</span>
           <span class="text-sm font-medium min-w-[120px]">{{ p.name }}</span>
           <span class="text-xs text-slate-400 w-20 shrink-0">{{ statusText(p.status) }}</span>
-          <div class="flex-1 h-4 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden" style="max-width:120px">
+          <div class="flex-1 h-4 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden" style="max-width:600px">
             <div class="h-full rounded-full transition-all" :class="statusBarClass(p.status)" :style="{width: (p.progress||0) + '%'}"></div>
           </div>
           <span class="text-xs text-slate-400 w-10 text-right shrink-0">{{ p.progress||0 }}%</span>
           <span class="text-xs text-slate-400 w-44 hidden md:block shrink-0">{{ p.start_date||'—' }} ~ {{ p.end_date||'—' }}</span>
           <span v-if="p.parent_name" class="text-xs text-slate-400 w-28 hidden lg:block truncate shrink-0">{{ p.parent_name }}</span>
           <span class="text-xs text-slate-400 w-20 hidden lg:block truncate shrink-0">{{ p.assignee_name || '—' }}</span>
-          <div class="shrink-0 flex gap-1">
+          <div class="ml-auto shrink-0 flex gap-1">
             <button @click="openDetail(p)" class="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
             <button @click="editPlan(p)" class="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
             <button @click="deletePlan(p.id)" class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
