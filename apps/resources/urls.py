@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
+router.register(r'consultants', views.ConsultantViewSet)
 router.register(r'project-resources', views.ProjectResourceViewSet)
 router.register(r'resource-change-logs', views.ResourceChangeLogViewSet)
 
