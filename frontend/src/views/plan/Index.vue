@@ -59,9 +59,9 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium mb-1">责任人</label>
-              <select v-model="form.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <select v-model="form.assignee_name" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
                 <option value="">不指定</option>
-                <option v-for="u in users" :key="u.id" :value="u.id">{{ u.real_name || u.username }}</option>
+                <option v-for="m in orgMembers" :key="m.id" :value="m.name">{{ m.name }} ({{ m.dept_name || '' }})</option>
               </select>
             </div>
             <div>
@@ -125,7 +125,7 @@ const planTabs = [
 const currentTabLabel = computed(() => planTabs.find(t => t.key === planTab.value)?.label || '')
 
 const allPlans = ref<any[]>([])
-const users = ref<any[]>([])
+const orgMembers = ref<any[]>([])
 const loading = ref(false)
 const showForm = ref(false)
 const editing = ref<any>(null)
@@ -151,7 +151,7 @@ async function load() {
   try { const r = await request.get('/plans/'); allPlans.value = (r.data.results ?? r.data) as any[] } catch { allPlans.value = [] }
   finally { loading.value = false }
 }
-async function loadUsers() { try { const r = await request.get('/users/'); users.value = (r.data.results ?? r.data) as any[] } catch {} }
+async function loadMembers() { try { const r=await request.get('/org-members/', { params: { page_size: 9999 } }); orgMembers.value = r.data.results ?? r.data } catch {} }
 
 function openForm() {
   editing.value = null
@@ -169,7 +169,7 @@ async function savePlan() {
   const payload = { ...form.value, type: planTab.value }
   if (!payload.start_date) { toast.show('请选择开始日期', 'error'); return }
   if (!payload.end_date) { toast.show('请选择结束日期', 'error'); return }
-  for (const k of ['parent', 'assignee']) {
+  for (const k of ['parent']) {
     if (k in payload && payload[k] === '') payload[k] = null
   }
   if (payload.parent === '') payload.parent = null
@@ -193,5 +193,5 @@ async function deletePlan(id: number) {
 }
 
 watch(planTab, () => {})
-onMounted(() => { load(); loadUsers() })
+onMounted(() => { load(); loadMembers() })
 </script>

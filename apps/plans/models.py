@@ -32,11 +32,7 @@ class Plan(models.Model):
         related_name='plans', verbose_name='所属项目',
     )
     description = models.TextField('计划描述', blank=True)
-    assignee = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='assigned_plans',
-        verbose_name='责任人',
-    )
+    assignee_name = models.CharField('责任人', max_length=50, blank=True)
     stakeholders = models.TextField('干系人', blank=True, help_text='多个干系人用逗号分隔')
     start_date = models.DateField('计划开始日期', null=True, blank=True)
     end_date = models.DateField('计划结束日期', null=True, blank=True)

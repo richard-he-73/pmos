@@ -4,13 +4,12 @@ from .models import Plan, Task
 
 class PlanSerializer(serializers.ModelSerializer):
     parent_name = serializers.CharField(source='parent.name', read_only=True, allow_null=True)
-    assignee_name = serializers.CharField(source='assignee.real_name', read_only=True, allow_null=True)
 
     class Meta:
         model = Plan
         fields = [
             'id', 'name', 'type', 'parent', 'parent_name', 'project',
-            'description', 'assignee', 'assignee_name', 'stakeholders',
+            'description', 'assignee_name', 'stakeholders',
             'start_date', 'end_date', 'actual_end_date',
             'status', 'progress', 'sort_order', 'created_at', 'updated_at',
         ]
