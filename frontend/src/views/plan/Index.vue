@@ -6,6 +6,8 @@
     <div class="flex gap-2 mb-4">
       <button v-for="t in planTabs" :key="t.key" :class="planTab===t.key?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'"
         class="px-3 py-1.5 rounded-lg text-sm transition" @click="planTab=t.key">{{ t.label }}</button>
+      <button :class="planTab==='gantt'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'"
+        class="px-3 py-1.5 rounded-lg text-sm transition" @click="planTab='gantt'">甘特图</button>
       <div class="flex-1"></div>
       <button @click="openForm" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新建计划</button>
     </div>
@@ -46,6 +48,48 @@
             <button @click="openDetail(p)" class="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
             <button @click="editPlan(p)" class="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
             <button @click="deletePlan(p.id)" class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 甘特图 -->
+    <div v-if="planTab==='gantt'" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div v-if="loading" class="text-center py-12 text-slate-400 text-sm">加载中...</div>
+      <div v-else-if="allPlans.length===0" class="flex flex-col items-center justify-center py-16 text-slate-400">
+        <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <span class="text-sm">暂无数据</span>
+      </div>
+      <div v-else class="overflow-x-auto">
+        <div class="flex" style="min-width:800px">
+          <!-- 左侧计划名称列 -->
+          <div class="shrink-0" style="width:200px">
+            <div class="h-10 flex items-center px-3 text-xs font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">计划名称</div>
+            <div v-for="p in ganttPlans" :key="p.id" class="h-8 flex items-center px-3 text-xs border-b border-slate-100 dark:border-slate-700/50"
+              :style="{ paddingLeft: (12 + p.depth * 16) + 'px' }">
+              <span class="truncate" :class="{'font-medium':p.depth===0}">{{ p.name }}</span>
+            </div>
+          </div>
+          <!-- 右侧时间轴 -->
+          <div class="flex-1 overflow-hidden">
+            <!-- 月份表头 -->
+            <div class="flex h-10 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
+              <div v-for="(m, mi) in ganttMonths" :key="mi" class="flex items-center justify-center text-xs text-slate-500 dark:text-slate-400 font-medium border-r border-slate-200 dark:border-slate-700"
+                :style="{ width: monthWidth * m.days + 'px', minWidth: monthWidth * m.days + 'px' }">{{ m.label }}</div>
+            </div>
+            <!-- 甘特条 -->
+            <div v-for="p in ganttPlans" :key="'bar'+p.id" class="relative h-8 border-b border-slate-100 dark:border-slate-700/50">
+              <div v-if="p.start_date && p.end_date"
+                class="absolute top-1.5 h-5 rounded cursor-pointer transition hover:opacity-80"
+                :style="{
+                  left: dateToPx(p.start_date) + 'px',
+                  width: Math.max(dateToPx(p.end_date) - dateToPx(p.start_date), 4) + 'px',
+                  backgroundColor: p.type==='milestone'?'#3b82f6':p.type==='middle'?'#22c55e':'#f59e0b',
+                  opacity: p.is_active===false ? 0.4 : 0.85
+                }"
+                :title="p.name + ' (' + p.start_date + ' ~ ' + p.end_date + ')'">
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -219,6 +263,70 @@ function statusText(v: string) {
 }
 function statusBarClass(v: string) {
   return { not_started: 'bg-slate-400', in_progress: 'bg-blue-500', suspended: 'bg-yellow-500', delayed: 'bg-red-500', completed_late: 'bg-orange-500', completed_on_time: 'bg-green-500', completed_early: 'bg-green-600' }[v] || 'bg-slate-400'
+}
+
+// 甘特图计算
+const monthWidth = 24  // 每天像素数
+const ganttPlans = computed(() => {
+  // 先序排序
+  const children: Record<number, any[]> = {}
+  const roots: any[] = []
+  for (const p of allPlans.value) {
+    if (p.parent) { (children[p.parent] ??= []).push(p) }
+    else { roots.push(p) }
+  }
+  // 同层按开始日期排序
+  for (const k in children) children[k].sort((a, b) => (a.start_date||'').localeCompare(b.start_date||''))
+  roots.sort((a, b) => (a.start_date||'').localeCompare(b.start_date||''))
+
+  const result: Array<any> = []
+  function walk(list: any[], depth: number) {
+    for (const p of list) {
+      result.push({ ...p, depth })
+      if (children[p.id]) walk(children[p.id], depth + 1)
+    }
+  }
+  walk(roots, 0)
+  return result
+})
+
+const ganttMinDate = computed(() => {
+  let min = ''
+  for (const p of allPlans.value) {
+    if (p.start_date && (!min || p.start_date < min)) min = p.start_date
+  }
+  return min
+})
+const ganttMaxDate = computed(() => {
+  let max = ''
+  for (const p of allPlans.value) {
+    if (p.end_date && (!max || p.end_date > max)) max = p.end_date
+  }
+  return max
+})
+
+const ganttMonths = computed(() => {
+  if (!ganttMinDate.value || !ganttMaxDate.value) return []
+  const start = new Date(ganttMinDate.value)
+  const end = new Date(ganttMaxDate.value)
+  const months: { label: string; days: number }[] = []
+  const cur = new Date(start.getFullYear(), start.getMonth(), 1)
+  while (cur <= end) {
+    const year = cur.getFullYear()
+    const month = cur.getMonth()
+    const lastDay = new Date(year, month + 1, 0).getDate()
+    months.push({ label: `${year}.${String(month + 1).padStart(2, '0')}`, days: lastDay })
+    cur.setMonth(month + 1)
+  }
+  return months
+})
+
+function dateToPx(dateStr: string): number {
+  if (!ganttMinDate.value) return 0
+  const d = new Date(dateStr)
+  const ref = new Date(ganttMinDate.value)
+  const diff = (d.getTime() - ref.getTime()) / (1000 * 60 * 60 * 24)
+  return Math.round(diff * monthWidth)
 }
 
 async function load() {
