@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
+from django.db.models import Case, When, Value, IntegerField
 from pypinyin import lazy_pinyin
 from .models import Department, UserOrganization
 from .serializers import DepartmentSerializer, UserOrganizationSerializer
@@ -45,3 +46,22 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 class UserOrganizationViewSet(viewsets.ModelViewSet):
     queryset = UserOrganization.objects.all()
     serializer_class = UserOrganizationSerializer
+
+    def get_queryset(self):
+        role_order = Case(
+            When(project_role='project_director', then=Value(0)),
+            When(project_role='project_manager', then=Value(1)),
+            When(project_role='consulting_expert', then=Value(2)),
+            When(project_role='consulting_advisor', then=Value(3)),
+            When(project_role='consulting_assistant', then=Value(4)),
+            When(project_role='other', then=Value(5)),
+            default=Value(99),
+            output_field=IntegerField(),
+        )
+        return UserOrganization.objects.all().annotate(
+            role_order=role_order
+        ).order_by(
+            'department__name',
+            'role_order',
+            'name',
+        )
