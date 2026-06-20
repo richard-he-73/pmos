@@ -31,7 +31,7 @@
           <span class="ml-auto shrink-0 text-right" style="width:146px">操作</span>
         </div>
         <div v-for="p in filteredPlans" :key="p.id"
-          class="flex items-center gap-3 py-2.5 px-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+          class="flex items-center gap-3 py-3 px-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
           <span class="text-sm w-5 shrink-0 text-center">{{ p.type==='milestone'?'📌':p.type==='middle'?'📋':'📝' }}</span>
           <span class="text-sm font-medium min-w-[120px]">{{ p.name }}</span>
           <span class="text-xs text-slate-400 w-20 shrink-0">{{ statusText(p.status) }}</span>

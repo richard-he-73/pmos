@@ -12,9 +12,9 @@
         </tr></thead>
         <tbody>
           <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50">
-            <td class="py-2 px-2 font-mono text-xs">{{ r.code }}</td>
-            <td class="py-2 px-2">{{ r.name }}</td>
-            <td class="py-2 px-2">{{ r.status }}</td>
+            <td class="py-3 px-3 font-mono text-xs">{{ r.code }}</td>
+            <td class="py-3 px-3">{{ r.name }}</td>
+            <td class="py-3 px-3">{{ r.status }}</td>
           </tr>
         </tbody>
       </table>

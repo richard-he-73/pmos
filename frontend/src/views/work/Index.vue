@@ -13,8 +13,8 @@
           <th class="text-right py-3 px-3 font-medium w-24">操作</th>
         </tr></thead><tbody>
           <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
-            <td v-for="c in cols" :key="c.k" class="py-2 px-2 whitespace-nowrap">{{ r[c.k] ?? '' }}</td>
-            <td class="py-2 px-2 whitespace-nowrap">
+            <td v-for="c in cols" :key="c.k" class="py-3 px-3 whitespace-nowrap">{{ r[c.k] ?? '' }}</td>
+            <td class="py-3 px-3 whitespace-nowrap">
               <button @click="deleteItem(r.id)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
             </td>
           </tr>

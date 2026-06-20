@@ -11,7 +11,7 @@
           </tr></thead>
           <tbody>
             <tr v-for="row in items" :key="row.id" class="border-b border-slate-100 dark:border-slate-700/50">
-              <td v-for="c in columns" :key="c.k" class="py-2 px-2">{{ row[c.k] }}</td>
+              <td v-for="c in columns" :key="c.k" class="py-3 px-3">{{ row[c.k] }}</td>
             </tr>
           </tbody>
         </table>

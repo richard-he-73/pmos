@@ -28,10 +28,10 @@
           </tr></thead>
           <tbody>
             <tr v-for="p in projects" :key="p.id" class="border-b border-slate-100 dark:border-slate-700/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30" @click="router.push('/projects/' + p.id)">
-              <td class="py-2.5 px-2 font-mono text-xs">{{ p.code }}</td>
-              <td class="py-2.5 px-2 font-medium">{{ p.name }}</td>
-              <td class="py-2.5 px-2 hidden sm:table-cell"><span :class="statusClass(p.status)">{{ statusText(p.status) }}</span></td>
-              <td class="py-2.5 px-2 hidden md:table-cell text-slate-400 text-xs">{{ p.created_at?.slice(0, 10) }}</td>
+              <td class="py-3 px-3 font-mono text-xs">{{ p.code }}</td>
+              <td class="py-3 px-3 font-medium">{{ p.name }}</td>
+              <td class="py-3 px-3 hidden sm:table-cell"><span :class="statusClass(p.status)">{{ statusText(p.status) }}</span></td>
+              <td class="py-3 px-3 hidden md:table-cell text-slate-400 text-xs">{{ p.created_at?.slice(0, 10) }}</td>
             </tr>
           </tbody>
         </table>
