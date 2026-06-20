@@ -22,9 +22,9 @@
       <div v-if="projects.length === 0" class="text-center py-8 text-slate-400">暂无项目数据</div>
       <div v-else class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead><tr class="border-b border-slate-200 dark:border-slate-700 text-slate-500">
-            <th class="text-left py-2 px-2">编号</th><th class="text-left py-2 px-2">名称</th>
-            <th class="text-left py-2 px-2 hidden sm:table-cell">状态</th><th class="text-left py-2 px-2 hidden md:table-cell">创建时间</th>
+          <thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+            <th class="text-left py-3 px-3 font-medium">编号</th><th class="text-left py-3 px-3 font-medium">名称</th>
+            <th class="text-left py-3 px-3 font-medium hidden sm:table-cell">状态</th><th class="text-left py-3 px-3 font-medium hidden md:table-cell">创建时间</th>
           </tr></thead>
           <tbody>
             <tr v-for="p in projects" :key="p.id" class="border-b border-slate-100 dark:border-slate-700/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30" @click="router.push('/projects/' + p.id)">

@@ -12,9 +12,9 @@
       <!-- 部门列表：表格 -->
       <div v-if="tab==='dept'">
         <div class="overflow-x-auto">
-          <table class="w-full text-sm"><thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500">
-            <th v-for="c in cols" :key="c.k" class="text-left py-3 px-4 font-medium">{{ c.t }}</th>
-            <th class="text-left py-3 px-4 font-medium w-24">操作</th>
+          <table class="w-full text-sm"><thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+            <th v-for="c in cols" :key="c.k" class="text-left py-3 px-3 font-medium">{{ c.t }}</th>
+            <th class="text-left py-3 px-3 font-medium w-24">操作</th>
           </tr></thead><tbody>
             <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
               <td v-for="c in cols" :key="c.k" class="py-3 px-4">
@@ -46,9 +46,9 @@
 
       <!-- 组织成员：表格 -->
       <div v-if="tab==='members'" class="overflow-x-auto">
-        <table class="w-full text-sm"><thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500">
-          <th v-for="c in cols" :key="c.k" class="text-left py-3 px-4 font-medium">{{ c.t }}</th>
-          <th class="text-left py-3 px-4 font-medium w-24">操作</th>
+        <table class="w-full text-sm"><thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+          <th v-for="c in cols" :key="c.k" class="text-left py-3 px-3 font-medium">{{ c.t }}</th>
+          <th class="text-left py-3 px-3 font-medium w-24">操作</th>
         </tr></thead><tbody>
           <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
             <td v-for="c in cols" :key="c.k" class="py-3 px-4">{{ c.k==='project_role' ? projectRoleText(r[c.k]) : r[c.k] ?? '' }}</td>
