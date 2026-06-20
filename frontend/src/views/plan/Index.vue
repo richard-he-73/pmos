@@ -19,7 +19,7 @@
       </div>
       <div v-else>
         <!-- 表头 -->
-        <div class="flex items-center gap-3 py-3 px-3 text-sm font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
+        <div class="flex items-center gap-6 py-3 px-3 text-sm font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
           <span class="w-5 shrink-0"></span>
           <span class="min-w-[120px]">名称</span>
           <span class="w-20 shrink-0">状态</span>
@@ -31,7 +31,7 @@
           <span class="ml-auto shrink-0 text-right" style="width:146px">操作</span>
         </div>
         <div v-for="p in filteredPlans" :key="p.id"
-          class="flex items-center gap-3 py-3 px-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+          class="flex items-center gap-6 py-3 px-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
           <span class="text-sm w-5 shrink-0 text-center">{{ p.type==='milestone'?'📌':p.type==='middle'?'📋':'📝' }}</span>
           <span class="text-sm font-medium min-w-[120px]">{{ p.name }}</span>
           <span class="text-xs text-slate-400 w-20 shrink-0">{{ statusText(p.status) }}</span>
@@ -72,7 +72,7 @@
               <option v-for="p in parentOptions" :key="p.id" :value="p.id">{{ p.name }} ({{ p.start_date||'?' }} ~ {{ p.end_date||'?' }})</option>
             </select>
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-medium mb-1">责任人</label>
               <select v-model="form.assignee_name" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
@@ -85,7 +85,7 @@
               <input v-model="form.stakeholders" placeholder="逗号分隔" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-medium mb-1">计划开始日期 *</label>
               <input v-model="form.start_date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
@@ -95,7 +95,7 @@
               <input v-model="form.end_date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-medium mb-1">计划状态</label>
               <select v-model="form.status" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" @change="onStatusChange">
