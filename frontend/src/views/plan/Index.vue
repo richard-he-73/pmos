@@ -23,7 +23,7 @@
         <!-- 表头 -->
         <div class="flex items-center gap-6 py-3 px-3 text-sm font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
           <span class="w-5 shrink-0"></span>
-          <span class="min-w-[120px]">名称</span>
+          <span class="min-w-[360px]">名称</span>
           <span class="w-20 shrink-0">状态</span>
           <span class="flex-1" style="max-width:600px">进度</span>
           <span class="w-10 text-right shrink-0">%</span>
@@ -35,7 +35,7 @@
         <div v-for="p in filteredPlans" :key="p.id"
           class="flex items-center gap-6 py-3 px-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
           <span class="text-sm w-5 shrink-0 text-center">{{ p.type==='milestone'?'📌':p.type==='middle'?'📋':'📝' }}</span>
-          <span class="text-sm font-medium min-w-[120px]">{{ p.name }}</span>
+          <span class="text-sm font-medium min-w-[360px]">{{ p.name }}</span>
           <span class="text-xs text-slate-400 w-20 shrink-0">{{ statusText(p.status) }}</span>
           <div class="flex-1 h-4 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden" style="max-width:600px">
             <div class="h-full rounded-full transition-all" :class="statusBarClass(p.status)" :style="{width: (p.progress||0) + '%'}"></div>
@@ -60,30 +60,30 @@
         <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
         <span class="text-sm">暂无数据</span>
       </div>
-      <div v-else class="overflow-x-auto">
-        <div class="flex" style="min-width:800px">
+      <div v-else>
+        <div class="flex">
           <!-- 左侧计划名称列 -->
-          <div class="shrink-0" style="width:200px">
-            <div class="h-10 flex items-center px-3 text-xs font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">计划名称</div>
-            <div v-for="p in ganttPlans" :key="p.id" class="h-8 flex items-center px-3 text-xs border-b border-slate-100 dark:border-slate-700/50"
+          <div class="shrink-0" style="width:360px">
+            <div class="h-10 flex items-center px-3 text-sm font-semibold text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">计划名称</div>
+            <div v-for="p in ganttPlans" :key="p.id" class="h-8 flex items-center px-3 text-sm border-b border-slate-100 dark:border-slate-700/50 bg-white dark:bg-slate-800"
               :style="{ paddingLeft: (12 + p.depth * 16) + 'px' }">
               <span class="truncate" :class="{'font-medium':p.depth===0}">{{ p.name }}</span>
             </div>
           </div>
-          <!-- 右侧时间轴 -->
-          <div class="flex-1 overflow-hidden">
+          <!-- 右侧时间轴（自适应百分比宽度） -->
+          <div class="flex-1 min-w-0">
             <!-- 月份表头 -->
             <div class="flex h-10 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
-              <div v-for="(m, mi) in ganttMonths" :key="mi" class="flex items-center justify-center text-xs text-slate-500 dark:text-slate-400 font-medium border-r border-slate-200 dark:border-slate-700"
-                :style="{ width: monthWidth * m.days + 'px', minWidth: monthWidth * m.days + 'px' }">{{ m.label }}</div>
+              <div v-for="(m, mi) in ganttMonths" :key="mi"
+                class="shrink-0 flex items-center justify-center text-sm text-slate-600 dark:text-slate-300 font-medium border-r border-slate-200 dark:border-slate-700 truncate"
+                :style="{ width: (m.days / ganttTotalDays * 100) + '%' }">{{ m.label }}</div>
             </div>
             <!-- 甘特条 -->
             <div v-for="p in ganttPlans" :key="'bar'+p.id" class="relative h-8 border-b border-slate-100 dark:border-slate-700/50">
               <div v-if="p.start_date && p.end_date"
                 class="absolute top-1.5 h-5 rounded cursor-pointer transition hover:opacity-80"
                 :style="{
-                  left: dateToPx(p.start_date) + 'px',
-                  width: Math.max(dateToPx(p.end_date) - dateToPx(p.start_date), 4) + 'px',
+                  ...barStyle(p),
                   backgroundColor: p.type==='milestone'?'#3b82f6':p.type==='middle'?'#22c55e':'#f59e0b',
                   opacity: p.is_active===false ? 0.4 : 0.85
                 }"
@@ -265,8 +265,11 @@ function statusBarClass(v: string) {
   return { not_started: 'bg-slate-400', in_progress: 'bg-blue-500', suspended: 'bg-yellow-500', delayed: 'bg-red-500', completed_late: 'bg-orange-500', completed_on_time: 'bg-green-500', completed_early: 'bg-green-600' }[v] || 'bg-slate-400'
 }
 
-// 甘特图计算
-const monthWidth = 24  // 每天像素数
+// 甘特图计算（自适应百分比）
+const ganttTotalDays = computed(() => {
+  if (!ganttMinDate.value || !ganttMaxDate.value) return 1
+  return daysBetween(ganttMinDate.value, ganttMaxDate.value) + 1
+})
 const ganttPlans = computed(() => {
   // 先序排序
   const children: Record<number, any[]> = {}
@@ -308,22 +311,18 @@ const ganttMaxDate = computed(() => {
 const ganttMonths = computed(() => {
   if (!ganttMinDate.value || !ganttMaxDate.value) return []
   const months: { label: string; days: number }[] = []
-  const [y0, m0] = ganttMinDate.value.split('-').map(Number)
-  const [y1, m1] = ganttMaxDate.value.split('-').map(Number)
-  console.log('Gantt:', ganttMinDate.value, ganttMaxDate.value, y0, m0, y1, m1)
+  const [y0, m0, d0] = ganttMinDate.value.split('-').map(Number)
+  const [y1, m1, d1] = ganttMaxDate.value.split('-').map(Number)
   let y = y0, m = m0
   while (y < y1 || (y === y1 && m <= m1)) {
     const lastDay = new Date(y, m, 0).getDate()
-    months.push({ label: `${y}.${String(m).padStart(2, '0')}`, days: lastDay })
+    // 本月在时间范围内的实际天数（首/尾月可能不完整）
+    const from = (y === y0 && m === m0) ? d0 : 1
+    const to   = (y === y1 && m === m1) ? d1 : lastDay
+    months.push({ label: `${y}.${String(m).padStart(2, '0')}`, days: to - from + 1 })
     m++; if (m > 12) { m = 1; y++ }
   }
-  console.log('Months:', months.map(m => m.label))
   return months
-})
-
-const ganttOrigin = computed(() => {
-  if (!ganttMinDate.value) return ''
-  return ganttMinDate.value.slice(0, 7) + '-01'
 })
 
 function daysBetween(d1: string, d2: string): number {
@@ -332,9 +331,16 @@ function daysBetween(d1: string, d2: string): number {
   return Math.round((new Date(y2, m2 - 1, day2).getTime() - new Date(y1, m1 - 1, day1).getTime()) / 86400000)
 }
 
-function dateToPx(dateStr: string): number {
-  if (!ganttOrigin.value) return 0
-  return Math.round(daysBetween(ganttOrigin.value, dateStr) * monthWidth)
+function barPct(dateStr: string): number {
+  if (!ganttMinDate.value || !ganttTotalDays.value) return 0
+  return (daysBetween(ganttMinDate.value, dateStr) / ganttTotalDays.value) * 100
+}
+
+function barStyle(p: any) {
+  if (!p.start_date || !p.end_date || !ganttTotalDays.value) return {}
+  const l = barPct(p.start_date)
+  const w = Math.max(barPct(p.end_date) - l, 0.3)
+  return { left: l + '%', width: w + '%' }
 }
 
 async function load() {

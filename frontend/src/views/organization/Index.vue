@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="text-xl font-bold mb-4">组织管理</h1>
+    <h1 class="text-xl font-bold mb-4">组织架构</h1>
     <div class="flex gap-2 mb-4">
       <button :class="tab==='dept'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm transition" @click="tab='dept'">部门管理</button>
       <button :class="tab==='members'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm transition" @click="tab='members'">组织成员</button>
