@@ -307,35 +307,32 @@ const ganttMaxDate = computed(() => {
 
 const ganttMonths = computed(() => {
   if (!ganttMinDate.value || !ganttMaxDate.value) return []
-  const start = new Date(ganttMinDate.value)
-  const end = new Date(ganttMaxDate.value)
   const months: { label: string; days: number }[] = []
-  const cur = new Date(start.getFullYear(), start.getMonth(), 1)
-  // 包含完整月
-  const endOfLast = new Date(end.getFullYear(), end.getMonth() + 1, 0)
-  while (cur <= endOfLast) {
-    const year = cur.getFullYear()
-    const month = cur.getMonth()
-    const lastDay = new Date(year, month + 1, 0).getDate()
-    months.push({ label: `${year}.${String(month + 1).padStart(2, '0')}`, days: lastDay })
-    cur.setMonth(month + 1)
+  const [y0, m0] = ganttMinDate.value.split('-').map(Number)
+  const [y1, m1] = ganttMaxDate.value.split('-').map(Number)
+  let y = y0, m = m0
+  while (y < y1 || (y === y1 && m <= m1)) {
+    const lastDay = new Date(y, m, 0).getDate()
+    months.push({ label: `${y}.${String(m).padStart(2, '0')}`, days: lastDay })
+    m++; if (m > 12) { m = 1; y++ }
   }
   return months
 })
 
-// 时间轴原点 = 首个月第1天（与月份列对齐）
 const ganttOrigin = computed(() => {
   if (!ganttMinDate.value) return ''
-  const d = new Date(ganttMinDate.value)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+  return ganttMinDate.value.slice(0, 7) + '-01'
 })
+
+function daysBetween(d1: string, d2: string): number {
+  const [y1, m1, day1] = d1.split('-').map(Number)
+  const [y2, m2, day2] = d2.split('-').map(Number)
+  return Math.round((new Date(y2, m2 - 1, day2).getTime() - new Date(y1, m1 - 1, day1).getTime()) / 86400000)
+}
 
 function dateToPx(dateStr: string): number {
   if (!ganttOrigin.value) return 0
-  const d = new Date(dateStr)
-  const ref = new Date(ganttOrigin.value)
-  const diff = (d.getTime() - ref.getTime()) / (1000 * 60 * 60 * 24)
-  return Math.round(diff * monthWidth)
+  return Math.round(daysBetween(ganttOrigin.value, dateStr) * monthWidth)
 }
 
 async function load() {
