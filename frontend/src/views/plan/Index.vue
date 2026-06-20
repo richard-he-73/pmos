@@ -31,6 +31,7 @@
           <span v-if="p.parent_name" class="text-xs text-slate-400 w-28 hidden lg:block truncate shrink-0">归属: {{ p.parent_name }}</span>
           <span class="text-xs text-slate-400 w-20 hidden lg:block truncate shrink-0">{{ p.assignee_name || '—' }}</span>
           <div class="shrink-0 flex gap-1">
+            <button @click="openDetail(p)" class="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
             <button @click="editPlan(p)" class="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
             <button @click="deletePlan(p.id)" class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
           </div>
@@ -107,6 +108,66 @@
         </div>
       </div>
     </div>
+
+    <!-- 详情弹窗 -->
+    <div v-if="showDetail && detailItem" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" @click.self="showDetail=false">
+      <div class="w-full max-w-lg bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg font-bold">计划详情</h2>
+          <button @click="showDetail=false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xl leading-none">&times;</button>
+        </div>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+          <div class="col-span-2 sm:col-span-1">
+            <span class="text-slate-400 block text-xs mb-0.5">计划名称</span>
+            <span class="font-medium">{{ detailItem.name }}</span>
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <span class="text-slate-400 block text-xs mb-0.5">计划类型</span>
+            <span>{{ detailItem.type==='milestone'?'里程碑计划':detailItem.type==='middle'?'中层计划':'详细计划' }}</span>
+          </div>
+          <div class="col-span-2">
+            <span class="text-slate-400 block text-xs mb-0.5">计划描述</span>
+            <span class="text-slate-600 dark:text-slate-300">{{ detailItem.description || '—' }}</span>
+          </div>
+          <div v-if="detailItem.parent_name">
+            <span class="text-slate-400 block text-xs mb-0.5">归属</span>
+            <span>{{ detailItem.parent_name }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">责任人</span>
+            <span>{{ detailItem.assignee_name || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">干系人</span>
+            <span>{{ detailItem.stakeholders || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">开始日期</span>
+            <span>{{ detailItem.start_date || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">结束日期</span>
+            <span>{{ detailItem.end_date || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">状态</span>
+            <span>{{ statusText(detailItem.status) }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">进度</span>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden" style="max-width:120px">
+                <div class="h-full rounded-full" :class="statusBarClass(detailItem.status)" :style="{width: (detailItem.progress||0) + '%'}"></div>
+              </div>
+              <span class="text-xs">{{ detailItem.progress||0 }}%</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <button @click="showDetail=false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">关闭</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -156,6 +217,10 @@ async function load() {
 }
 async function loadMembers() { try { const r=await request.get('/org-members/', { params: { page_size: 9999 } }); orgMembers.value = r.data.results ?? r.data } catch {} }
 
+const showDetail = ref(false)
+const detailItem = ref<any>(null)
+function openDetail(r: any) { detailItem.value = r; showDetail.value = true }
+
 function openForm() {
   editing.value = null
   form.value = { type: planTab.value, status: 'not_started', progress: 0 }
@@ -176,6 +241,9 @@ async function savePlan() {
     if (k in payload && payload[k] === '') payload[k] = null
   }
   if (payload.parent === '') payload.parent = null
+  // 状态联动进度：未开始→0，完成→100
+  if (payload.status === 'not_started') payload.progress = 0
+  if (['completed_late', 'completed_on_time', 'completed_early'].includes(payload.status)) payload.progress = 100
   try {
     if (editing.value) { await request.patch('/plans/' + editing.value.id + '/', payload) }
     else { await request.post('/plans/', payload) }
