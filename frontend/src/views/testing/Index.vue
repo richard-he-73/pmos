@@ -4,10 +4,7 @@
     <div class="flex gap-2 mb-4">
       <button :class="tab==='plans'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm transition" @click="tab='plans'">测试计划</button>
       <button :class="tab==='bugs'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm transition" @click="tab='bugs'">缺陷列表</button>
-    </div>
-
-    <div class="flex items-center justify-between mb-3">
-      <div></div>
+      <div class="flex-1"></div>
       <button v-if="tab==='bugs'" @click="openBugForm" class="px-3 py-1.5 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700">+ 报告缺陷</button>
     </div>
 

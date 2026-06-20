@@ -1,14 +1,12 @@
 <template>
   <div>
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-      <h1 class="text-xl font-bold">项目管理</h1>
-      <button @click="openCreate" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 shrink-0">＋ 新建项目</button>
-    </div>
-
+    <h1 class="text-xl font-bold mb-4">项目管理</h1>
     <div class="flex flex-wrap gap-2 mb-4">
       <input v-model="search" placeholder="搜索项目名称/编号..." class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm flex-1 min-w-[180px] outline-none focus:ring-2 focus:ring-blue-500" @input="onSearch" />
       <select v-model="filters.status" @change="fetchData" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm outline-none"><option value="">全部状态</option><option value="planning">计划中</option><option value="active">进行中</option><option value="pending_acceptance">待验收</option><option value="closed">已结项</option></select>
       <select v-model="filters.project_type" @change="fetchData" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm outline-none"><option value="">全部类型</option><option value="monthly">人月型</option><option value="fixed">项目制</option><option value="resource_pool">资源池</option></select>
+      <div class="flex-1"></div>
+      <button @click="openCreate" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 shrink-0">＋ 新建项目</button>
     </div>
 
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">

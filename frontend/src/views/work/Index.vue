@@ -3,10 +3,8 @@
     <h1 class="text-xl font-bold mb-4">工作管理</h1>
     <div class="flex gap-2 mb-4">
       <button v-for="t in tabs" :key="t.k" :class="tab===t.k?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm transition" @click="tab=t.k">{{ t.l }}</button>
-    </div>
-    <div class="flex items-center justify-between mb-3">
-      <div></div>
-      <button @click="openForm" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新增</button>
+      <div class="flex-1"></div>
+      <button @click="openForm" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新增{{ cur?.l || '' }}</button>
     </div>
     <Card>
       <div class="overflow-x-auto">
