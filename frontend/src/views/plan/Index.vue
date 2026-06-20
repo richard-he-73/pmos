@@ -310,12 +310,14 @@ const ganttMonths = computed(() => {
   const months: { label: string; days: number }[] = []
   const [y0, m0] = ganttMinDate.value.split('-').map(Number)
   const [y1, m1] = ganttMaxDate.value.split('-').map(Number)
+  console.log('Gantt:', ganttMinDate.value, ganttMaxDate.value, y0, m0, y1, m1)
   let y = y0, m = m0
   while (y < y1 || (y === y1 && m <= m1)) {
     const lastDay = new Date(y, m, 0).getDate()
     months.push({ label: `${y}.${String(m).padStart(2, '0')}`, days: lastDay })
     m++; if (m > 12) { m = 1; y++ }
   }
+  console.log('Months:', months.map(m => m.label))
   return months
 })
 
