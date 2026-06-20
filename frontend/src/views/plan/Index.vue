@@ -28,7 +28,7 @@
           <span class="w-44 hidden md:block shrink-0">日期范围</span>
           <span v-if="planTab!=='milestone'" class="w-28 hidden lg:block shrink-0">归属</span>
           <span class="w-20 hidden lg:block shrink-0">责任人</span>
-          <span class="ml-auto shrink-0" style="width:146px">操作</span>
+          <span class="ml-auto shrink-0 text-right" style="width:146px">操作</span>
         </div>
         <div v-for="p in filteredPlans" :key="p.id"
           class="flex items-center gap-3 py-2.5 px-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
