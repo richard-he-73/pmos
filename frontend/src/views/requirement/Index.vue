@@ -7,8 +7,8 @@
     </div>
     <Card>
       <table class="w-full text-sm">
-        <thead><tr class="border-b border-slate-200 dark:border-slate-700 text-slate-500">
-          <th class="text-left py-2 px-2">编号</th><th class="text-left py-2 px-2">名称</th><th class="text-left py-2 px-2">状态</th>
+        <thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+          <th class="text-left py-3 px-3 font-medium">编号</th><th class="text-left py-3 px-3 font-medium">名称</th><th class="text-left py-3 px-3 font-medium">状态</th>
         </tr></thead>
         <tbody>
           <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50">

@@ -7,14 +7,14 @@
 
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full text-sm"><thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500">
-          <th class="text-left py-3 px-4 font-medium">姓名</th>
-          <th class="text-left py-3 px-4 font-medium">性别</th>
-          <th class="text-left py-3 px-4 font-medium">年龄</th>
-          <th class="text-left py-3 px-4 font-medium">职级</th>
-          <th class="text-left py-3 px-4 font-medium">可用状态</th>
-          <th class="text-left py-3 px-4 font-medium">入场日期</th>
-          <th class="text-left py-3 px-4 font-medium">离场日期</th>
+        <table class="w-full text-sm"><thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+          <th class="text-left py-3 px-3 font-medium">姓名</th>
+          <th class="text-left py-3 px-3 font-medium">性别</th>
+          <th class="text-left py-3 px-3 font-medium">年龄</th>
+          <th class="text-left py-3 px-3 font-medium">职级</th>
+          <th class="text-left py-3 px-3 font-medium">可用状态</th>
+          <th class="text-left py-3 px-3 font-medium">入场日期</th>
+          <th class="text-left py-3 px-3 font-medium">离场日期</th>
           <th class="text-left py-3 px-4 font-medium w-24">操作</th>
         </tr></thead><tbody>
           <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
