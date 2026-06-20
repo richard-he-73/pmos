@@ -17,9 +17,21 @@
         <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
         <span class="text-sm">暂无数据</span>
       </div>
-      <div v-else class="space-y-2">
+      <div v-else>
+        <!-- 表头 -->
+        <div class="flex items-center gap-3 py-2 px-3 text-xs text-slate-400 font-medium border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
+          <span class="shrink-0 w-[18px]"></span>
+          <span class="min-w-[120px]">名称</span>
+          <span class="w-20 shrink-0">状态</span>
+          <span class="flex-1 min-w-[80px]">进度</span>
+          <span class="w-10 text-right shrink-0">%</span>
+          <span class="w-44 hidden md:block shrink-0">日期范围</span>
+          <span class="w-28 hidden lg:block shrink-0">归属</span>
+          <span class="w-20 hidden lg:block shrink-0">责任人</span>
+          <span class="shrink-0" style="width:146px">操作</span>
+        </div>
         <div v-for="p in filteredPlans" :key="p.id"
-          class="flex items-center gap-3 py-2.5 px-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 rounded transition">
+          class="flex items-center gap-3 py-2.5 px-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
           <span class="text-sm shrink-0">{{ p.type==='milestone'?'📌':p.type==='middle'?'📋':'📝' }}</span>
           <span class="text-sm font-medium min-w-[120px]">{{ p.name }}</span>
           <span class="text-xs text-slate-400 shrink-0 w-20">{{ statusText(p.status) }}</span>
@@ -86,7 +98,7 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium mb-1">计划状态</label>
-              <select v-model="form.status" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <select v-model="form.status" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" @change="onStatusChange">
                 <option value="not_started">未开始</option>
                 <option value="in_progress">执行中</option>
                 <option value="suspended">已挂起</option>
@@ -220,6 +232,11 @@ async function loadMembers() { try { const r=await request.get('/org-members/', 
 const showDetail = ref(false)
 const detailItem = ref<any>(null)
 function openDetail(r: any) { detailItem.value = r; showDetail.value = true }
+
+function onStatusChange() {
+  if (form.value.status === 'not_started') form.value.progress = 0
+  if (['completed_late', 'completed_on_time', 'completed_early'].includes(form.value.status)) form.value.progress = 100
+}
 
 function openForm() {
   editing.value = null
