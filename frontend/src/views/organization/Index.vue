@@ -100,7 +100,7 @@
             <!-- Consultant select (members tab): auto-populate name/gender/age/rank -->
             <select v-model="form.consultant" v-else-if="f.type==='consultant_select'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" @change="onConsultantSelect">
               <option value="">请选择资源</option>
-              <option v-for="c in consultants" :key="c.id" :value="c.id">{{ c.name }} ({{ {male:'男',female:'女'}[c.gender] || c.gender }} / {{ ({director:'咨询总监',senior:'高级咨询师',consultant:'咨询师',assistant:'咨询助理',other:'其他'})[c.rank] || c.rank }})</option>
+              <option v-for="c in availableConsultants" :key="c.id" :value="c.id">{{ c.name }} ({{ {male:'男',female:'女'}[c.gender] || c.gender }} / {{ ({director:'咨询总监',senior:'高级咨询师',consultant:'咨询师',assistant:'咨询助理',other:'其他'})[c.rank] || c.rank }})</option>
             </select>
 
             <!-- Department select (members tab) -->
@@ -283,6 +283,17 @@ async function loadDepts() { try { const r=await request.get('/departments/', { 
 async function loadUsers() { try { const r=await request.get('/users/', { params: { page_size: 9999 } }); users.value = r.data.results ?? r.data } catch {} }
 const consultants = ref<any[]>([])
 async function loadConsultants() { try { const r=await request.get('/consultants/', { params: { page_size: 9999 } }); consultants.value = r.data.results ?? r.data } catch {} }
+const assignedConsultantIds = computed(() => {
+  if (tab.value !== 'members') return new Set<number>()
+  const ids = new Set<number>()
+  for (const item of items.value) { if (item.consultant != null) ids.add(item.consultant) }
+  return ids
+})
+const availableConsultants = computed(() => {
+  const assigned = assignedConsultantIds.value
+  const currentId = editing.value?.consultant
+  return consultants.value.filter(c => !assigned.has(c.id) || c.id === currentId)
+})
 
 function onConsultantSelect() {
   const c = consultants.value.find(c => c.id === form.value.consultant)
