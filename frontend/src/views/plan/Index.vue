@@ -396,6 +396,6 @@ async function deletePlan(id: number) {
   try { await request.delete('/plans/' + id + '/'); toast.show('删除成功', 'success'); load() } catch { toast.show('删除失败', 'error') }
 }
 
-watch(planTab, () => {})
+watch(planTab, () => { load() })
 onMounted(() => { load(); loadMembers() })
 </script>
