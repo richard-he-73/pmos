@@ -19,14 +19,14 @@
       </div>
       <div v-else>
         <!-- 表头 -->
-        <div class="flex items-center gap-3 py-2 px-3 text-xs text-slate-400 font-medium border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
+        <div class="flex items-center gap-3 py-3 px-3 text-xs text-slate-500 dark:text-slate-400 font-medium border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
           <span class="w-5 shrink-0"></span>
           <span class="min-w-[120px]">名称</span>
           <span class="w-20 shrink-0">状态</span>
           <span class="flex-1" style="max-width:600px">进度</span>
           <span class="w-10 text-right shrink-0">%</span>
           <span class="w-44 hidden md:block shrink-0">日期范围</span>
-          <span class="w-28 hidden lg:block shrink-0">归属</span>
+          <span v-if="planTab!=='milestone'" class="w-28 hidden lg:block shrink-0">归属</span>
           <span class="w-20 hidden lg:block shrink-0">责任人</span>
           <span class="ml-auto shrink-0" style="width:146px">操作</span>
         </div>
@@ -40,7 +40,7 @@
           </div>
           <span class="text-xs text-slate-400 w-10 text-right shrink-0">{{ p.progress||0 }}%</span>
           <span class="text-xs text-slate-400 w-44 hidden md:block shrink-0">{{ p.start_date||'—' }} ~ {{ p.end_date||'—' }}</span>
-          <span v-if="p.parent_name" class="text-xs text-slate-400 w-28 hidden lg:block truncate shrink-0">{{ p.parent_name }}</span>
+          <span v-if="planTab!=='milestone' && p.parent_name" class="text-xs text-slate-400 w-28 hidden lg:block truncate shrink-0">{{ p.parent_name }}</span>
           <span class="text-xs text-slate-400 w-20 hidden lg:block truncate shrink-0">{{ p.assignee_name || '—' }}</span>
           <div class="ml-auto shrink-0 flex gap-1">
             <button @click="openDetail(p)" class="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
