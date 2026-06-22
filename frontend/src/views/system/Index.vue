@@ -1,18 +1,19 @@
 <template>
   <div>
     <h1 class="text-xl font-bold mb-4">系统管理</h1>
-    <div class="flex gap-2 mb-4">
+    <div class="flex gap-2 items-center mb-4">
       <button v-for="t in tabsFiltered()" :key="t.k" class="px-3 py-1.5 rounded-lg text-sm transition"
         :class="tab===t.k?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200'"
         @click="tab=t.k">{{ t.l }}</button>
+      <div class="flex-1"></div>
+      <button v-if="tab==='users'" @click="openCreate" class="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新建用户</button>
+      <button v-if="tab==='backup'" @click="createBackup" :disabled="backupLoading"
+        class="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition disabled:opacity-50">
+        {{ backupLoading ? '备份中...' : '+ 创建备份' }}
+      </button>
     </div>
 
     <div v-if="tab==='users'" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-      <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap gap-2 items-center justify-between">
-        <input v-model="search" placeholder="搜索用户名/姓名..." class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none w-60" @input="load" />
-        <button @click="openCreate" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新建用户</button>
-      </div>
-
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -36,22 +37,18 @@
                 </div>
               </td>
             </tr>
+            <tr v-if="items.length === 0">
+              <td :colspan="cols.length + 1" class="py-16 text-center text-slate-400">
+                <svg class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                <span class="text-sm">暂无数据</span>
+              </td>
+            </tr>
           </tbody></table>
       </div>
     </div>
 
     <!-- 数据备份 -->
     <div v-if="tab==='backup'">
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-3">
-          <span class="text-sm text-slate-500 dark:text-slate-400">{{ backupItems.length }} 个备份文件</span>
-        </div>
-        <button @click="createBackup" :disabled="backupLoading"
-          class="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition disabled:opacity-50">
-          {{ backupLoading ? '备份中...' : '+ 创建备份' }}
-        </button>
-      </div>
-
       <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -66,7 +63,10 @@
             </thead>
             <tbody>
               <tr v-if="backupItems.length === 0">
-                <td colspan="5" class="py-16 text-center text-slate-400 text-sm">暂无备份，点击右上角创建</td>
+                <td colspan="5" class="py-16 text-center text-slate-400">
+                  <svg class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                  <span class="text-sm">暂无备份</span>
+                </td>
               </tr>
               <tr v-for="b in backupItems" :key="b.filename" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
                 <td class="py-3 px-3 font-medium whitespace-nowrap">{{ b.filename }}</td>
@@ -77,6 +77,7 @@
                 </td>
                 <td class="py-3 px-3 whitespace-nowrap text-right">
                   <div class="flex gap-1 justify-end whitespace-nowrap">
+                    <button @click="previewBackup(b)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-sky-100 text-sky-700 hover:bg-sky-200 dark:bg-sky-900/30 dark:text-sky-400">预览</button>
                     <button @click="viewBackupDetail(b)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
                     <button @click="restoreBackup(b)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400">恢复</button>
                     <button @click="deleteBackup(b)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
@@ -95,24 +96,49 @@
             <h2 class="text-lg font-bold">备份详情</h2>
             <button @click="backupDetail = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xl leading-none">&times;</button>
           </div>
-          <div class="space-y-3 text-sm">
-            <div><span class="text-slate-400 block text-xs">文件名</span><span class="font-medium break-all">{{ backupDetail.filename }}</span></div>
-            <div class="grid grid-cols-2 gap-4">
-              <div><span class="text-slate-400 block text-xs">文件大小</span><span>{{ formatSize(backupDetail.file_size) }}</span></div>
-              <div><span class="text-slate-400 block text-xs">备份日期</span><span>{{ formatTime(backupDetail.created_at) }}</span></div>
-            </div>
-            <div>
-              <span class="text-slate-400 block text-xs mb-1">备份内容（{{ backupDetail.total_tables }} 张表，{{ backupDetail.total_records }} 条记录）</span>
-              <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 max-h-48 overflow-y-auto text-xs space-y-1">
-                <div v-for="(count, table) in backupDetail.summary" :key="table" class="flex justify-between">
-                  <span class="text-slate-600 dark:text-slate-300">{{ table }}</span>
-                  <span class="text-slate-400">{{ count }} 条</span>
-                </div>
-              </div>
+          <div class="mb-4 text-sm space-y-1">
+            <div><span class="text-slate-400 text-xs">文件名：</span><span class="font-medium break-all">{{ backupDetail.filename }}</span></div>
+            <div class="flex gap-4">
+              <span><span class="text-slate-400 text-xs">大小：</span>{{ formatSize(backupDetail.file_size) }}</span>
+              <span><span class="text-slate-400 text-xs">时间：</span>{{ formatTime(backupDetail.created_at) }}</span>
             </div>
           </div>
-          <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs">
+                <th class="text-left py-2 px-3 font-medium">数据表</th>
+                <th class="text-right py-2 px-3 font-medium w-20">记录数</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in detailPageItems" :key="item.k" class="border-b border-slate-100 dark:border-slate-700/50 text-xs">
+                <td class="py-2 px-3 text-slate-600 dark:text-slate-300">{{ item.k }}</td>
+                <td class="py-2 px-3 text-right text-slate-500">{{ item.v }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <!-- 分页 -->
+          <div v-if="detailTotalPages > 1" class="flex items-center justify-center gap-2 mt-3 text-xs text-slate-400">
+            <button @click="detailPage--" :disabled="detailPage <= 1" class="px-2 py-1 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-30">&lt;</button>
+            <span>第 {{ detailPage }} / {{ detailTotalPages }} 页（共 {{ detailTotalRecords }} 条）</span>
+            <button @click="detailPage++" :disabled="detailPage >= detailTotalPages" class="px-2 py-1 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-30">&gt;</button>
+          </div>
+          <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
             <button @click="backupDetail = null" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition">关闭</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 备份预览弹窗 -->
+      <div v-if="previewContent" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="previewContent = null">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-3xl mx-4 p-6 max-h-[85vh] flex flex-col">
+          <div class="flex items-center justify-between mb-4 shrink-0">
+            <h2 class="text-lg font-bold">备份文件预览</h2>
+            <button @click="previewContent = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xl leading-none">&times;</button>
+          </div>
+          <pre class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 text-xs text-slate-600 dark:text-slate-300 flex-1 min-h-0 overflow-auto" style="white-space:pre; font-family:'SF Mono',Monaco,'Cascadia Code',monospace;">{{ previewContent }}</pre>
+          <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 shrink-0">
+            <button @click="previewContent = null" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition">关闭</button>
           </div>
         </div>
       </div>
@@ -198,6 +224,20 @@ const isAdmin = ref(false)
 const backupLoading = ref(false)
 const backupItems = ref<any[]>([])
 const backupDetail = ref<any>(null)
+const previewContent = ref<string | null>(null)
+const detailPage = ref(1)
+const PAGE_SIZE = 10
+
+const detailEntries = computed(() => {
+  if (!backupDetail.value?.summary) return []
+  return Object.entries(backupDetail.value.summary).map(([k, v]) => ({ k, v }))
+})
+const detailTotalPages = computed(() => Math.ceil(detailEntries.value.length / PAGE_SIZE))
+const detailTotalRecords = computed(() => backupDetail.value?.total_records || 0)
+const detailPageItems = computed(() => {
+  const start = (detailPage.value - 1) * PAGE_SIZE
+  return detailEntries.value.slice(start, start + PAGE_SIZE)
+})
 
 const form = ref<Record<string,any>>({})
 
@@ -297,8 +337,9 @@ function formatTime(t: string): string {
   if (!t) return '—'
   try {
     const d = new Date(t)
-    const pad = (n: number) => String(n).padStart(2, '0')
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+    const pad2 = (n: number) => String(n).padStart(2, '0')
+    const pad3 = (n: number) => String(n).padStart(3, '0')
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}.${pad3(d.getMilliseconds())}`
   } catch { return t }
 }
 
@@ -341,6 +382,20 @@ async function deleteBackup(b: any) {
     const r = await api('/api/v1/system/backup/' + encodeURIComponent(b.filename) + '/', { method: 'DELETE' })
     if (r.ok) await loadBackups()
   } catch {}
+}
+
+async function previewBackup(b: any) {
+  try {
+    const r = await api('/api/v1/system/backup/' + encodeURIComponent(b.filename) + '/')
+    if (r.ok) {
+      const data = await r.json()
+      previewContent.value = JSON.stringify(data, null, 2)
+    } else {
+      previewContent.value = '无法读取备份文件'
+    }
+  } catch {
+    previewContent.value = '加载失败'
+  }
 }
 
 function tabsFiltered() {
