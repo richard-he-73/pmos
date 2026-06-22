@@ -46,17 +46,81 @@
     </div>
 
     <!-- 数据备份 -->
-    <div v-if="tab==='backup'" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-      <div class="p-8 flex flex-col items-center gap-6">
-        <svg class="w-20 h-20 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-        </svg>
-        <p class="text-sm text-slate-500 dark:text-slate-400 text-center max-w-md">导出系统全部数据为 JSON 格式的备份文件，包含所有模块的配置和业务数据。</p>
-        <button @click="exportBackup" :disabled="backupLoading"
-          class="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition disabled:opacity-50">
-          {{ backupLoading ? '导出中...' : '导出数据备份' }}
+    <div v-if="tab==='backup'">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-slate-500 dark:text-slate-400">{{ backupItems.length }} 个备份文件</span>
+        </div>
+        <button @click="createBackup" :disabled="backupLoading"
+          class="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition disabled:opacity-50">
+          {{ backupLoading ? '备份中...' : '+ 创建备份' }}
         </button>
-        <p v-if="backupMsg" class="text-sm" :class="backupMsg.includes('失败') ? 'text-red-500' : 'text-green-600'">{{ backupMsg }}</p>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div v-if="backupItems.length === 0" class="flex flex-col items-center justify-center py-16 text-slate-400">
+          <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+          <span class="text-sm">暂无备份，点击右上角创建</span>
+        </div>
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+                <th class="text-left py-3 px-3 font-medium whitespace-nowrap">备份文件名</th>
+                <th class="text-left py-3 px-3 font-medium whitespace-nowrap">文件大小</th>
+                <th class="text-left py-3 px-3 font-medium whitespace-nowrap">备份日期</th>
+                <th class="text-left py-3 px-3 font-medium">备份内容</th>
+                <th class="text-right py-3 px-3 font-medium whitespace-nowrap">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="b in backupItems" :key="b.filename" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                <td class="py-3 px-3 font-medium whitespace-nowrap">{{ b.filename }}</td>
+                <td class="py-3 px-3 whitespace-nowrap text-slate-500">{{ formatSize(b.file_size) }}</td>
+                <td class="py-3 px-3 whitespace-nowrap text-slate-500">{{ formatTime(b.created_at) }}</td>
+                <td class="py-3 px-3 text-xs text-slate-500 max-w-xs truncate">
+                  {{ b.total_tables }} 张表，{{ b.total_records }} 条记录
+                </td>
+                <td class="py-3 px-3 whitespace-nowrap text-right">
+                  <div class="flex gap-1 justify-end whitespace-nowrap">
+                    <button @click="viewBackupDetail(b)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
+                    <button @click="restoreBackup(b)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400">恢复</button>
+                    <button @click="deleteBackup(b)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 备份详情弹窗 -->
+      <div v-if="backupDetail" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="backupDetail = null">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold">备份详情</h2>
+            <button @click="backupDetail = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xl leading-none">&times;</button>
+          </div>
+          <div class="space-y-3 text-sm">
+            <div><span class="text-slate-400 block text-xs">文件名</span><span class="font-medium break-all">{{ backupDetail.filename }}</span></div>
+            <div class="grid grid-cols-2 gap-4">
+              <div><span class="text-slate-400 block text-xs">文件大小</span><span>{{ formatSize(backupDetail.file_size) }}</span></div>
+              <div><span class="text-slate-400 block text-xs">备份日期</span><span>{{ formatTime(backupDetail.created_at) }}</span></div>
+            </div>
+            <div>
+              <span class="text-slate-400 block text-xs mb-1">备份内容（{{ backupDetail.total_tables }} 张表，{{ backupDetail.total_records }} 条记录）</span>
+              <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 max-h-48 overflow-y-auto text-xs space-y-1">
+                <div v-for="(count, table) in backupDetail.summary" :key="table" class="flex justify-between">
+                  <span class="text-slate-600 dark:text-slate-300">{{ table }}</span>
+                  <span class="text-slate-400">{{ count }} 条</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <button @click="backupDetail = null" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition">关闭</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -138,7 +202,8 @@ const formError = ref('')
 const currentUserId = ref<number|null>(null)
 const isAdmin = ref(false)
 const backupLoading = ref(false)
-const backupMsg = ref('')
+const backupItems = ref<any[]>([])
+const backupDetail = ref<any>(null)
 
 const form = ref<Record<string,any>>({})
 
@@ -228,24 +293,60 @@ async function deleteItem(id: number) {
   try { await api('/api/v1/users/' + id + '/', { method: 'DELETE' }); load() } catch {}
 }
 
-async function exportBackup() {
-  backupLoading.value = true
-  backupMsg.value = ''
+function formatSize(bytes: number): string {
+  if (!bytes) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  return (bytes / Math.pow(1024, i)).toFixed(i > 0 ? 1 : 0) + ' ' + units[i]
+}
+function formatTime(t: string): string {
+  if (!t) return '—'
+  try {
+    const d = new Date(t)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  } catch { return t }
+}
+
+async function loadBackups() {
   try {
     const r = await api('/api/v1/system/backup/')
-    if (!r.ok) { backupMsg.value = '导出失败'; return }
-    const blob = await r.blob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    const now = new Date()
-    const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`
-    a.download = `pmos_backup_${ts}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-    backupMsg.value = '导出成功'
-  } catch { backupMsg.value = '导出失败' }
+    if (r.ok) backupItems.value = await r.json()
+  } catch {}
+}
+
+async function createBackup() {
+  backupLoading.value = true
+  try {
+    const r = await api('/api/v1/system/backup/', { method: 'POST' })
+    if (r.ok) { await loadBackups() }
+    else { alert('创建备份失败') }
+  } catch { alert('创建备份失败') }
   finally { backupLoading.value = false }
+}
+
+async function viewBackupDetail(b: any) {
+  try {
+    const r = await api('/api/v1/system/backup/' + encodeURIComponent(b.filename) + '/')
+    if (r.ok) backupDetail.value = await r.json()
+  } catch {}
+}
+
+async function restoreBackup(b: any) {
+  if (!(await confirm.show('确认从该备份恢复数据？将覆盖当前数据！'))) return
+  try {
+    const r = await api('/api/v1/system/backup/' + encodeURIComponent(b.filename) + '/', { method: 'POST' })
+    if (r.ok) { alert('数据恢复成功'); await loadBackups() }
+    else { alert('恢复失败') }
+  } catch { alert('恢复失败') }
+}
+
+async function deleteBackup(b: any) {
+  if (!(await confirm.show('确认删除此备份文件？'))) return
+  try {
+    const r = await api('/api/v1/system/backup/' + encodeURIComponent(b.filename) + '/', { method: 'DELETE' })
+    if (r.ok) await loadBackups()
+  } catch {}
 }
 
 function tabsFiltered() {
@@ -295,5 +396,6 @@ onMounted(async () => {
     isAdmin.value = u.is_superuser
   } catch {}
   load()
+  loadBackups()
 })
 </script>
