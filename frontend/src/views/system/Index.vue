@@ -131,13 +131,13 @@
 
       <!-- 备份预览弹窗 -->
       <div v-if="previewContent" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="previewContent = null">
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-3xl mx-4 p-6 max-h-[85vh] flex flex-col">
-          <div class="flex items-center justify-between mb-4 shrink-0">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-3xl mx-4 p-6 overflow-hidden" style="max-height:85vh;">
+          <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-bold">备份文件预览</h2>
             <button @click="previewContent = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xl leading-none">&times;</button>
           </div>
-          <pre class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 text-xs text-slate-600 dark:text-slate-300 flex-1 min-h-0 overflow-auto" style="white-space:pre; font-family:'SF Mono',Monaco,'Cascadia Code',monospace;">{{ previewContent }}</pre>
-          <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 shrink-0">
+          <pre class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 text-xs text-slate-600 dark:text-slate-300" style="height:calc(85vh - 120px); overflow:auto; white-space:pre; font-family:'SF Mono',Monaco,'Cascadia Code',monospace;">{{ previewContent }}</pre>
+          <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
             <button @click="previewContent = null" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition">关闭</button>
           </div>
         </div>
