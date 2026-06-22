@@ -42,7 +42,7 @@
               <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
             </select>
           </div>
-          <div><label class="block text-sm font-medium mb-1">计划时间</label><input v-model="form.planned_date" type="datetime-local" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
+          <div><label class="block text-sm font-medium mb-1">计划时间</label><input v-model="form.planned_date" type="datetime-local" @focus="e.target.showPicker?.()" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
           <div v-if="tab==='deploy'"><label class="block text-sm font-medium mb-1">版本号</label><input v-model="form.version" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
           <div><label class="block text-sm font-medium mb-1">备注</label><textarea v-model="form.notes" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
         </div>
@@ -56,7 +56,9 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useProjectStore } from '@/stores/project'
 import { useConfirmStore } from '@/stores/confirm'
+const projectStore = useProjectStore()
 const confirm = useConfirmStore()
 const tab = ref('drill')
 const items = ref<any[]>([])
@@ -74,7 +76,7 @@ const cols = computed(() => cur.value?.cols || [])
 
 async function load() {
   if (!cur.value) return
-  try { const r=await fetch('/api/v1/'+cur.value.e+'/'); const d=await r.json(); items.value=d.results ?? [] } catch { items.value=[] }
+  try { const r=await fetch('/api/v1/'+cur.value.e+'/?project=' + (projectStore.activeProjectId || '')); const d=await r.json(); items.value=d.results ?? [] } catch { items.value=[] }
 }
 async function loadProjects() { try { const r=await fetch('/api/v1/projects/'); const d=await r.json(); projects.value=d.results||[] } catch {} }
 

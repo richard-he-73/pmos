@@ -90,10 +90,10 @@
               <option v-for="d in depts" :key="d.id" :value="d.id">{{ d.name }}</option>
             </select>
 
-            <!-- Select: manager (users list) -->
+            <!-- Select: manager (consultants list) -->
             <select v-model="form[f.k]" v-else-if="f.k==='manager'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option value="">不指定</option>
-              <option v-for="u in users" :key="u.id" :value="u.id">{{ u.real_name || u.username }}</option>
+              <option v-for="c in consultants" :key="c.id" :value="c.id">{{ c.name }}</option>
             </select>
 
             <!-- Consultant select (members tab): auto-populate name/gender/age/rank -->
@@ -229,8 +229,10 @@ import { ref, computed, watch, onMounted } from 'vue'
 import request from '@/api/request'
 import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
+import { useProjectStore } from '@/stores/project'
 import OrgChart from '@/components/OrgChart.vue'
 const confirm = useConfirmStore()
+const projectStore = useProjectStore()
 const toast = useToastStore()
 const tab = ref('dept')
 const items = ref<any[]>([])
@@ -307,7 +309,7 @@ function hasNextSiblingInTree(t: any, ancestorDepth: number): boolean {
 async function load() {
   if (!cur.value) return
   loading.value = true
-  try { const r = await request.get('/' + cur.value.e + '/'); items.value = (r.data.results ?? r.data) as any[] } catch { items.value = [] }
+  try { const r = await request.get('/' + cur.value.e + '/', { params: { project: projectStore.activeProjectId || undefined } }); items.value = (r.data.results ?? r.data) as any[] } catch { items.value = [] }
   finally { loading.value = false }
   // 默认展开所有部门节点（仅 dept 标签有效）
   if (tab.value === 'dept') {
@@ -316,10 +318,10 @@ async function load() {
     expandedIds.value = s
   }
 }
-async function loadDepts() { try { const r=await request.get('/departments/', { params: { page_size: 9999 } }); depts.value = r.data.results ?? r.data } catch {} }
+async function loadDepts() { try { const r=await request.get('/departments/', { params: { page_size: 9999, project: projectStore.activeProjectId || undefined } }); depts.value = r.data.results ?? r.data } catch {} }
 async function loadUsers() { try { const r=await request.get('/users/', { params: { page_size: 9999 } }); users.value = r.data.results ?? r.data } catch {} }
 const consultants = ref<any[]>([])
-async function loadConsultants() { try { const r=await request.get('/consultants/', { params: { page_size: 9999 } }); consultants.value = r.data.results ?? r.data } catch {} }
+async function loadConsultants() { try { const r=await request.get('/consultants/', { params: { page_size: 9999, project: projectStore.activeProjectId || undefined } }); consultants.value = r.data.results ?? r.data } catch {} }
 const assignedConsultantIds = computed(() => {
   if (tab.value !== 'members') return new Set<number>()
   const ids = new Set<number>()
@@ -346,8 +348,8 @@ function onConsultantSelect() {
 
 function openForm() {
   editing.value = null
-  if (tab.value === 'dept') { form.value = { is_active: true } }
-  else { form.value = {} }
+  if (tab.value === 'dept') { form.value = { is_active: true, project: projectStore.activeProjectId } }
+  else { form.value = { project: projectStore.activeProjectId } }
   showForm.value = true
 }
 function editItem(r: any) { editing.value = r; form.value = { ...r }; showForm.value = true }

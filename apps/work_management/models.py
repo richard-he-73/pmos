@@ -5,26 +5,41 @@ from django.conf import settings
 class Equipment(models.Model):
     """设备管理"""
 
-    class Status(models.TextChoices):
-        AVAILABLE = 'available', '可用'
-        IN_USE = 'in_use', '使用中'
-        MAINTENANCE = 'maintenance', '维护中'
-        RETIRED = 'retired', '已报废'
+    class TypeChoices(models.TextChoices):
+        SERVER = 'server', '服务器'
+        COMPUTER = 'computer', '计算机'
+        PRINTER = 'printer', '打印机'
+        STORAGE = 'storage', '移动存储'
+        CONSUMABLE = 'consumable', '耗材'
+        OTHER = 'other', '其他'
 
-    name = models.CharField('设备名称', max_length=200)
-    code = models.CharField('设备编号', max_length=50, unique=True)
-    type = models.CharField('设备类型', max_length=50)
-    specs = models.JSONField('规格参数', blank=True, default=dict)
+    class StatusChoices(models.TextChoices):
+        NOT_ISSUED = 'not_issued', '未出库'
+        IN_USE = 'in_use', '使用中'
+        RECYCLED = 'recycled', '已回收'
+        SCRAPPED = 'scrapped', '已报废'
+        OTHER = 'other', '其他'
+
+    name = models.CharField('设备名称', max_length=200, blank=True, default='')
+    code = models.CharField('设备编号', max_length=50, blank=True, default='')
+    type = models.CharField('设备类型', max_length=30, choices=TypeChoices.choices, default=TypeChoices.OTHER)
+    specs = models.CharField('设备规格', max_length=500, blank=True, default='')
+    quantity = models.IntegerField('设备数量', default=1)
     status = models.CharField(
-        '状态', max_length=20, choices=Status.choices, default=Status.AVAILABLE,
+        '状态', max_length=20, choices=StatusChoices.choices, default=StatusChoices.NOT_ISSUED,
     )
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='equipments',
+        verbose_name='所属项目',
+    )
+    notes = models.TextField('备注说明', blank=True, default='')
     borrower = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
         null=True, blank=True, verbose_name='借用人',
     )
     borrow_date = models.DateField('借用日期', null=True, blank=True)
     return_date = models.DateField('预计归还日期', null=True, blank=True)
-    notes = models.TextField('备注', blank=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
 
@@ -41,38 +56,45 @@ class Leave(models.Model):
     """请假管理"""
 
     class Type(models.TextChoices):
-        ANNUAL = 'annual', '年假'
-        SICK = 'sick', '病假'
         PERSONAL = 'personal', '事假'
+        SICK = 'sick', '病假'
+        ANNUAL = 'annual', '年假'
         MARRIAGE = 'marriage', '婚假'
-        MATERNITY = 'maternity', '产假'
+        FUNERAL = 'funeral', '丧假'
+        PATERNITY = 'paternity', '陪产假'
+        COMPENSATORY = 'compensatory', '调休假'
+        FAMILY_VISIT = 'family_visit', '探亲假'
         OTHER = 'other', '其他'
 
     class Status(models.TextChoices):
         PENDING = 'pending', '待审批'
         APPROVED = 'approved', '已批准'
         REJECTED = 'rejected', '已驳回'
-        CANCELLED = 'cancelled', '已取消'
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        related_name='leaves', verbose_name='申请人',
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='leaves',
+        verbose_name='所属项目',
+    )
+    applicant = models.ForeignKey(
+        'organizations.UserOrganization', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='leaves',
+        verbose_name='申请人',
     )
     type = models.CharField('请假类型', max_length=20, choices=Type.choices)
-    start_date = models.DateField('开始日期')
-    end_date = models.DateField('结束日期')
-    duration_days = models.DecimalField('天数', max_digits=4, decimal_places=1)
-    reason = models.TextField('请假原因')
+    start_date = models.DateTimeField('开始时间')
+    end_date = models.DateTimeField('结束时间')
+    duration_days = models.DecimalField('天数', max_digits=4, decimal_places=1, null=True, blank=True)
     status = models.CharField(
-        '状态', max_length=20, choices=Status.choices, default=Status.PENDING,
+        '审批状态', max_length=20, choices=Status.choices, default=Status.PENDING,
     )
     approver = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        'organizations.UserOrganization', on_delete=models.SET_NULL,
         null=True, blank=True, related_name='approved_leaves',
         verbose_name='审批人',
     )
-    approve_notes = models.TextField('审批意见', blank=True)
-    cancel_date = models.DateField('销假日期', null=True, blank=True)
+    is_cancelled = models.BooleanField('销假状态', default=False)
+    notes = models.TextField('备注说明', blank=True, default='')
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
 
@@ -82,33 +104,45 @@ class Leave(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'{self.user} - {self.get_type_display()} ({self.start_date}~{self.end_date})'
+        return f'{self.applicant} - {self.get_type_display()}'
 
 
 class Timesheet(models.Model):
-    """工时登记"""
+    """工时记录"""
 
-    class Status(models.TextChoices):
-        DRAFT = 'draft', '草稿'
-        SUBMITTED = 'submitted', '已提交'
-        APPROVED = 'approved', '已批准'
+    class TypeChoices(models.TextChoices):
+        WORKDAY = 'workday', '工作日'
+        HOLIDAY = 'holiday', '节假日'
+        OVERTIME = 'overtime', '加班'
+        LEAVE = 'leave', '请假'
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        related_name='timesheets', verbose_name='人员',
-    )
-    date = models.DateField('日期')
+    class StatusChoices(models.TextChoices):
+        NORMAL = 'normal', '正常'
+        ABNORMAL = 'abnormal', '异常'
+
+    class ApprovalStatus(models.TextChoices):
+        APPROVED = 'approved', '同意'
+        RETURNED = 'returned', '退回'
+        REJECTED = 'rejected', '拒绝'
+
     project = models.ForeignKey(
-        'projects.Project', on_delete=models.CASCADE, verbose_name='项目',
+        'projects.Project', on_delete=models.CASCADE,
+        null=True, blank=True, verbose_name='项目',
     )
-    task = models.ForeignKey(
-        'plans.Task', on_delete=models.CASCADE,
-        null=True, blank=True, verbose_name='任务',
+    reporter = models.ForeignKey(
+        'organizations.UserOrganization', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='timesheets',
+        verbose_name='填报人',
     )
-    hours = models.DecimalField('工时', max_digits=4, decimal_places=1)
-    description = models.CharField('工作内容', max_length=500)
-    status = models.CharField(
-        '状态', max_length=20, choices=Status.choices, default=Status.DRAFT,
+    start_date = models.DateField('开始日期', null=True, blank=True)
+    end_date = models.DateField('结束日期', null=True, blank=True)
+    type = models.CharField('工时类型', max_length=20, choices=TypeChoices.choices, default=TypeChoices.WORKDAY)
+    status = models.CharField('工时状态', max_length=20, choices=StatusChoices.choices, default=StatusChoices.NORMAL)
+    approval_status = models.CharField('审批状态', max_length=20, choices=ApprovalStatus.choices, default=ApprovalStatus.APPROVED)
+    approver = models.ForeignKey(
+        'organizations.UserOrganization', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='approved_timesheets',
+        verbose_name='审批人',
     )
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
@@ -116,7 +150,28 @@ class Timesheet(models.Model):
     class Meta:
         verbose_name = '工时'
         verbose_name_plural = '工时'
-        ordering = ['-date']
+        ordering = ['-start_date']
 
     def __str__(self):
-        return f'{self.user} - {self.date} ({self.hours}h)'
+        return f'{self.reporter} - {self.start_date}~{self.end_date}'
+
+
+class TimesheetDetail(models.Model):
+    """工时明细"""
+    timesheet = models.ForeignKey(
+        Timesheet, on_delete=models.CASCADE,
+        related_name='details', verbose_name='工时记录',
+    )
+    date = models.DateField('日期')
+    type = models.CharField('工时类型', max_length=20, choices=Timesheet.TypeChoices.choices)
+    hours = models.DecimalField('工时', max_digits=4, decimal_places=1, default=8.0)
+    description = models.CharField('说明', max_length=200, blank=True, default='')
+
+    class Meta:
+        verbose_name = '工时明细'
+        verbose_name_plural = '工时明细'
+        ordering = ['date']
+        unique_together = ['timesheet', 'date']
+
+    def __str__(self):
+        return f'{self.date} - {self.get_type_display()}'

@@ -19,6 +19,11 @@ class Consultant(models.Model):
         ('exited', '已离场'),
     ]
 
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='consultants',
+        verbose_name='所属项目',
+    )
     name = models.CharField('姓名', max_length=50)
     gender = models.CharField('性别', max_length=10, choices=GENDER_CHOICES)
     age = models.IntegerField('年龄', null=True, blank=True)
@@ -26,6 +31,10 @@ class Consultant(models.Model):
     status = models.CharField('可用状态', max_length=30, choices=STATUS_CHOICES, default='pending_entry')
     entry_date = models.DateField('入场日期', null=True, blank=True)
     exit_date = models.DateField('离场日期', null=True, blank=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, verbose_name='关联系统用户',
+    )
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
 
     class Meta:

@@ -6,12 +6,17 @@ from apps.resources.models import Consultant
 class Department(models.Model):
     """部门/组织"""
     name = models.CharField('部门名称', max_length=100)
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='departments',
+        verbose_name='所属项目',
+    )
     parent = models.ForeignKey(
         'self', on_delete=models.CASCADE, null=True, blank=True,
         related_name='children', verbose_name='上级部门',
     )
     manager = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        'resources.Consultant', on_delete=models.SET_NULL,
         null=True, blank=True, related_name='managed_departments',
         verbose_name='部门负责人',
     )
@@ -40,6 +45,11 @@ class UserOrganization(models.Model):
         ('other', '其他'),
     ]
 
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='org_members',
+        verbose_name='所属项目',
+    )
     consultant = models.ForeignKey(
         Consultant, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='org_memberships',

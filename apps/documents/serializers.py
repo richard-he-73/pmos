@@ -9,6 +9,8 @@ class DocumentCategorySerializer(serializers.ModelSerializer):
 
 
 class DocumentSerializer(serializers.ModelSerializer):
+    uploader_name = serializers.CharField(source='uploader.real_name', read_only=True)
+
     class Meta:
         model = Document
         fields = '__all__'

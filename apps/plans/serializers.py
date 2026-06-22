@@ -37,15 +37,17 @@ class PlanGanttSerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
-    assignee_name = serializers.CharField(
+    assignee_name_display = serializers.CharField(
         source='assignee.real_name', read_only=True,
     )
+    plan_name = serializers.CharField(source='plan.name', read_only=True)
 
     class Meta:
         model = Task
         fields = [
-            'id', 'name', 'description', 'plan', 'status', 'priority',
-            'assignee', 'assignee_name', 'start_date', 'due_date',
+            'id', 'name', 'description', 'plan', 'plan_name', 'status', 'priority',
+            'assignee', 'assignee_name', 'assignee_name_display', 'stakeholders',
+            'start_date', 'due_date',
             'estimated_hours', 'actual_hours', 'parent', 'sort_order',
             'created_at', 'updated_at',
         ]

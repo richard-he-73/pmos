@@ -13,6 +13,7 @@
           <th class="text-left py-3 px-3 font-medium">年龄</th>
           <th class="text-left py-3 px-3 font-medium">职级</th>
           <th class="text-left py-3 px-3 font-medium">可用状态</th>
+          <th class="text-left py-3 px-3 font-medium">系统用户</th>
           <th class="text-left py-3 px-3 font-medium">入场日期</th>
           <th class="text-left py-3 px-3 font-medium">离场日期</th>
           <th class="text-right py-3 px-3 font-medium w-24">操作</th>
@@ -26,6 +27,10 @@
             </td>
             <td class="py-3 px-3">
               <span class="px-2 py-0.5 rounded text-xs font-medium" :class="statusClass(r.status)">{{ statusText(r.status) }}</span>
+            </td>
+            <td class="py-3 px-3 text-xs">
+              <span v-if="r.user_name" class="text-green-600 dark:text-green-400">{{ r.user_name }}</span>
+              <span v-else class="text-slate-400">未关联</span>
             </td>
             <td class="py-3 px-3 text-slate-500 text-xs">{{ r.entry_date || '—' }}</td>
             <td class="py-3 px-3 text-slate-500 text-xs">{{ r.exit_date || '—' }}</td>
@@ -42,65 +47,77 @@
       </div>
     </div>
 
-    <!-- 弹窗 -->
+    <!-- 资源编辑弹窗 -->
     <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showForm=false">
       <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
         <h2 class="text-lg font-bold mb-4">{{ editing ? '编辑资源' : '新建资源' }}</h2>
         <div class="space-y-3">
-          <!-- 姓名 -->
-          <div>
-            <label class="block text-sm font-medium mb-1">姓名 *</label>
-            <input v-model="form.name" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <!-- 性别 -->
-          <div>
-            <label class="block text-sm font-medium mb-1">性别 *</label>
+          <div><label class="block text-sm font-medium mb-1">姓名 *</label>
+            <input v-model="form.name" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" /></div>
+          <div><label class="block text-sm font-medium mb-1">性别 *</label>
             <select v-model="form.gender" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
-              <option value="">请选择</option>
-              <option value="male">男</option>
-              <option value="female">女</option>
-            </select>
-          </div>
-          <!-- 年龄 -->
-          <div>
-            <label class="block text-sm font-medium mb-1">年龄</label>
-            <input v-model="form.age" type="number" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <!-- 职级 -->
-          <div>
-            <label class="block text-sm font-medium mb-1">职级 *</label>
+              <option value="">请选择</option><option value="male">男</option><option value="female">女</option>
+            </select></div>
+          <div><label class="block text-sm font-medium mb-1">年龄</label>
+            <input v-model="form.age" type="number" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" /></div>
+          <div><label class="block text-sm font-medium mb-1">职级 *</label>
             <select v-model="form.rank" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
-              <option value="director">咨询总监</option>
-              <option value="senior">高级咨询师</option>
-              <option value="consultant">咨询师</option>
-              <option value="assistant">咨询助理</option>
-              <option value="other">其他</option>
-            </select>
-          </div>
-          <!-- 可用状态 -->
-          <div>
-            <label class="block text-sm font-medium mb-1">可用状态 *</label>
+              <option value="director">咨询总监</option><option value="senior">高级咨询师</option><option value="consultant">咨询师</option><option value="assistant">咨询助理</option><option value="other">其他</option>
+            </select></div>
+          <div><label class="block text-sm font-medium mb-1">可用状态 *</label>
             <select v-model="form.status" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
-              <option value="pending_entry">待入场</option>
-              <option value="entered">已入场</option>
-              <option value="pending_exit">待离场</option>
-              <option value="exited">已离场</option>
-            </select>
-          </div>
-          <!-- 入场日期 -->
-          <div>
-            <label class="block text-sm font-medium mb-1">入场日期</label>
-            <input v-model="form.entry_date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <!-- 离场日期 -->
-          <div>
-            <label class="block text-sm font-medium mb-1">离场日期</label>
-            <input v-model="form.exit_date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
+              <option value="pending_entry">待入场</option><option value="entered">已入场</option><option value="pending_exit">待离场</option><option value="exited">已离场</option>
+            </select></div>
+          <div><label class="block text-sm font-medium mb-1">入场日期</label>
+            <SmartDateInput v-model="form.entry_date" /></div>
+          <div><label class="block text-sm font-medium mb-1">离场日期</label>
+            <SmartDateInput v-model="form.exit_date" /></div>
         </div>
         <div class="flex justify-end gap-2 mt-6">
           <button @click="showForm=false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">取消</button>
           <button @click="saveItem" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 系统用户确认弹窗 -->
+    <div v-if="showUserConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+        <h2 class="text-lg font-bold mb-4">系统用户确认</h2>
+        <div v-if="existingUsers.length > 0" class="mb-4">
+          <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">已有同名系统用户，请确认是否关联：</p>
+          <div v-for="u in existingUsers" :key="u.id" class="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 mb-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50"
+            :class="selectedUserId === u.id ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''"
+            @click="selectedUserId = u.id">
+            <input type="radio" :value="u.id" v-model="selectedUserId" class="text-blue-600" />
+            <div>
+              <span class="text-sm font-medium">{{ u.real_name }}</span>
+              <span class="text-xs text-slate-400 ml-2">@{{ u.username }}</span>
+              <span class="text-xs text-slate-400 ml-2">{{ u.is_active ? '已激活' : '已禁用' }}</span>
+            </div>
+          </div>
+          <button @click="createNewUser = true; selectedUserId = null" class="text-sm text-blue-600 hover:underline mt-1"
+            :class="createNewUser ? 'font-medium' : ''">
+            或为此资源创建新的系统用户
+          </button>
+        </div>
+        <div v-else class="mb-4">
+          <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">未找到同名系统用户，是否同步创建系统用户？</p>
+          <div class="flex items-center gap-2">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" :value="true" v-model="createNewUser" class="text-blue-600" />
+              <span class="text-sm">同步创建</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer ml-4">
+              <input type="radio" :value="false" v-model="createNewUser" class="text-blue-600" />
+              <span class="text-sm">仅创建资源</span>
+            </label>
+          </div>
+          <p v-if="createNewUser" class="text-xs text-slate-400 mt-2">将自动生成拼音用户名，初始密码 Pmos@2026</p>
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+          <button @click="showUserConfirm = false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">取消</button>
+          <button @click="confirmSave" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">确认</button>
         </div>
       </div>
     </div>
@@ -112,31 +129,95 @@ import { ref, onMounted } from 'vue'
 import request from '@/api/request'
 import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
+import { useProjectStore } from '@/stores/project'
+import SmartDateInput from '@/components/SmartDateInput.vue'
 const toast = useToastStore()
+const projectStore = useProjectStore()
 const confirm = useConfirmStore()
 
 const items = ref<any[]>([])
 const showForm = ref(false)
 const editing = ref<any>(null)
 const form = ref<any>({})
+const showUserConfirm = ref(false)
+const existingUsers = ref<any[]>([])
+const createNewUser = ref(true)
+const selectedUserId = ref<number | null>(null)
+const pendingPayload = ref<any>(null)
 
 async function load() {
-  try { const r = await request.get('/consultants/'); items.value = (r.data.results ?? r.data) as any[] } catch { items.value = [] }
+  try { const r = await request.get('/consultants/', { params: { project: projectStore.activeProjectId || undefined } }); items.value = (r.data.results ?? r.data) as any[] } catch { items.value = [] }
 }
 
 function openForm() { editing.value = null; form.value = { rank: 'consultant', status: 'pending_entry' }; showForm.value = true }
 function editItem(r: any) { editing.value = r; form.value = { ...r }; showForm.value = true }
 
-async function saveItem() {
-  if (!form.value.name || !form.value.gender) { toast.show('请填写姓名和性别', 'error'); return }
-  const payload = { ...form.value }
+function preparePayload() {
+  const payload = { ...form.value, project: projectStore.activeProjectId }
   if (payload.age === '' || payload.age === null) payload.age = null
   if (!payload.entry_date) payload.entry_date = null
   if (!payload.exit_date) payload.exit_date = null
+  // 清理编辑时带入的后端字段
+  delete payload.created_at
+  delete payload.user
+  delete payload.user_name
+  return payload
+}
+
+async function saveItem() {
+  if (!form.value.name || !form.value.gender) { toast.show('请填写姓名和性别', 'error'); return }
+
+  // 编辑模式直接保存（不触发用户同步）
+  if (editing.value) {
+    const payload = preparePayload()
+    try {
+      await request.patch('/consultants/' + editing.value.id + '/', payload)
+      showForm.value = false; load()
+    } catch (e: any) {
+      const msg = e?.response?.data ? JSON.stringify(e.response.data) : '保存失败'
+      toast.show(msg, 'error')
+    }
+    return
+  }
+
+  // 新建模式：先检查是否有同名系统用户
+  pendingPayload.value = preparePayload()
   try {
-    if (editing.value) { await request.patch('/consultants/' + editing.value.id + '/', payload) }
-    else { await request.post('/consultants/', payload) }
+    const r = await request.get('/consultants/check_user_by_name/', { params: { name: form.value.name } })
+    existingUsers.value = r.data.users || []
+    selectedUserId.value = existingUsers.value.length > 0 ? existingUsers.value[0].id : null
+    createNewUser.value = existingUsers.value.length === 0  // 没有同名用户时默认创建
+    showUserConfirm.value = true
+  } catch {
+    // 检查失败时直接保存
+    doSave(pendingPayload.value)
+  }
+}
+
+async function confirmSave() {
+  const payload = { ...pendingPayload.value }
+
+  if (selectedUserId.value) {
+    // 关联已有系统用户
+    payload.create_user = true
+    payload.linked_user_id = selectedUserId.value
+  } else if (createNewUser.value) {
+    // 同步创建系统用户
+    payload.create_user = true
+  } else {
+    // 仅创建资源
+    payload.create_user = false
+  }
+
+  showUserConfirm.value = false
+  await doSave(payload)
+}
+
+async function doSave(payload: any) {
+  try {
+    await request.post('/consultants/create_with_user/', payload)
     showForm.value = false; load()
+    toast.show('资源创建成功', 'success')
   } catch (e: any) {
     const msg = e?.response?.data ? JSON.stringify(e.response.data) : '保存失败'
     toast.show(msg, 'error')

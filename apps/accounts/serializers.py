@@ -3,11 +3,14 @@ from .models import User, Role
 
 
 class UserSerializer(serializers.ModelSerializer):
+    active_project_name = serializers.CharField(source='active_project.name', read_only=True, allow_null=True)
+
     class Meta:
         model = User
         fields = ['id', 'username', 'real_name', 'email', 'phone',
                   'position', 'department', 'avatar', 'is_active',
-                  'is_superuser', 'date_joined', 'last_login']
+                  'is_superuser', 'date_joined', 'last_login',
+                  'active_project', 'active_project_name']
         read_only_fields = ['date_joined', 'last_login']
 
 

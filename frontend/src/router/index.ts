@@ -41,11 +41,14 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to, _from) => {
+router.beforeEach(async (to, _from) => {
   const authStore = useAuthStore()
   if (to.meta.requiresAuth === false) return true
   if (!authStore.isLoggedIn && !authStore.token) return '/login'
-  if (!authStore.currentUser && authStore.token) { authStore.fetchCurrentUser() }
+  // 确保用户信息（含当前项目）加载完成后再渲染页面
+  if (!authStore.currentUser && authStore.token) {
+    await authStore.fetchCurrentUser()
+  }
   return true
 })
 

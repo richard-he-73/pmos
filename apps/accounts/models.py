@@ -9,6 +9,10 @@ class User(AbstractUser):
     avatar = models.ImageField('头像', upload_to='avatars/', blank=True)
     position = models.CharField('职位', max_length=100, blank=True)
     department = models.CharField('部门', max_length=100, blank=True)
+    active_project = models.ForeignKey(
+        'projects.Project', on_delete=models.SET_NULL,
+        null=True, blank=True, verbose_name='当前项目',
+    )
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
 

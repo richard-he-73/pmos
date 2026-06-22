@@ -56,7 +56,9 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useProjectStore } from '@/stores/project'
 import { createBug } from '@/api/modules/testing'
+const projectStore = useProjectStore()
 const tab = ref('bugs')
 const items = ref<any[]>([])
 const showBugForm = ref(false)
@@ -72,7 +74,7 @@ const cols = computed(() => views[tab.value]?.cols || [])
 async function load() {
   const v = views[tab.value]; if (!v) return
   try {
-    const r = await fetch('/api/v1/' + v.e + '/')
+    const r = await fetch('/api/v1/' + v.e + '/?project=' + (projectStore.activeProjectId || ''))
     const d = await r.json()
     items.value = d.results ?? []
   } catch { items.value = [] }

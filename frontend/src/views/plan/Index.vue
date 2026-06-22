@@ -121,7 +121,7 @@
               <label class="block text-sm font-medium mb-1">责任人</label>
               <select v-model="form.assignee_name" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
                 <option value="">不指定</option>
-                <option v-for="m in orgMembers" :key="m.id" :value="m.name">{{ m.name }} ({{ m.dept_name || '' }})</option>
+                <option v-for="m in orgMembers" :key="m.id" :value="m.name">{{ memberLabel(m) }}</option>
               </select>
             </div>
             <div>
@@ -132,11 +132,11 @@
           <div class="grid grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-medium mb-1">计划开始日期 *</label>
-              <input v-model="form.start_date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+              <SmartDateInput v-model="form.start_date" />
             </div>
             <div>
               <label class="block text-sm font-medium mb-1">计划结束日期 *</label>
-              <input v-model="form.end_date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+              <SmartDateInput v-model="form.end_date" />
             </div>
           </div>
           <div class="grid grid-cols-2 gap-6">
@@ -232,8 +232,27 @@ import { ref, computed, watch, onMounted } from 'vue'
 import request from '@/api/request'
 import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
+import SmartDateInput from '@/components/SmartDateInput.vue'
 const toast = useToastStore()
 const confirmStore = useConfirmStore()
+const roleLabel: Record<string, string> = {
+  project_director: '项目总监',
+  project_manager: '项目经理',
+  consulting_expert: '咨询专家',
+  consulting_advisor: '咨询顾问',
+  consulting_assistant: '咨询助理',
+  other: '其他',
+}
+function memberLabel(m: any): string {
+  const name = m.real_name || m.name || ''
+  const parts = []
+  if (m.dept_name) parts.push(m.dept_name)
+  if (m.project_role && roleLabel[m.project_role]) parts.push(roleLabel[m.project_role])
+  const suffix = parts.length ? `（${parts.join('-')}）` : ''
+  return `${name}${suffix}`
+}
+
+
 
 const planTab = ref('milestone')
 const planTabs = [

@@ -58,10 +58,13 @@ class Task(models.Model):
     """任务"""
 
     class Status(models.TextChoices):
-        TODO = 'todo', '待办'
-        IN_PROGRESS = 'in_progress', '进行中'
-        DONE = 'done', '已完成'
-        CLOSED = 'closed', '已关闭'
+        NOT_STARTED = 'not_started', '未开始'
+        IN_PROGRESS = 'in_progress', '执行中'
+        SUSPENDED = 'suspended', '已挂起'
+        DELAYED = 'delayed', '已延期'
+        COMPLETED_LATE = 'completed_late', '延期完成'
+        COMPLETED_ON_TIME = 'completed_on_time', '按期完成'
+        COMPLETED_EARLY = 'completed_early', '提前完成'
 
     class Priority(models.TextChoices):
         URGENT = 'urgent', '紧急'
@@ -76,7 +79,7 @@ class Task(models.Model):
         related_name='tasks', verbose_name='所属计划',
     )
     status = models.CharField(
-        '状态', max_length=20, choices=Status.choices, default=Status.TODO,
+        '状态', max_length=20, choices=Status.choices, default=Status.NOT_STARTED,
     )
     priority = models.CharField(
         '优先级', max_length=20, choices=Priority.choices,
@@ -86,6 +89,8 @@ class Task(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='tasks', verbose_name='负责人',
     )
+    assignee_name = models.CharField('负责人姓名', max_length=50, blank=True, default='')
+    stakeholders = models.TextField('干系人', blank=True, help_text='多个干系人用逗号分隔')
     start_date = models.DateField('开始日期', null=True, blank=True)
     due_date = models.DateField('截止日期', null=True, blank=True)
     estimated_hours = models.DecimalField(

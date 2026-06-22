@@ -4,6 +4,11 @@ from django.conf import settings
 
 class Notification(models.Model):
     """消息通知"""
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='notifications',
+        verbose_name='所属项目',
+    )
     recipient = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
         related_name='notifications', verbose_name='接收人',

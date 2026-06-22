@@ -5,6 +5,7 @@ from . import views
 router = DefaultRouter()
 router.register(r'equipments', views.EquipmentViewSet)
 router.register(r'leaves', views.LeaveViewSet)
+router.register(r'timesheet-details', views.TimesheetDetailViewSet)
 router.register(r'timesheets', views.TimesheetViewSet)
 
 urlpatterns = [

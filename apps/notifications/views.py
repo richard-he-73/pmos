@@ -2,6 +2,7 @@ from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils.timezone import now
+from django.db.models import Q
 from .models import Notification, NotificationTemplate
 from .serializers import NotificationSerializer, NotificationTemplateSerializer
 
@@ -11,7 +12,11 @@ class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.none()  # Default empty, overridden by get_queryset
 
     def get_queryset(self):
-        return Notification.objects.filter(recipient=self.request.user)
+        qs = Notification.objects.filter(recipient=self.request.user)
+        project_id = self.request.query_params.get('project')
+        if project_id:
+            qs = qs.filter(Q(project_id=project_id) | Q(project_id__isnull=True))
+        return qs
 
     def perform_create(self, serializer):
         serializer.save(recipient=self.request.user)

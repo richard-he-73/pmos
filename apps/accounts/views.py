@@ -84,6 +84,24 @@ class UserViewSet(viewsets.ModelViewSet):
         user.save()
         return Response({'detail': '密码已重置'})
 
+    @action(detail=False, methods=['get'])
+    def generate_username(self, request):
+        """根据中文姓名生成拼音用户名"""
+        name = request.query_params.get('name', '').strip()
+        if not name:
+            return Response({'error': '请提供姓名'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            from pypinyin import lazy_pinyin
+            pinyin = ''.join(lazy_pinyin(name)).lower().replace(' ', '')
+            username = pinyin
+            suffix = 2
+            while User.objects.filter(username=username).exists():
+                username = f'{pinyin}{suffix}'
+                suffix += 1
+            return Response({'username': username, 'email': f'{username}@pmos.com'})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()

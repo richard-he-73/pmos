@@ -28,12 +28,14 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useProjectStore } from '@/stores/project'
 const items = ref<any[]>([])
+const projectStore = useProjectStore()
 const loading = ref(true)
 const columns: { k: string; t: string }[] = []
 onMounted(async () => {
   try {
-    const r = await fetch('/api/v1/statistics/project_overview/')
+    const r = await fetch('/api/v1/statistics/project_overview/?project=' + (projectStore.activeProjectId || ''))
     const d = await r.json()
     items.value = d.results ?? []
   } catch {}

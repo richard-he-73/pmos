@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { login, getCurrentUser } from '@/api/modules/auth'
+import { useProjectStore } from '@/stores/project'
 import type { LoginData, UserInfo } from '@/api/modules/auth'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -23,6 +24,9 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await getCurrentUser()
       currentUser.value = res.data
+      // 从后端加载当前项目
+      const projectStore = useProjectStore()
+      projectStore.loadFromUser(res.data)
     } catch {
       logout()
     }

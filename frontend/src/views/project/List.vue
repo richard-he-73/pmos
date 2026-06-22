@@ -32,6 +32,8 @@
               <td class="py-3 px-3 hidden md:table-cell text-slate-500">{{ p.owner_name || '—' }}</td>
               <td class="py-3 px-3 hidden lg:table-cell text-slate-400 text-xs">{{ p.start_date || '—' }} ~ {{ p.end_date || '—' }}</td>
               <td class="py-3 px-3 text-right whitespace-nowrap">
+                <button v-if="activeProjectId===p.id" class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 cursor-default">当前项目</button>
+                <button v-else @click="setAsActive(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400">设为当前</button>
                 <button @click="openDetail(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
                 <button @click="openEdit(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
                 <button @click="handleDelete(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
@@ -71,7 +73,7 @@
             </select>
           </div>
           <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">日期范围</label>
-            <div class="flex gap-2"><input v-model="form.start_date" type="date" class="flex-1 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /><input v-model="form.end_date" type="date" class="flex-1 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
+            <div class="flex gap-2"><input v-model="form.start_date" type="date" @focus="e.target.showPicker?.()" class="flex-1 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /><input v-model="form.end_date" type="date" @focus="e.target.showPicker?.()" class="flex-1 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
           </div>
           <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">项目负责人</label>
             <select v-model="form.owner" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
@@ -163,14 +165,17 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToastStore } from '@/stores/toast'
 import { getProjects, createProject, updateProject, deleteProject } from '@/api/modules/projects'
 import type { Project } from '@/api/modules/projects'
+import { useProjectStore } from '@/stores/project'
 
 const router = useRouter()
 const toast = useToastStore()
+const projectStore = useProjectStore()
+const activeProjectId = computed(() => projectStore.activeProjectId)
 const items = ref<Project[]>([])
 const loading = ref(true)
 const search = ref('')
@@ -241,6 +246,11 @@ async function handleSave() {
   }
   finally { saving.value = false }
 }
+async function setAsActive(p: Project) {
+  projectStore.setActiveProject(p.id, p.name)
+  toast.show('已切换当前项目为: ' + p.name, 'success')
+}
+
 async function handleDelete(p: Project) {
   // confirm removed, deletion proceeds directly
   try { await deleteProject(p.id); fetchData() } catch {}

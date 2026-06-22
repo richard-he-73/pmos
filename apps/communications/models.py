@@ -5,6 +5,13 @@ from django.conf import settings
 class CommType(models.Model):
     """沟通类型"""
     name = models.CharField('类型名称', max_length=50)
+    description = models.TextField('类型描述', blank=True, default='')
+    is_active = models.BooleanField('是否启用', default=True)
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.CASCADE,
+        null=True, blank=True, related_name='comm_types',
+        verbose_name='所属项目',
+    )
     icon = models.CharField('图标', max_length=50, blank=True)
     sort_order = models.IntegerField('排序', default=0)
 
@@ -28,12 +35,13 @@ class CommRecord(models.Model):
     )
     subject = models.CharField('主题', max_length=200)
     content = models.TextField('内容', blank=True)
+    conclusion = models.TextField('结论', blank=True, default='')
     initiator = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        'organizations.UserOrganization', on_delete=models.CASCADE,
         related_name='initiated_comms', verbose_name='发起人',
     )
     participants = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, blank=True,
+        'organizations.UserOrganization', blank=True,
         related_name='participated_comms', verbose_name='参与人',
     )
     comm_date = models.DateTimeField('沟通时间')

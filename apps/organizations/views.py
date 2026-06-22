@@ -10,6 +10,13 @@ class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
 
+    def get_queryset(self):
+        qs = Department.objects.all()
+        project_id = self.request.query_params.get('project')
+        if project_id:
+            qs = qs.filter(project_id=project_id)
+        return qs
+
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         # 先序遍历：父→子→孙紧随其后，同级按拼音排序
@@ -48,6 +55,11 @@ class UserOrganizationViewSet(viewsets.ModelViewSet):
     serializer_class = UserOrganizationSerializer
 
     def get_queryset(self):
+        qs = UserOrganization.objects.all()
+        project_id = self.request.query_params.get('project')
+        if project_id:
+            qs = qs.filter(project_id=project_id)
+
         # 部门层级排序（与 DepartmentViewSet 先序遍历一致）
         all_depts = list(Department.objects.all())
         children = {}
@@ -84,7 +96,7 @@ class UserOrganizationViewSet(viewsets.ModelViewSet):
             default=Value(99),
             output_field=IntegerField(),
         )
-        return UserOrganization.objects.all().annotate(
+        return qs.annotate(
             dept_order=dept_order,
             role_order=role_order,
         ).order_by(

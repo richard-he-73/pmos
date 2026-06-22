@@ -10,6 +10,6 @@ class DocumentCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ['title', 'category', 'project', 'creator', 'status', 'version']
-    list_filter = ['status']
+    list_display = ['title', 'doc_type', 'project', 'uploader', 'archive_status', 'version']
+    list_filter = ['doc_type', 'archive_status']
     search_fields = ['title']

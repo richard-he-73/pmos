@@ -4,7 +4,7 @@ from .models import Department, UserOrganization
 
 class DepartmentSerializer(serializers.ModelSerializer):
     parent_name = serializers.CharField(source='parent.name', read_only=True, allow_null=True)
-    manager_name = serializers.CharField(source='manager.real_name', read_only=True, allow_null=True)
+    manager_name = serializers.CharField(source='manager.name', read_only=True, allow_null=True)
 
     class Meta:
         model = Department

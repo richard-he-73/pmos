@@ -20,8 +20,9 @@ def notify_user(recipient_id, type, related_obj=None, extra=''):
     title = _build_title(type, related_obj, extra)
     related_type = related_obj._meta.model_name if related_obj else ''
     related_id = related_obj.id if related_obj else None
+    project_id = _extract_project_id(related_obj)
     content = _build_content(type, related_obj)
-    _dispatch(recipient_id, type, title, content, related_type, related_id)
+    _dispatch(recipient_id, type, title, content, related_type, related_id, project_id)
 
 
 def notify_users(user_ids, type, related_obj=None, extra=''):
@@ -31,11 +32,28 @@ def notify_users(user_ids, type, related_obj=None, extra=''):
     title = _build_title(type, related_obj, extra)
     related_type = related_obj._meta.model_name if related_obj else ''
     related_id = related_obj.id if related_obj else None
+    project_id = _extract_project_id(related_obj)
     content = _build_content(type, related_obj)
-    _dispatch_bulk(user_ids, type, title, content, related_type, related_id)
+    _dispatch_bulk(user_ids, type, title, content, related_type, related_id, project_id)
 
 
-def _dispatch(recipient_id, type, title, content, related_type, related_id):
+def _extract_project_id(obj):
+    """从关联对象中提取项目ID"""
+    if obj is None:
+        return None
+    # 对象本身是 Project
+    if hasattr(obj, '_meta') and obj._meta.model_name == 'project':
+        return obj.id
+    # 对象有 project_id 属性
+    if hasattr(obj, 'project_id') and obj.project_id is not None:
+        return obj.project_id
+    # 对象有 project 外键
+    if hasattr(obj, 'project') and obj.project is not None:
+        return obj.project_id if hasattr(obj, 'project_id') else (obj.project.id if obj.project else None)
+    return None
+
+
+def _dispatch(recipient_id, type, title, content, related_type, related_id, project_id=None):
     """同步发送通知（开发模式用，生产环境可改为 Celery）"""
     from .models import Notification
     from django.contrib.auth import get_user_model
@@ -45,12 +63,13 @@ def _dispatch(recipient_id, type, title, content, related_type, related_id):
             recipient=User.objects.get(id=recipient_id),
             type=type, title=title, content=content,
             related_type=related_type, related_id=related_id,
+            project_id=project_id,
         )
     except Exception:
         pass
 
 
-def _dispatch_bulk(user_ids, type, title, content, related_type, related_id):
+def _dispatch_bulk(user_ids, type, title, content, related_type, related_id, project_id=None):
     """批量同步发送"""
     from .models import Notification
     from django.contrib.auth import get_user_model
@@ -60,6 +79,7 @@ def _dispatch_bulk(user_ids, type, title, content, related_type, related_id):
         Notification(
             recipient=user, type=type, title=title, content=content,
             related_type=related_type, related_id=related_id,
+            project_id=project_id,
         )
         for user in users
     ]

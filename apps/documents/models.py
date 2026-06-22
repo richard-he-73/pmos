@@ -27,37 +27,42 @@ class DocumentCategory(models.Model):
 class Document(models.Model):
     """文档"""
 
-    class Status(models.TextChoices):
-        DRAFT = 'draft', '草稿'
-        PUBLISHED = 'published', '已发布'
+    class DocType(models.TextChoices):
+        REPORT = 'report', '报告'
+        PLAN = 'plan', '方案'
+        REQUIREMENT = 'requirement', '需求'
+        MINUTES = 'minutes', '纪要'
+        OTHER = 'other', '其他'
+
+    class ArchiveStatus(models.TextChoices):
+        UNARCHIVED = 'unarchived', '未归档'
         ARCHIVED = 'archived', '已归档'
 
-    title = models.CharField('标题', max_length=200)
-    content = models.TextField('内容', blank=True)
-    category = models.ForeignKey(
-        DocumentCategory, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='documents', verbose_name='分类',
-    )
     project = models.ForeignKey(
         'projects.Project', on_delete=models.CASCADE,
-        related_name='documents', verbose_name='所属项目',
+        null=True, blank=True, related_name='documents', verbose_name='所属项目',
     )
-    creator = models.ForeignKey(
+    doc_type = models.CharField('文档类型', max_length=20, choices=DocType.choices, default=DocType.OTHER)
+    title = models.CharField('文档标题', max_length=200, blank=True, default='')
+    version = models.CharField('文档版本', max_length=50, blank=True, default='')
+    file_format = models.CharField('文档格式', max_length=20, blank=True, default='')
+    file_size = models.CharField('文档大小', max_length=50, blank=True, default='')
+    upload_time = models.DateTimeField('上传时间', null=True, blank=True)
+    uploader = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, verbose_name='创建人',
+        null=True, blank=True, verbose_name='上传人',
     )
-    version = models.IntegerField('版本', default=1)
-    status = models.CharField(
-        '状态', max_length=20, choices=Status.choices, default=Status.DRAFT,
+    archive_status = models.CharField(
+        '归档状态', max_length=20, choices=ArchiveStatus.choices, default=ArchiveStatus.UNARCHIVED,
     )
-    file = models.FileField('附件', upload_to='documents/', blank=True)
+    file = models.FileField('文件', upload_to='documents/', blank=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
-    updated_at = models.DateTimeField('更新时间', auto_now=True)
+    updated_at = models.DateTimeField('更新时间', null=True, blank=True)
 
     class Meta:
         verbose_name = '文档'
         verbose_name_plural = '文档'
-        ordering = ['-updated_at']
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.title

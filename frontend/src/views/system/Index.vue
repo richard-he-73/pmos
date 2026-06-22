@@ -52,7 +52,7 @@
         <div class="space-y-3">
           <div class="grid grid-cols-2 gap-3">
             <div><label class="block text-sm font-medium mb-1">用户名 *</label><input v-model="form.username" :disabled="editing" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50" /></div>
-            <div><label class="block text-sm font-medium mb-1">姓名 *</label><input v-model="form.real_name" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" /></div>
+            <div><label class="block text-sm font-medium mb-1">姓名 *</label><input v-model="form.real_name" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" @input="onNameInput" /></div>
           </div>
           <div><label class="block text-sm font-medium mb-1">邮箱</label><input v-model="form.email" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" /></div>
           <div class="grid grid-cols-2 gap-3">
@@ -78,9 +78,6 @@
       </div>
     </div>
 
-    <!-- 修改密码弹窗 -->
-    <PasswordDialog ref="pwdDialog" @done="fetchData" />
-  
     <!-- 密码弹窗 -->
     <div v-if="pwdDialog.show" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="pwdDialog.show=false">
       <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
@@ -162,6 +159,23 @@ function openCreate() {
   form.value = { username: '', real_name: '', email: '', department: '', position: '', user_type: 'user', password: '', password2: '' }
   formError.value = ''
   showForm.value = true
+}
+
+function onNameInput() {
+  if (editing.value) return
+  const name = form.value.real_name?.trim()
+  if (!name) return
+  clearTimeout((window as any)._nameTimer)
+  ;(window as any)._nameTimer = setTimeout(async () => {
+    try {
+      const r = await api('/api/v1/users/generate_username/?name=' + encodeURIComponent(name))
+      const d = await r.json()
+      if (d.username) {
+        if (!form.value.username) form.value.username = d.username
+        if (!form.value.email) form.value.email = d.email || d.username + '@pmos.com'
+      }
+    } catch {}
+  }, 500)
 }
 
 function editItem(r: any) {

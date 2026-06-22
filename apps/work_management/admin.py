@@ -11,12 +11,12 @@ class EquipmentAdmin(admin.ModelAdmin):
 
 @admin.register(Leave)
 class LeaveAdmin(admin.ModelAdmin):
-    list_display = ['user', 'type', 'start_date', 'end_date', 'duration_days', 'status']
+    list_display = ['applicant', 'type', 'start_date', 'end_date', 'duration_days', 'status']
     list_filter = ['type', 'status']
-    search_fields = ['user__real_name']
+    search_fields = ['applicant__name']
 
 
 @admin.register(Timesheet)
 class TimesheetAdmin(admin.ModelAdmin):
-    list_display = ['user', 'date', 'project', 'hours', 'status']
-    list_filter = ['status', 'date']
+    list_display = ['reporter', 'start_date', 'end_date', 'type', 'approval_status']
+    list_filter = ['type', 'approval_status']

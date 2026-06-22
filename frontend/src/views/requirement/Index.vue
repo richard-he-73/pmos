@@ -31,13 +31,14 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
+import { useProjectStore } from '@/stores/project'
 
 const api = async (url: string, opts: any = {}): Promise<Response> => {
   const token = sessionStorage.getItem('pmos-token')
   const headers: Record<string,string> = { "Content-Type": "application/json" }
   if (token) headers['Authorization'] = 'Bearer ' + token
   if (opts.headers) Object.assign(headers, opts.headers)
-  return fetch(url, { ...opts, headers })
+  return fetch(url + (url.includes('?') ? '&' : '?') + 'project=' + (projectStore.activeProjectId || ''), { ...opts, headers })
 }
 
 const tab = ref('biz')
