@@ -13,15 +13,7 @@
             <tr v-for="row in items" :key="row.id" class="border-b border-slate-100 dark:border-slate-700/50">
               <td v-for="c in columns" :key="c.k" class="py-3 px-3">{{ row[c.k] }}</td>
             </tr>
-          </tbody>
-        </table>
-
-<div v-if="items.length===0" class="flex flex-col items-center justify-center py-16 text-slate-400">
-    <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-    </svg>
-    <span class="text-sm">暂无数据</span>
-  </div>
+          </tbody></table>
       </div>
     </div>
   </div>

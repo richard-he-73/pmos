@@ -7,8 +7,8 @@
         @click="tab=t.k">{{ t.l }}</button>
     </div>
 
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-      <div v-if="tab==='users'" class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap gap-2 items-center justify-between">
+    <div v-if="tab==='users'" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap gap-2 items-center justify-between">
         <input v-model="search" placeholder="搜索用户名/姓名..." class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none w-60" @input="load" />
         <button @click="openCreate" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新建用户</button>
       </div>
@@ -36,12 +36,7 @@
                 </div>
               </td>
             </tr>
-          </tbody>
-        </table>
-        <div v-if="items.length===0" class="flex flex-col items-center justify-center py-16 text-slate-400">
-          <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-          <span class="text-sm">暂无数据</span>
-        </div>
+          </tbody></table>
       </div>
     </div>
 
@@ -58,11 +53,7 @@
       </div>
 
       <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div v-if="backupItems.length === 0" class="flex flex-col items-center justify-center py-16 text-slate-400">
-          <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
-          <span class="text-sm">暂无备份，点击右上角创建</span>
-        </div>
-        <div v-else class="overflow-x-auto">
+        <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
@@ -74,6 +65,9 @@
               </tr>
             </thead>
             <tbody>
+              <tr v-if="backupItems.length === 0">
+                <td colspan="5" class="py-16 text-center text-slate-400 text-sm">暂无备份，点击右上角创建</td>
+              </tr>
               <tr v-for="b in backupItems" :key="b.filename" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
                 <td class="py-3 px-3 font-medium whitespace-nowrap">{{ b.filename }}</td>
                 <td class="py-3 px-3 whitespace-nowrap text-slate-500">{{ formatSize(b.file_size) }}</td>
