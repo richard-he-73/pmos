@@ -2,7 +2,7 @@
   <div>
     <h1 class="text-xl font-bold mb-4">系统管理</h1>
     <div class="flex gap-2 mb-4">
-      <button v-for="t in tabs" :key="t.k" class="px-3 py-1.5 rounded-lg text-sm transition"
+      <button v-for="t in tabsFiltered()" :key="t.k" class="px-3 py-1.5 rounded-lg text-sm transition"
         :class="tab===t.k?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200'"
         @click="tab=t.k">{{ t.l }}</button>
     </div>
@@ -42,6 +42,21 @@
           <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
           <span class="text-sm">暂无数据</span>
         </div>
+      </div>
+    </div>
+
+    <!-- 数据备份 -->
+    <div v-if="tab==='backup'" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div class="p-8 flex flex-col items-center gap-6">
+        <svg class="w-20 h-20 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+        </svg>
+        <p class="text-sm text-slate-500 dark:text-slate-400 text-center max-w-md">导出系统全部数据为 JSON 格式的备份文件，包含所有模块的配置和业务数据。</p>
+        <button @click="exportBackup" :disabled="backupLoading"
+          class="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition disabled:opacity-50">
+          {{ backupLoading ? '导出中...' : '导出数据备份' }}
+        </button>
+        <p v-if="backupMsg" class="text-sm" :class="backupMsg.includes('失败') ? 'text-red-500' : 'text-green-600'">{{ backupMsg }}</p>
       </div>
     </div>
 
@@ -122,6 +137,8 @@ const saving = ref(false)
 const formError = ref('')
 const currentUserId = ref<number|null>(null)
 const isAdmin = ref(false)
+const backupLoading = ref(false)
+const backupMsg = ref('')
 
 const form = ref<Record<string,any>>({})
 
@@ -131,9 +148,7 @@ const tabs = [
     { k: 'email', t: '邮箱' }, { k: 'department', t: '部门' },
     { k: 'position', t: '职位' }, { k: 'is_superuser', t: '类型' },
   ]},
-  { k: 'roles', l: '角色管理', e: 'roles', cols: [
-    { k: 'name', t: '角色' }, { k: 'code', t: '编码' }, { k: 'is_system', t: '内置' },
-  ]},
+  { k: 'backup', l: '数据备份', e: '', cols: [] },
 ]
 
 const cur = computed(() => tabs.find(t => t.k === tab.value))
@@ -211,6 +226,30 @@ async function saveItem() {
 async function deleteItem(id: number) {
   if (!(await confirm.show('确认删除此用户？'))) return
   try { await api('/api/v1/users/' + id + '/', { method: 'DELETE' }); load() } catch {}
+}
+
+async function exportBackup() {
+  backupLoading.value = true
+  backupMsg.value = ''
+  try {
+    const r = await api('/api/v1/system/backup/')
+    if (!r.ok) { backupMsg.value = '导出失败'; return }
+    const blob = await r.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const now = new Date()
+    const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`
+    a.download = `pmos_backup_${ts}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    backupMsg.value = '导出成功'
+  } catch { backupMsg.value = '导出失败' }
+  finally { backupLoading.value = false }
+}
+
+function tabsFiltered() {
+  return tabs.filter(t => t.k !== 'backup' || isAdmin.value)
 }
 
 // ── Password dialogs ──
