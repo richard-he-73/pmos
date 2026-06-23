@@ -1,7 +1,7 @@
 import os, json, io
 from datetime import datetime
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAdminUser
@@ -116,6 +116,13 @@ def backup_detail(request, filename):
         return Response({'error': '备份文件不存在'}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
+        raw = request.query_params.get('raw') == 'true'
+        if raw:
+            # 返回原始文件内容
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return HttpResponse(content, content_type='application/json; charset=utf-8')
+
         stat = os.stat(filepath)
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)

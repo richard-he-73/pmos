@@ -21,15 +21,20 @@
             </tr>
 </tbody></table>
       </div>
+      <Pagination :page="page" :page-size="pageSize" :total="total" @update:page="page=$event; fetchData()" @update:page-size="pageSize=$event; page=1; fetchData()" />
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useProjectStore } from '@/stores/project'
+import Pagination from '@/components/Pagination.vue'
 const items = ref<any[]>([])
 const projectStore = useProjectStore()
 const loading = ref(true)
+const page = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const columns: { k: string; t: string }[] = []
 onMounted(async () => {
   try {

@@ -40,7 +40,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getProjects } from '@/api/modules/projects'
@@ -48,7 +48,16 @@ import { getProjectOverview } from '@/api/modules/statistics'
 const router = useRouter()
 const authStore = useAuthStore()
 const username = computed(() => authStore.currentUser?.real_name || authStore.currentUser?.username || '用户')
-const time = ref(new Date().toLocaleString('zh-CN'))
+const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+const pad2 = (n: number) => String(n).padStart(2, '0')
+const formatNow = () => {
+  const d = new Date()
+  return `${d.getFullYear()}年${pad2(d.getMonth() + 1)}月${pad2(d.getDate())}日 ${weekDays[d.getDay()]} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`
+}
+const time = ref(formatNow())
+let timer: ReturnType<typeof setInterval> | null = null
+onMounted(() => { timer = setInterval(() => { time.value = formatNow() }, 1000) })
+onUnmounted(() => { if (timer) clearInterval(timer) })
 const projects = ref<any[]>([])
 const stats = ref([{ icon: '📁', label: '项目总数', value: '0', path: '/projects' }, { icon: '✅', label: '待完成任务', value: '0', path: '/tasks' }, { icon: '🐛', label: '未关闭缺陷', value: '0', path: '/bugs' }, { icon: '📊', label: '系统概览', value: '0', path: '/statistics' }])
 function statusClass(s: string) { return { planning: 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/20', active: 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20', pending_acceptance: 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/20', closed: 'text-slate-500 bg-slate-50 dark:text-slate-400 dark:bg-slate-800' }[s] + ' px-2 py-0.5 rounded text-xs' }

@@ -15,6 +15,8 @@ class DepartmentSerializer(serializers.ModelSerializer):
 class UserOrganizationSerializer(serializers.ModelSerializer):
     dept_name = serializers.CharField(source='department.name', read_only=True)
     consultant_name = serializers.CharField(source='consultant.name', read_only=True, allow_null=True)
+    user_id = serializers.IntegerField(source='consultant.user.id', read_only=True, allow_null=True)
+    user_name = serializers.CharField(source='consultant.user.real_name', read_only=True, allow_null=True)
 
     class Meta:
         model = UserOrganization

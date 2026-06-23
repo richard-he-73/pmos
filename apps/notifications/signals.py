@@ -61,7 +61,3 @@ def bug_saved(sender, instance, created, **kwargs):
 
 # ── 需求 ──
 
-@receiver(post_save, sender='requirements.SoftwareRequirement')
-def requirement_saved(sender, instance, created, **kwargs):
-    if instance.assignee_id:
-        notify_user(instance.assignee_id, 'requirement_updated', instance)

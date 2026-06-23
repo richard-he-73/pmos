@@ -17,7 +17,9 @@
           <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
             <td v-for="c in cols" :key="c.k" class="py-3 px-3 whitespace-nowrap">{{ r[c.k] ?? '' }}</td>
             <td class="py-3 px-3 whitespace-nowrap">
-              <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
+              <div class="flex gap-1 justify-end whitespace-nowrap">
+                <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
+              </div>
             </td>
           </tr>
                   <tr v-if="items.length === 0">
@@ -29,6 +31,7 @@
 </tbody></table>
         
       </div>
+      <Pagination :page="page" :page-size="pageSize" :total="total" @update:page="page=$event; fetchData()" @update:page-size="pageSize=$event; page=1; fetchData()" />
     </div>
 
     <!-- 缺陷报告弹窗 -->
@@ -57,6 +60,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { createBug } from '@/api/modules/testing'
+import Pagination from '@/components/Pagination.vue'
 const projectStore = useProjectStore()
 const tab = ref('bugs')
 const items = ref<any[]>([])
@@ -73,9 +77,10 @@ const cols = computed(() => views[tab.value]?.cols || [])
 async function load() {
   const v = views[tab.value]; if (!v) return
   try {
-    const r = await fetch('/api/v1/' + v.e + '/?project=' + (projectStore.activeProjectId || ''))
+    const r = await fetch('/api/v1/' + v.e + '/?page=' + page.value + '&page_size=' + pageSize.value + '&project=' + (projectStore.activeProjectId || ''))
     const d = await r.json()
     items.value = d.results ?? []
+    total.value = d.count ?? items.value.length
   } catch { items.value = [] }
 }
 function openBugForm() { bugForm.value = { title:'', severity:'minor', module:'', description:'' }; showBugForm.value = true }

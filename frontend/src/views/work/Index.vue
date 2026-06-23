@@ -18,13 +18,13 @@
               <span v-else-if="c.k==='type' && tab==='leave'">{{ leaveTypeLabels[r.type] || r.type }}</span>
               <span v-else-if="c.k==='status' && tab==='equipment'">{{ statusLabels[r.status] || r.status }}</span>
               <span v-else-if="c.k==='status' && tab==='leave'">
-                <span class="px-2 py-0.5 rounded text-xs font-medium" :class="{'bg-yellow-100 text-yellow-700':r.status==='pending','bg-green-100 text-green-700':r.status==='approved','bg-red-100 text-red-700':r.status==='rejected'}">{{ leaveStatusLabels[r.status] || r.status }}</span>
+                <span class="px-2 py-0.5 rounded text-xs font-medium" :class="{'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400':r.status==='pending','bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400':r.status==='approved','bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400':r.status==='rejected'}">{{ leaveStatusLabels[r.status] || r.status }}</span>
                 <span v-if="r.status==='approved' && r.end_date && new Date(r.end_date) < new Date() && !r.is_cancelled" class="ml-1 text-xs text-red-500 font-medium">⚠逾期未销假</span>
               </span>
               <span v-else-if="c.k==='type' && tab==='timesheet'">{{ timesheetTypeLabels[r.type] || r.type }}</span>
               <span v-else-if="c.k==='status' && tab==='timesheet'">{{ timesheetStatusLabels[r.status] || r.status }}</span>
               <span v-else-if="c.k==='approval_status' && tab==='timesheet'">
-                <span class="px-2 py-0.5 rounded text-xs font-medium" :class="{'bg-green-100 text-green-700':r.approval_status==='approved','bg-yellow-100 text-yellow-700':r.approval_status==='returned','bg-red-100 text-red-700':r.approval_status==='rejected'}">{{ timesheetApprovalLabels[r.approval_status] || r.approval_status }}</span>
+                <span class="px-2 py-0.5 rounded text-xs font-medium" :class="{'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400':r.approval_status==='approved','bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400':r.approval_status==='returned','bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400':r.approval_status==='rejected'}">{{ timesheetApprovalLabels[r.approval_status] || r.approval_status }}</span>
               </span>
               <span v-else-if="c.k==='is_cancelled' && tab==='leave'">
                 <span :class="r.is_cancelled?'text-green-600':'text-slate-400'">{{ r.is_cancelled ? '已销假' : '未销假' }}</span>
@@ -33,11 +33,13 @@
               <span v-else>{{ r[c.k] ?? '' }}</span>
             </td>
             <td class="py-3 px-3 whitespace-nowrap text-right">
+                <div class="flex gap-1 justify-end whitespace-nowrap">
               <button v-if="tab==='leave' && r.status==='approved' && !r.is_cancelled" @click="cancelLeave(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400">销假</button>
               <button @click="openDetail(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
               <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
               <button @click="deleteItem(r.id)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
-            </td>
+                            </div>
+</td>
           </tr>
                   <tr v-if="items.length === 0">
               <td colspan="6" class="py-16 text-center text-slate-400">
@@ -48,6 +50,7 @@
 </tbody></table>
         
       </div>
+      <Pagination :page="page" :page-size="listPageSize" :total="total" @update:page="page=$event; fetchData()" @update:page-size="listPageSize=$event; page=1; fetchData()" />
     </div>
     <!-- 详情弹窗 -->
     <div v-if="showDetail && detailItem" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" @click.self="showDetail=false">
@@ -60,10 +63,14 @@
           <div v-for="c in cols" :key="c.k">
             <span class="text-slate-400 block text-xs">{{ c.t }}</span>
             <span v-if="c.k==='type' && tab==='equipment'">{{ typeLabels[detailItem.type] || detailItem.type }}</span>
+            <span v-else-if="c.k==='type' && tab==='leave'">{{ leaveTypeLabels[detailItem.type] || detailItem.type }}</span>
             <span v-else-if="c.k==='type' && tab==='timesheet'">{{ timesheetTypeLabels[detailItem.type] || detailItem.type }}</span>
             <span v-else-if="c.k==='status' && tab==='equipment'">{{ statusLabels[detailItem.status] || detailItem.status }}</span>
+            <span v-else-if="c.k==='status' && tab==='leave'">{{ leaveStatusLabels[detailItem.status] || detailItem.status }}</span>
             <span v-else-if="c.k==='status' && tab==='timesheet'">{{ timesheetStatusLabels[detailItem.status] || detailItem.status }}</span>
             <span v-else-if="c.k==='approval_status' && tab==='timesheet'">{{ timesheetApprovalLabels[detailItem.approval_status] || detailItem.approval_status }}</span>
+            <span v-else-if="c.k==='is_cancelled' && tab==='leave'"><span :class="detailItem.is_cancelled?'text-green-600':'text-slate-400'">{{ detailItem.is_cancelled ? '已销假' : '未销假' }}</span></span>
+            <span v-else-if="c.k==='start_date' || c.k==='end_date'">{{ detailItem[c.k]?.slice(0,16).replace('T',' ') || '—' }}</span>
             <span v-else>{{ detailItem[c.k] ?? '—' }}</span>
           </div>
         </div>
@@ -155,12 +162,21 @@ import { useProjectStore } from '@/stores/project'
 import { useConfirmStore } from '@/stores/confirm'
 import { useToastStore } from '@/stores/toast'
 import request from '@/api/request'
+
+import { getEquipments, createEquipment, updateEquipment, deleteEquipment,
+  getLeaves, createLeave, updateLeave, deleteLeave,
+  getTimesheets, createTimesheet, getTimesheetDetails } from '@/api/modules/work_management'
+import { getOrgMembers } from '@/api/modules/organizations'
+import Pagination from '@/components/Pagination.vue'
 const confirm = useConfirmStore()
 const projectStore = useProjectStore()
 const toast = useToastStore()
 const tab = ref('equipment')
 const items = ref<any[]>([])
 const showForm = ref(false)
+const page = ref(1)
+const listPageSize = ref(10)
+const total = ref(0)
 const form = ref<Record<string,any>>({})
 
 
@@ -228,7 +244,16 @@ const curFields = computed(() => cur.value?.fields || [])
 
 async function load() {
   if (!cur.value) return
-  try { const r = await request.get('/' + cur.value.e + '/', { params: { project: projectStore.activeProjectId || undefined } }); items.value = (r.data.results ?? r.data) as any[] } catch { items.value = [] }
+  try {
+    const params = { page: page.value, page_size: listPageSize.value, project: projectStore.activeProjectId || undefined }
+    let r
+    if (tab.value === 'equipment') r = await getEquipments(params)
+    else if (tab.value === 'leave') r = await getLeaves(params)
+    else if (tab.value === 'timesheet') r = await getTimesheets(params)
+    else return
+    items.value = (r.data.results ?? r.data) as any[]
+    total.value = r.data.count ?? items.value.length
+  } catch { items.value = [] }
 }
 const orgApprovers = computed(() => orgMembers.value.filter(m => m.project_role === 'project_director' || m.project_role === 'project_manager'))
 
@@ -248,6 +273,12 @@ function openForm() {
 function editItem(r: any) {
   editing.value = r
   form.value = { ...r }
+  // 转换日期格式适配 datetime-local 输入：去掉秒和时区
+  for (const k of ['start_date', 'end_date']) {
+    if (form.value[k] && typeof form.value[k] === 'string') {
+      form.value[k] = form.value[k].slice(0, 16)
+    }
+  }
   if (tab.value === 'leave') loadOrgMembers()
   if (tab.value === 'timesheet') loadOrgMembers()
   showForm.value = true
@@ -282,21 +313,33 @@ async function cancelLeave(r: any) {
 
 async function loadOrgMembers() {
   try {
-    const r = await request.get('/org-members/', { params: { page_size: 9999, project: projectStore.activeProjectId || undefined } })
+    const r = await request.get('/org-members/', { params: { page: page.value, page_size: listPageSize.value, project: projectStore.activeProjectId || undefined } })
     orgMembers.value = r.data.results ?? r.data ?? []
   } catch { orgMembers.value = [] }
 }
 async function saveItem() {
   const payload = { ...form.value, project: projectStore.activeProjectId }
   try {
-    if (editing.value) { await request.patch('/' + cur.value!.e + '/' + editing.value.id + '/', payload) }
-    else { await request.post('/' + cur.value!.e + '/', payload) }
+    if (editing.value) {
+      if (tab.value === 'equipment') await updateEquipment(editing.value.id, payload)
+      else if (tab.value === 'leave') await updateLeave(editing.value.id, payload)
+      else if (tab.value === 'timesheet') await createTimesheet(payload)
+    } else {
+      if (tab.value === 'equipment') await createEquipment(payload)
+      else if (tab.value === 'leave') await createLeave(payload)
+      else if (tab.value === 'timesheet') await createTimesheet(payload)
+    }
     showForm.value = false; load()
   } catch(e: any) { toast.show('保存失败', 'error') }
 }
 async function deleteItem(id: number) {
   if (!(await confirm.show('确认删除？'))) return
-  try { await request.delete('/' + cur.value!.e + '/' + id + '/'); load() } catch {}
+  try {
+    if (tab.value === 'equipment') await deleteEquipment(id)
+    else if (tab.value === 'leave') await deleteLeave(id)
+    // timesheet 不支持删除
+    load()
+  } catch {}
 }
 watch(tab, load)
 onMounted(load)

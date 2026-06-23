@@ -58,3 +58,7 @@ export function createBug(data: Partial<Bug>) {
 export function updateBug(id: number, data: Partial<Bug>) {
   return request.patch<Bug>(`/bugs/${id}/`, data)
 }
+
+export function deleteBug(id: number) {
+  return request.delete(`/bugs/${id}/`)
+}

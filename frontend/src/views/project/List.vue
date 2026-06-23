@@ -6,7 +6,7 @@
       <select v-model="filters.status" @change="fetchData" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm outline-none"><option value="">全部状态</option><option value="planning">计划中</option><option value="active">进行中</option><option value="pending_acceptance">待验收</option><option value="closed">已结项</option></select>
       <select v-model="filters.project_type" @change="fetchData" class="px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm outline-none"><option value="">全部类型</option><option value="monthly">人月型</option><option value="fixed">项目制</option><option value="resource_pool">资源池</option></select>
       <div class="flex-1"></div>
-      <button @click="openCreate" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 shrink-0">＋ 新建项目</button>
+      <button @click="openCreate" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">＋ 新建项目</button>
     </div>
 
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -32,11 +32,13 @@
               <td class="py-3 px-3 hidden md:table-cell text-slate-500">{{ p.owner_name || '—' }}</td>
               <td class="py-3 px-3 hidden lg:table-cell text-slate-400 text-xs">{{ p.start_date || '—' }} ~ {{ p.end_date || '—' }}</td>
               <td class="py-3 px-3 text-right whitespace-nowrap">
-                <button v-if="activeProjectId===p.id" class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 cursor-default">当前项目</button>
+                  <div class="flex gap-1 justify-end whitespace-nowrap">
+                    <button v-if="activeProjectId===p.id" class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 cursor-default">当前项目</button>
                 <button v-else @click="setAsActive(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400">设为当前</button>
                 <button @click="openDetail(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
                 <button @click="openEdit(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
                 <button @click="handleDelete(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
+                  </div>
               </td>
             </tr>
                     <tr v-if="items.length === 0">
@@ -47,6 +49,7 @@
             </tr>
 </tbody></table>
       </div>
+      <Pagination :page="page" :page-size="pageSize" :total="total" @update:page="page=$event; fetchData()" @update:page-size="pageSize=$event; page=1; fetchData()" />
     </div>
 
     <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" @click.self="showForm=false">
@@ -169,9 +172,11 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToastStore } from '@/stores/toast'
+import { useConfirmStore } from '@/stores/confirm'
 import { getProjects, createProject, updateProject, deleteProject } from '@/api/modules/projects'
 import type { Project } from '@/api/modules/projects'
 import { useProjectStore } from '@/stores/project'
+import Pagination from '@/components/Pagination.vue'
 
 const router = useRouter()
 const toast = useToastStore()
@@ -180,6 +185,9 @@ const activeProjectId = computed(() => projectStore.activeProjectId)
 const items = ref<Project[]>([])
 const loading = ref(true)
 const search = ref('')
+const page = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const filters = reactive({ status: '', project_type: '' })
 const showForm = ref(false)
 const isEdit = ref(false)
@@ -208,12 +216,13 @@ function onSearch() { if (searchTimer) clearTimeout(searchTimer); searchTimer = 
 async function fetchData() {
   loading.value = true
   try {
-    const params: Record<string, any> = {}
+    const params: Record<string, any> = { page: page.value, page_size: pageSize.value }
     if (search.value) params.search = search.value
     if (filters.status) params.status = filters.status
     if (filters.project_type) params.project_type = filters.project_type
     const r = await getProjects(params)
     items.value = r.data.results || []
+    total.value = r.data.count ?? items.value.length
   } catch { items.value = [] }
   finally { loading.value = false }
 }
@@ -253,8 +262,8 @@ async function setAsActive(p: Project) {
 }
 
 async function handleDelete(p: Project) {
-  // confirm removed, deletion proceeds directly
-  try { await deleteProject(p.id); fetchData() } catch {}
+  if (!(await useConfirmStore().show(`确认删除项目「${p.name}」？此操作不可撤销。`))) return
+  try { await deleteProject(p.id); toast.show('删除成功', 'success'); fetchData() } catch { toast.show('删除失败', 'error') }
 }
 function openDetail(p: Project) {
   detailItem.value = p

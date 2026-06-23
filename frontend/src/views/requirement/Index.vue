@@ -1,54 +1,593 @@
 <template>
   <div>
     <h1 class="text-xl font-bold mb-4">需求管理</h1>
-    <div class="flex gap-2 mb-4">
-      <button class="px-3 py-1.5 rounded-lg text-sm" :class="tab==='biz'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" @click="tab='biz'">业务需求</button>
-      <button class="px-3 py-1.5 rounded-lg text-sm" :class="tab==='sw'?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" @click="tab='sw'">软件需求</button>
+    <div class="flex gap-2 mb-4 flex-wrap">
+      <button v-for="t in tabs" :key="t.k" :class="tab===t.k?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700'" class="px-3 py-1.5 rounded-lg text-sm transition" @click="tab=t.k">{{ t.l }}</button>
+      <div class="flex-1"></div>
+      <button v-if="tab==='submit'" @click="openForm(null)" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新建需求</button>
+      <button v-if="tab==='change'" @click="openChangeForm()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新建变更</button>
+      <button v-if="tab==='baseline'" @click="openBaselineForm()" class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">生成基线</button>
     </div>
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-      <table class="w-full text-sm">
-        <thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
-          <th class="text-left py-3 px-3 font-medium">编号</th><th class="text-left py-3 px-3 font-medium">名称</th><th class="text-left py-3 px-3 font-medium">状态</th>
-        </tr></thead>
-        <tbody>
-          <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50">
-            <td class="py-3 px-3 font-mono text-xs">{{ r.code }}</td>
-            <td class="py-3 px-3">{{ r.name }}</td>
-            <td class="py-3 px-3">{{ r.status }}</td>
+
+    <!-- 需求提交列表 -->
+    <div v-if="tab==='submit'" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm"><thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+          <th class="text-left py-3 px-3 font-medium">需求名称</th><th class="text-left py-3 px-3 font-medium hidden sm:table-cell">需求类型</th>
+          <th class="text-left py-3 px-3 font-medium hidden sm:table-cell">需求负责人</th><th class="text-left py-3 px-3 font-medium hidden sm:table-cell">完成日期</th><th class="text-left py-3 px-3 font-medium">状态</th><th class="text-right py-3 px-3 font-medium">操作</th>
+        </tr></thead><tbody>
+          <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
+            <td class="py-3 px-3 font-medium">{{ r.name }}</td>
+            <td class="py-3 px-3 hidden sm:table-cell">{{ typeLabels[r.type] || r.type }}</td>
+            <td class="py-3 px-3 hidden sm:table-cell">{{ r.assignee_name || '—' }}</td>
+            <td class="py-3 px-3 hidden sm:table-cell">{{ r.due_date || '—' }}</td>
+            <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-xs font-medium" :class="statusCls(r.status)">{{ statusLabels[r.status] }}</span></td>
+            <td class="py-3 px-3 text-right whitespace-nowrap">
+              <div class="flex gap-1 justify-end whitespace-nowrap">
+                <button @click="viewDetail(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
+                <button @click="openForm(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
+                <button v-if="r.status==='submitted'" @click="doSubmitReview(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400">提交评审</button>
+                <button v-if="r.status==='pending_review'" @click="doWithdraw(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400">撤回评审</button>
+                <button @click="doDelete(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
+              </div>
+            </td>
           </tr>
-                  <tr v-if="items.length === 0">
-              <td colspan="6" class="py-16 text-center text-slate-400">
-                <svg class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                <span class="text-sm">暂无数据</span>
-              </td>
+          <tr v-if="items.length===0"><td colspan="6" class="py-16 text-center text-slate-400"><svg class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><span class="text-sm">暂无数据</span></td></tr>
+        </tbody></table>
+      </div>
+      <Pagination :page="page" :page-size="pageSize" :total="total" @update:page="page=$event; load()" @update:page-size="pageSize=$event; page=1; load()" />
+    </div>
+
+    <!-- 需求评审列表 -->
+    <div v-if="tab==='review'" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm"><thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+          <th class="text-left py-3 px-3 font-medium">需求名称</th><th class="text-left py-3 px-3 font-medium hidden sm:table-cell">需求类型</th>
+          <th class="text-left py-3 px-3 font-medium hidden sm:table-cell">需求负责人</th><th class="text-left py-3 px-3 font-medium hidden sm:table-cell">完成日期</th><th class="text-left py-3 px-3 font-medium">评审负责人</th><th class="text-left py-3 px-3 font-medium">状态</th><th class="text-right py-3 px-3 font-medium">操作</th>
+        </tr></thead><tbody>
+          <tr v-for="r in reviewItems" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
+            <td class="py-3 px-3 font-medium">{{ r.name }}</td>
+            <td class="py-3 px-3 hidden sm:table-cell">{{ typeLabels[r.type] || r.type }}</td>
+            <td class="py-3 px-3 hidden sm:table-cell">{{ r.assignee_name || '—' }}</td>
+            <td class="py-3 px-3 hidden sm:table-cell">{{ r.due_date || '—' }}</td>
+            <td class="py-3 px-3">{{ r.review_assignee_name || '不指定' }}</td>
+            <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-xs font-medium" :class="statusCls(r.status)">{{ statusLabels[r.status] }}</span></td>
+            <td class="py-3 px-3 text-right whitespace-nowrap">
+              <div class="flex gap-1 justify-end whitespace-nowrap">
+                <button v-if="r.status==='pending_review'" @click="openReviewForm(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400">发起评审</button>
+                <button @click="viewDetail(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
+              </div>
+            </td>
+          </tr>
+          <tr v-if="reviewItems.length===0"><td colspan="7" class="py-16 text-center text-slate-400"><svg class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><span class="text-sm">暂无待评审需求</span></td></tr>
+        </tbody></table>
+      </div>
+      <Pagination :page="reviewPage" :page-size="reviewPageSize" :total="reviewTotal" @update:page="reviewPage=$event; loadReviewItems()" @update:page-size="reviewPageSize=$event; reviewPage=1; loadReviewItems()" />
+    </div>
+
+    <!-- 需求基线列表 -->
+    <div v-if="tab==='baseline'" class="space-y-4">
+      <div v-for="bl in baselines" :key="bl.id" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
+          <span class="text-sm font-semibold">{{ bl.name }}</span>
+          <span class="text-xs text-slate-400 font-mono">v{{ bl.version }}</span>
+          <span class="text-xs text-slate-400">{{ typeLabels[bl.type] || bl.type }}</span>
+          <div class="flex-1"></div>
+          <span class="text-xs text-slate-400">{{ bl.created_by_name || '' }} {{ bl.created_at?.slice(0,10) }}</span>
+          <button @click="deleteBaseline(bl)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm"><thead><tr class="text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/50">
+            <th class="text-left py-2 px-3 font-medium text-xs">需求名称</th><th class="text-left py-2 px-3 font-medium text-xs">需求描述</th><th class="text-left py-2 px-3 font-medium text-xs hidden sm:table-cell">类型</th><th class="text-left py-2 px-3 font-medium text-xs hidden sm:table-cell">需求负责人</th><th class="text-left py-2 px-3 font-medium text-xs hidden sm:table-cell">完成日期</th>
+          </tr></thead><tbody>
+            <tr v-for="req in (bl.requirements_data||[])" :key="req.id" class="border-b border-slate-100 dark:border-slate-700/50">
+              <td class="py-2 px-3 text-xs">{{ req.name }}</td>
+              <td class="py-2 px-3 text-xs truncate max-w-[200px]">{{ req.description || '—' }}</td>
+              <td class="py-2 px-3 text-xs hidden sm:table-cell">{{ typeLabels[req.type] || req.type }}</td>
+              <td class="py-2 px-3 text-xs hidden sm:table-cell">{{ req.assignee_name || '—' }}</td>
+              <td class="py-2 px-3 text-xs hidden sm:table-cell">{{ req.due_date || '—' }}</td>
             </tr>
-</tbody></table>
-      
+          </tbody></table>
+        </div>
+      </div>
+      <div v-if="baselines.length===0" class="flex flex-col items-center justify-center py-16 text-slate-400"><svg class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><span class="text-sm">暂无基线数据</span></div>
+    </div>
+
+    <!-- 需求变更列表 -->
+    <div v-if="tab==='change'" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm"><thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+          <th class="text-left py-3 px-3 font-medium">基线</th><th class="text-left py-3 px-3 font-medium">变更对象</th>
+          <th class="text-left py-3 px-3 font-medium hidden sm:table-cell">负责人</th><th class="text-left py-3 px-3 font-medium">审批状态</th><th class="text-right py-3 px-3 font-medium">操作</th>
+        </tr></thead><tbody>
+          <tr v-for="c in changes" :key="c.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
+            <td class="py-3 px-3"><span class="text-xs font-mono">{{ c.baseline_name }} v{{ c.baseline_version }}</span></td>
+            <td class="py-3 px-3">{{ c.object_desc }}</td>
+            <td class="py-3 px-3 hidden sm:table-cell">{{ c.assignee_name || '—' }}</td>
+            <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-xs font-medium" :class="approvalCls(c.approval_status)">{{ approvalLabels[c.approval_status] }}</span></td>
+            <td class="py-3 px-3 text-right whitespace-nowrap">
+              <div class="flex gap-1 justify-end whitespace-nowrap">
+                <button @click="editChange(c)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
+              </div>
+            </td>
+          </tr>
+          <tr v-if="changes.length===0"><td colspan="6" class="py-16 text-center text-slate-400"><svg class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><span class="text-sm">暂无数据</span></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- 需求表单弹窗 -->
+    <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showForm=false">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <h2 class="text-lg font-bold mb-4">{{ editing ? '编辑' : '新建' }}需求</h2>
+        <div class="space-y-3">
+          <div><label class="block text-sm font-medium mb-1">需求类型 *</label>
+            <select v-model="form.type" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option v-for="(l,k) in typeLabels" :key="k" :value="k">{{ l }}</option>
+            </select>
+          </div>
+          <div><label class="block text-sm font-medium mb-1">需求名称 *</label><input v-model="form.name" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
+          <div><label class="block text-sm font-medium mb-1">需求描述</label><textarea v-model="form.description" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
+          <div><label class="block text-sm font-medium mb-1">需求负责人</label>
+            <select v-model="form.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option :value="null">不指定</option>
+              <option v-for="m in orgMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
+            </select>
+          </div>
+          <div><label class="block text-sm font-medium mb-1">需求完成日期</label><input v-model="form.due_date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
+          <div><label class="block text-sm font-medium mb-1">备注说明</label><textarea v-model="form.notes" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+          <button @click="showForm=false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">取消</button>
+          <button @click="saveForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 提交评审弹窗 -->
+    <div v-if="showReviewAssign" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showReviewAssign=false">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <h2 class="text-lg font-bold mb-4">提交评审</h2>
+        <div><label class="block text-sm font-medium mb-1">评审负责人</label>
+          <select v-model="reviewAssigneeId" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+            <option :value="null">不指定</option>
+            <option v-for="m in orgMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
+          </select>
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+          <button @click="showReviewAssign=false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">取消</button>
+          <button @click="confirmSubmitReview" class="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm hover:bg-yellow-700">提交评审</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 评审弹窗 -->
+    <div v-if="showReview" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showReview=false">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <h2 class="text-lg font-bold mb-4">发起评审 - {{ reviewTarget?.name }}</h2>
+        <div class="space-y-3">
+          <div><label class="block text-sm font-medium mb-1">评审结论 *</label>
+            <select v-model="reviewForm.conclusion" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option value="pass">通过</option><option value="conditional_pass">有条件通过</option><option value="fail">不通过</option>
+            </select>
+          </div>
+          <div><label class="block text-sm font-medium mb-1">评审方式 *</label>
+            <select v-model="reviewForm.review_method" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option value="meeting">会议</option><option value="email">邮件</option><option value="circulation">传签</option><option value="other">其他</option>
+            </select>
+          </div>
+          <div><label class="block text-sm font-medium mb-1">评审日期</label><input v-model="reviewForm.review_date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
+          <div><label class="block text-sm font-medium mb-1">评审干系人</label>
+            <div class="max-h-32 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg p-2 space-y-1">
+              <label v-for="m in orgMembers" :key="m.id" class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" :value="m.id" v-model="reviewForm.stakeholders_ids" class="rounded" />
+                <span>{{ m.name }}</span>
+              </label>
+            </div>
+          </div>
+          <div><label class="block text-sm font-medium mb-1">备注说明</label><textarea v-model="reviewForm.notes" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+          <button @click="showReview=false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">取消</button>
+          <button @click="confirmReview" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">确认评审</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 基线弹窗 -->
+    <div v-if="showBaseline" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showBaseline=false">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <h2 class="text-lg font-bold mb-4">生成基线</h2>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div><label class="block text-sm font-medium mb-1">需求类型 *</label>
+            <select v-model="blForm.type" @change="loadBaselineReqs" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option v-for="(l,k) in typeLabels" :key="k" :value="k">{{ l }}</option>
+            </select>
+          </div>
+          <div><label class="block text-sm font-medium mb-1">基线版本 *</label><input v-model="blForm.version" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
+          <div class="col-span-2"><label class="block text-sm font-medium mb-1">基线名称 *</label><input v-model="blForm.name" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
+          <div class="col-span-2"><label class="block text-sm font-medium mb-1">基线描述</label><textarea v-model="blForm.description" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
+          <div class="col-span-2"><label class="block text-sm font-medium mb-1">备注说明</label><textarea v-model="blForm.notes" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
+        </div>
+        <div class="border-t border-slate-200 dark:border-slate-700 pt-3">
+          <div class="text-sm font-medium mb-2">待纳入基线的需求（{{ blReqs.length }}）</div>
+          <div class="max-h-48 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg">
+            <label v-for="req in blReqs" :key="req.id" class="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-700/50 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30">
+              <input type="checkbox" :value="req.id" v-model="blForm.requirement_ids" class="rounded" />
+              <span class="font-medium">{{ req.name }}</span>
+              <span class="text-xs text-slate-400">{{ typeLabels[req.type] }}</span>
+            </label>
+            <div v-if="blReqs.length===0" class="flex flex-col items-center justify-center py-8 text-slate-400"><svg class="w-12 h-12 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><span class="text-xs">暂无可纳入基线的需求</span></div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+          <button @click="showBaseline=false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">取消</button>
+          <button @click="saveBaseline" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">保存基线</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 变更弹窗 -->
+    <div v-if="showChange" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showChange=false">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg mx-4 p-6">
+        <h2 class="text-lg font-bold mb-4">{{ changeEditing ? '编辑' : '新建' }}变更</h2>
+        <div class="space-y-3">
+          <div><label class="block text-sm font-medium mb-1">基线名称</label>
+            <div class="relative">
+              <input v-model="blSearch" placeholder="输入关键字搜索基线..." class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+              <div v-if="blSearch && filteredBaselines.length" class="absolute z-10 mt-1 w-full max-h-40 overflow-y-auto border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg shadow-lg">
+                <div v-for="bl in filteredBaselines" :key="bl.id" class="px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30" @click="selectBaseline(bl)">{{ bl.name }} <span class="text-xs text-slate-400">v{{ bl.version }}</span></div>
+              </div>
+            </div>
+          </div>
+          <div><label class="block text-sm font-medium mb-1">变更对象</label><textarea v-model="changeForm.object_desc" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
+          <div><label class="block text-sm font-medium mb-1">变更内容</label><textarea v-model="changeForm.content" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
+          <div><label class="block text-sm font-medium mb-1">变更负责人</label>
+            <select v-model="changeForm.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option :value="null">不指定</option>
+              <option v-for="m in orgMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
+            </select>
+          </div>
+          <div><label class="block text-sm font-medium mb-1">变更审批人</label>
+            <select v-model="changeForm.approver" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option :value="null">不指定</option>
+              <option v-for="m in orgMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
+            </select>
+          </div>
+          <div><label class="block text-sm font-medium mb-1">备注说明</label><textarea v-model="changeForm.notes" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+          <button @click="showChange=false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">取消</button>
+          <button @click="saveChange" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">保存</button>
+        </div>
+      </div>
+    </div>
+  <!-- 需求详情弹窗 -->
+    <div v-if="showDetail && detailItem" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showDetail=false">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold">需求详情</h2>
+          <button @click="showDetail=false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xl leading-none">&times;</button>
+        </div>
+        <div class="space-y-4 text-sm">
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">需求名称</span>
+            <span class="font-medium">{{ detailItem.name }}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <span class="text-slate-400 block text-xs mb-0.5">类型</span>
+              <span class="inline-block px-2 py-0.5 rounded text-xs font-medium" :class="typeCls(detailItem.type)">{{ typeLabels[detailItem.type] || detailItem.type }}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block text-xs mb-0.5">状态</span>
+              <span class="inline-block px-2 py-0.5 rounded text-xs font-medium" :class="statusCls(detailItem.status)">{{ statusLabels[detailItem.status] }}</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <span class="text-slate-400 block text-xs mb-0.5">提交人</span>
+              <span>{{ detailItem.submitter_name || '—' }}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block text-xs mb-0.5">负责人</span>
+              <span>{{ detailItem.assignee_name || '—' }}</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <span class="text-slate-400 block text-xs mb-0.5">完成日期</span>
+              <span>{{ detailItem.due_date || '—' }}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block text-xs mb-0.5">创建时间</span>
+              <span>{{ formatTime(detailItem.created_at) }}</span>
+            </div>
+          </div>
+          <div v-if="detailItem.description">
+            <span class="text-slate-400 block text-xs mb-0.5">描述</span>
+            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{{ detailItem.description }}</div>
+          </div>
+          <div v-if="detailItem.notes">
+            <span class="text-slate-400 block text-xs mb-0.5">备注</span>
+            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{{ detailItem.notes }}</div>
+          </div>
+          <div v-if="detailItem.document_url">
+            <span class="text-slate-400 block text-xs mb-0.5">需求文档</span>
+            <a :href="detailItem.document_url" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline text-sm break-all">{{ detailItem.document_url.split('/').pop() }}</a>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <button @click="showDetail=false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition">关闭</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
-<script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
-import { useProjectStore } from '@/stores/project'
 
-const api = async (url: string, opts: any = {}): Promise<Response> => {
-  const token = sessionStorage.getItem('pmos-token')
-  const headers: Record<string,string> = { "Content-Type": "application/json" }
-  if (token) headers['Authorization'] = 'Bearer ' + token
-  if (opts.headers) Object.assign(headers, opts.headers)
-  return fetch(url + (url.includes('?') ? '&' : '?') + 'project=' + (projectStore.activeProjectId || ''), { ...opts, headers })
+<script setup lang="ts">
+import { ref, reactive, watch, onMounted, computed } from 'vue'
+import { useProjectStore } from '@/stores/project'
+import { useToastStore } from '@/stores/toast'
+import { useConfirmStore } from '@/stores/confirm'
+import request from '@/api/request'
+import Pagination from '@/components/Pagination.vue'
+import {
+  getRequirements, createRequirement, updateRequirement, deleteRequirement,
+  submitReview, withdrawReview,
+  getReqReviews, createReqReview,
+  getReqBaselines, createReqBaseline, deleteReqBaseline,
+  getReqChanges, createReqChange, updateReqChange,
+  TYPE_LABELS, STATUS_LABELS,
+} from '@/api/modules/requirements'
+import type { Requirement } from '@/api/modules/requirements'
+
+const projectStore = useProjectStore()
+const toast = useToastStore()
+const confirm = useConfirmStore()
+
+const typeLabels = TYPE_LABELS
+const statusLabels = STATUS_LABELS
+const approvalLabels: Record<string, string> = { pending: '待审批', approved: '审批通过', rejected: '审批不通过' }
+
+const tabs = [
+  { k: 'submit', l: '需求提交' }, { k: 'review', l: '需求评审' },
+  { k: 'baseline', l: '需求基线' }, { k: 'change', l: '需求变更' },
+]
+const tab = ref('submit')
+const items = ref<Requirement[]>([])
+const reviewItems = ref<Requirement[]>([])
+const reviewPage = ref(1)
+const reviewPageSize = ref(10)
+const reviewTotal = ref(0)
+const baselines = ref<any[]>([])
+const changes = ref<any[]>([])
+const orgMembers = ref<any[]>([])
+
+// Pagination
+const page = ref(1), pageSize = ref(10), total = ref(0)
+
+// Form state
+const showDetail = ref(false)
+const detailItem = ref<any>(null)
+const showForm = ref(false), editing = ref<any>(null)
+const form = reactive<Record<string, any>>({ type: 'business', name: '', description: '', assignee: null, due_date: '', notes: '' })
+
+// Review submit
+const showReviewAssign = ref(false), reviewAssigneeId = ref(null), reviewTarget = ref<any>(null)
+const showReview = ref(false)
+const reviewForm = reactive<Record<string, any>>({ conclusion: 'pass', review_method: 'meeting', review_date: '', stakeholders_ids: [], notes: '' })
+
+// Baseline
+const showBaseline = ref(false), blReqs = ref<Requirement[]>([])
+const blForm = reactive<Record<string, any>>({ type: 'business', name: '', version: '', description: '', notes: '', requirement_ids: [] })
+
+// Change
+const showChange = ref(false), changeEditing = ref<any>(null), blSearch = ref('')
+const changeForm = reactive<Record<string, any>>({ baseline: '', object_desc: '', content: '', assignee: null, approver: null, notes: '' })
+
+const filteredBaselines = computed(() =>
+  baselines.value.filter(bl => !blSearch.value || bl.name.includes(blSearch.value) || bl.version.includes(blSearch.value))
+)
+function selectBaseline(bl: any) { changeForm.baseline = bl.id; blSearch.value = bl.name + ' v' + bl.version }
+
+function formatTime(t: string | null | undefined) {
+  if (!t) return '—'
+  try {
+    const d = new Date(t)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  } catch { return t }
 }
 
-const tab = ref('biz')
-const items = ref<any[]>([])
+function statusCls(s: string) {
+  return { submitted: 'text-slate-600 bg-slate-100 dark:text-slate-400 dark:bg-slate-700', pending_review: 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/20', review_passed: 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20', baselined: 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20' }[s] || ''
+}
+function typeCls(t: string) {
+  return { business: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', software_func: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', software_perf: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', other: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300' }[t] || ''
+}
+function approvalCls(s: string) {
+  return { pending: 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/20', approved: 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20', rejected: 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/20' }[s] || ''
+}
+
 async function load() {
   try {
-    const ep = tab.value === 'biz' ? 'business-requirements' : 'software-requirements'
-    const r = await api('/api/v1/' + ep + '/')
-    const d = await r.json()
-    items.value = d.results ?? []
+    const params: Record<string, any> = { page: page.value, page_size: pageSize.value, project: projectStore.activeProjectId || undefined }
+    if (tab.value === 'submit') {
+      params.exclude_status = 'review_passed,baselined'
+      const r = await getRequirements(params); items.value = r.data.results ?? []; total.value = r.data.count ?? items.value.length
+    }
   } catch { items.value = [] }
 }
-watch(tab, load)
-onMounted(load)
+
+async function loadReviewItems() {
+  try {
+    const params: Record<string, any> = { page: reviewPage.value, page_size: reviewPageSize.value, project: projectStore.activeProjectId || undefined, status: 'pending_review,review_passed' }
+    const r = await getRequirements(params)
+    reviewItems.value = (r.data.results ?? []).filter((req: Requirement) =>
+      !req.review_assignee || req.review_assignee === null
+    )
+    reviewTotal.value = r.data.count ?? reviewItems.value.length
+  } catch { reviewItems.value = [] }
+}
+
+async function loadBaselines() {
+  try {
+    const r = await getReqBaselines({ project: projectStore.activeProjectId || undefined })
+    baselines.value = r.data.results ?? []
+  } catch { baselines.value = [] }
+}
+
+async function loadChanges() {
+  try {
+    const r = await getReqChanges({})
+    changes.value = r.data.results ?? []
+  } catch { changes.value = [] }
+}
+
+async function loadOrgMembers() {
+  try {
+    const r = await request.get('/org-members/', { params: { page_size: 9999, project: projectStore.activeProjectId || undefined } })
+    orgMembers.value = r.data.results ?? []
+  } catch { orgMembers.value = [] }
+}
+
+async function loadBaselineReqs() {
+  try {
+    const r = await getRequirements({ page_size: 9999, project: projectStore.activeProjectId || undefined, type: blForm.type, status: 'review_passed' })
+    blReqs.value = r.data.results ?? []
+  } catch { blReqs.value = [] }
+}
+
+// Submit tab
+function openForm(r: any) {
+  editing.value = r
+  if (r) { Object.assign(form, r) }
+  else { Object.assign(form, { type: 'business', name: '', description: '', assignee: null, due_date: '', notes: '' }) }
+  showForm.value = true
+}
+async function saveForm() {
+  try {
+    if (editing.value) { await updateRequirement(editing.value.id, { ...form } as any) }
+    else { await createRequirement({ ...form, project: projectStore.activeProjectId } as any) }
+    showForm.value = false; toast.show('保存成功', 'success'); load()
+  } catch { toast.show('保存失败', 'error') }
+}
+async function doDelete(r: Requirement) {
+  if (!(await confirm.show('确认删除此需求？'))) return
+  try { await deleteRequirement(r.id); toast.show('删除成功', 'success'); load() } catch { toast.show('删除失败', 'error') }
+}
+function doSubmitReview(r: Requirement) {
+  reviewTarget.value = r; reviewAssigneeId.value = null; showReviewAssign.value = true
+}
+async function confirmSubmitReview() {
+  try {
+    await submitReview(reviewTarget.value.id, { review_assignee_id: reviewAssigneeId.value })
+    showReviewAssign.value = false; toast.show('已提交评审', 'success'); load()
+  } catch { toast.show('操作失败', 'error') }
+}
+async function doWithdraw(r: Requirement) {
+  try { await withdrawReview(r.id); toast.show('已撤回评审', 'success'); load() } catch { toast.show('操作失败', 'error') }
+}
+
+// Review tab
+function openReviewForm(r: Requirement) {
+  reviewTarget.value = r
+  Object.assign(reviewForm, { conclusion: 'pass', review_method: 'meeting', review_date: '', stakeholders_ids: [], notes: '' })
+  showReview.value = true
+}
+async function confirmReview() {
+  try {
+    await createReqReview({ ...reviewForm, requirement: reviewTarget.value.id, reviewer: null } as any)
+    showReview.value = false; toast.show('评审完成', 'success'); loadReviewItems()
+  } catch { toast.show('操作失败', 'error') }
+}
+
+// Baseline tab
+function openBaselineForm() {
+  Object.assign(blForm, { type: 'business', name: '', version: '', description: '', notes: '', requirement_ids: [] })
+  showBaseline.value = true; loadBaselineReqs()
+}
+async function saveBaseline() {
+  try {
+    const projectId = projectStore.activeProjectId
+    if (!projectId) { toast.show('请先选择项目', 'error'); return }
+    if (!blForm.name?.trim()) { toast.show('请输入基线名称', 'error'); return }
+    if (!blForm.requirement_ids || blForm.requirement_ids.length === 0) { toast.show('请至少选择一个需求纳入基线', 'error'); return }
+    if (!blForm.version?.trim()) {
+      const now = new Date()
+      blForm.version = `v${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`
+    }
+    const payload = {
+      type: blForm.type,
+      name: blForm.name,
+      version: blForm.version || `v${new Date().toISOString().slice(0,10).replace(/-/g,'')}`,
+      description: blForm.description,
+      notes: blForm.notes,
+      requirement_ids: blForm.requirement_ids,
+      project: projectId,
+    }
+    console.log('[基线] payload:', JSON.stringify(payload))
+    await createReqBaseline(payload)
+    showBaseline.value = false; toast.show('基线已生成', 'success'); loadBaselines(); load()
+  } catch (e: any) {
+    console.error('[基线] 错误:', e)
+    const data = e?.response?.data
+    let msg = '保存失败'
+    if (data) {
+      if (typeof data === 'string') {
+        msg = data
+      } else if (typeof data === 'object') {
+        msg = Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join('；') : v}`).join(' | ')
+      }
+    }
+    console.log('[基线] 错误消息:', msg)
+    toast.show(msg, 'error')
+  }
+}
+
+async function deleteBaseline(bl: any) {
+  if (!(await confirm.show('确认删除基线「' + bl.name + '」？将同时移除该基线关联的所有需求的基线状态。'))) return
+  try {
+    await deleteReqBaseline(bl.id)
+    toast.show('基线已删除', 'success')
+    await loadBaselines()
+  } catch { toast.show('删除失败', 'error') }
+}
+
+// Change tab
+function openChangeForm() {
+  changeEditing.value = null
+  Object.assign(changeForm, { baseline: '', object_desc: '', content: '', assignee: null, approver: null, notes: '' })
+  showChange.value = true
+}
+function editChange(c: any) {
+  changeEditing.value = c
+  Object.assign(changeForm, { baseline: c.baseline, object_desc: c.object_desc, content: c.content, assignee: c.assignee, approver: c.approver, notes: c.notes })
+  showChange.value = true
+}
+async function saveChange() {
+  try {
+    if (changeEditing.value) { await updateReqChange(changeEditing.value.id, changeForm as any) }
+    else { await createReqChange({ ...changeForm, baseline: Number(changeForm.baseline) } as any) }
+    showChange.value = false; toast.show('保存成功', 'success'); loadChanges()
+  } catch { toast.show('保存失败', 'error') }
+}
+
+function viewDetail(r: any) {
+  detailItem.value = r
+  showDetail.value = true
+}
+
+watch(tab, (v) => {
+  if (v === 'submit') load()
+  if (v === 'review') loadReviewItems()
+  if (v === 'baseline') loadBaselines()
+  if (v === 'change') { loadChanges(); loadBaselines() }
+})
+
+onMounted(async () => {
+  await loadOrgMembers()
+  load()
+})
 </script>

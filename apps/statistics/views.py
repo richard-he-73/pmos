@@ -35,12 +35,12 @@ class StatisticsViewSet(viewsets.ViewSet):
         return Response({
             'plans': {
                 'total': plans.count(),
-                'completed': plans.filter(status='completed').count(),
+                'completed': plans.filter(status__in=['completed_on_time', 'completed_late', 'completed_early']).count(),
                 'in_progress': plans.filter(status='in_progress').count(),
             },
             'tasks': {
                 'total': tasks.count(),
-                'completed': tasks.filter(status='done').count(),
+                'completed': tasks.filter(status__in=['completed_on_time', 'completed_late', 'completed_early']).count(),
                 'in_progress': tasks.filter(status='in_progress').count(),
             },
             'bugs': {
@@ -71,24 +71,26 @@ class StatisticsViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'])
     def timesheet_summary(self, request):
-        """工时统计"""
+        """工时统计（通过 TimesheetDetail 聚合）"""
         project_id = request.query_params.get('project')
         user_id = request.query_params.get('user')
 
-        qs = Timesheet.objects.all()
+        from apps.work_management.models import TimesheetDetail
+
+        qs = TimesheetDetail.objects.all()
         if project_id:
-            qs = qs.filter(project_id=project_id)
+            qs = qs.filter(timesheet__project_id=project_id)
         if user_id:
-            qs = qs.filter(user_id=user_id)
+            qs = qs.filter(timesheet__reporter_id=user_id)
 
         total_hours = qs.aggregate(total=Sum('hours'))['total'] or 0
 
         return Response({
             'total_hours': total_hours,
-            'by_project': list(qs.values('project__name').annotate(
+            'by_project': list(qs.values('timesheet__project__name').annotate(
                 total=Sum('hours'),
             )),
-            'by_user': list(qs.values('user__real_name').annotate(
+            'by_user': list(qs.values('timesheet__reporter__name').annotate(
                 total=Sum('hours'),
             )),
         })

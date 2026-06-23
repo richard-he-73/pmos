@@ -35,9 +35,11 @@
             <td class="py-3 px-3 text-slate-500 text-xs">{{ r.entry_date || '—' }}</td>
             <td class="py-3 px-3 text-slate-500 text-xs">{{ r.exit_date || '—' }}</td>
             <td class="py-3 px-3 whitespace-nowrap">
+              <div class="flex gap-1 justify-end whitespace-nowrap">
               <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
               <button @click="deleteItem(r.id)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
-            </td>
+                          </div>
+</td>
           </tr>
                   <tr v-if="items.length === 0">
               <td colspan="9" class="py-16 text-center text-slate-400">
@@ -47,6 +49,7 @@
             </tr>
 </tbody></table>
       </div>
+      <Pagination :page="page" :page-size="pageSize" :total="total" @update:page="page=$event; load()" @update:page-size="pageSize=$event; page=1; load()" />
     </div>
 
     <!-- 资源编辑弹窗 -->
@@ -133,11 +136,15 @@ import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
 import { useProjectStore } from '@/stores/project'
 import SmartDateInput from '@/components/SmartDateInput.vue'
+import Pagination from '@/components/Pagination.vue'
 const toast = useToastStore()
 const projectStore = useProjectStore()
 const confirm = useConfirmStore()
 
 const items = ref<any[]>([])
+const page = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const showForm = ref(false)
 const editing = ref<any>(null)
 const form = ref<any>({})
@@ -148,7 +155,8 @@ const selectedUserId = ref<number | null>(null)
 const pendingPayload = ref<any>(null)
 
 async function load() {
-  try { const r = await request.get('/consultants/', { params: { project: projectStore.activeProjectId || undefined } }); items.value = (r.data.results ?? r.data) as any[] } catch { items.value = [] }
+  try { const r = await request.get('/consultants/', { params: { page: page.value, page_size: pageSize.value, project: projectStore.activeProjectId || undefined } }); items.value = (r.data.results ?? r.data) as any[]
+    total.value = r.data.count ?? items.value.length } catch { items.value = [] }
 }
 
 function openForm() { editing.value = null; form.value = { rank: 'consultant', status: 'pending_entry' }; showForm.value = true }

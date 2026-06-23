@@ -15,11 +15,7 @@
     <div v-if="planTab!=='gantt'" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <!-- 列表 -->
       <div v-if="loading" class="text-center py-12 text-slate-400 text-sm">加载中...</div>
-      <div v-else-if="filteredPlans.length===0" class="flex flex-col items-center justify-center py-16 text-slate-400">
-        <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-        <span class="text-sm">暂无数据</span>
-      </div>
-      <div v-else>
+          <div v-else>
         <!-- 表头 -->
         <div class="flex items-center gap-6 py-3 px-3 text-sm font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
           <span class="w-5 shrink-0"></span>
@@ -32,7 +28,11 @@
           <span class="w-20 hidden lg:block shrink-0">责任人</span>
           <span class="ml-auto shrink-0 text-right" style="width:146px">操作</span>
         </div>
-        <div v-for="p in filteredPlans" :key="p.id"
+        <div v-if="filteredPlans.length===0" class="flex flex-col items-center justify-center py-16 text-slate-400">
+            <svg class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            <span class="text-sm">暂无数据</span>
+          </div>
+          <div v-for="p in filteredPlans" :key="p.id"
           class="flex items-center gap-6 py-3 px-3 border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
           <span class="text-sm w-5 shrink-0 text-center">{{ p.type==='milestone'?'📌':p.type==='middle'?'📋':'📝' }}</span>
           <span class="text-sm font-medium min-w-[360px]">{{ p.name }}</span>
@@ -45,9 +45,9 @@
           <span v-if="planTab!=='milestone' && p.parent_name" class="text-xs text-slate-400 w-28 hidden lg:block truncate shrink-0">{{ p.parent_name }}</span>
           <span class="text-xs text-slate-400 w-20 hidden lg:block truncate shrink-0">{{ p.assignee_name || '—' }}</span>
           <div class="ml-auto shrink-0 flex gap-1">
-            <button @click="openDetail(p)" class="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
-            <button @click="editPlan(p)" class="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
-            <button @click="deletePlan(p.id)" class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
+            <button @click="openDetail(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
+            <button @click="editPlan(p)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
+            <button @click="deletePlan(p.id)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
           </div>
         </div>
       </div>
@@ -232,9 +232,11 @@ import { ref, computed, watch, onMounted } from 'vue'
 import request from '@/api/request'
 import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
+import { useProjectStore } from '@/stores/project'
 import SmartDateInput from '@/components/SmartDateInput.vue'
 const toast = useToastStore()
 const confirmStore = useConfirmStore()
+const projectStore = useProjectStore()
 const roleLabel: Record<string, string> = {
   project_director: '项目总监',
   project_manager: '项目经理',
@@ -364,10 +366,10 @@ function barStyle(p: any) {
 
 async function load() {
   loading.value = true
-  try { const r = await request.get('/plans/', { params: { page_size: 9999 } }); allPlans.value = (r.data.results ?? r.data) as any[] } catch { allPlans.value = [] }
+  try { const r = await request.get('/plans/', { params: { page_size: 9999, project: projectStore.activeProjectId || undefined } }); allPlans.value = (r.data.results ?? r.data) as any[] } catch { allPlans.value = [] }
   finally { loading.value = false }
 }
-async function loadMembers() { try { const r=await request.get('/org-members/', { params: { page_size: 9999 } }); orgMembers.value = r.data.results ?? r.data } catch {} }
+async function loadMembers() { try { const r=await request.get('/org-members/', { params: { page_size: 9999, project: projectStore.activeProjectId || undefined } }); orgMembers.value = r.data.results ?? r.data } catch {} }
 
 const showDetail = ref(false)
 const detailItem = ref<any>(null)

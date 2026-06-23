@@ -66,10 +66,7 @@ class TestCase(models.Model):
     )
     status = models.CharField('状态', max_length=20, default='active')
     module = models.CharField('模块', max_length=100, blank=True)
-    requirement = models.ForeignKey(
-        'requirements.SoftwareRequirement', on_delete=models.SET_NULL,
-        null=True, blank=True, verbose_name='关联需求',
-    )
+
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
         null=True, verbose_name='创建人',
@@ -171,10 +168,7 @@ class Bug(models.Model):
         TestRun, on_delete=models.SET_NULL, null=True, blank=True,
         verbose_name='关联测试执行',
     )
-    related_requirement = models.ForeignKey(
-        'requirements.SoftwareRequirement', on_delete=models.SET_NULL,
-        null=True, blank=True, verbose_name='关联需求',
-    )
+
     resolution = models.CharField(
         '解决方案', max_length=20, choices=Resolution.choices,
         null=True, blank=True,

@@ -11,6 +11,13 @@
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <!-- 部门列表：表格 -->
       <div v-if="tab==='dept'">
+        <!-- 组织架构图 -->
+        <div v-if="allDepts.length>0" class="border-b border-slate-200 dark:border-slate-700">
+          <div class="px-4 py-3 text-sm font-medium text-slate-500 bg-slate-50 dark:bg-slate-700/50">组织架构图</div>
+          <div class="p-6 overflow-x-auto">
+            <org-chart :items="allDepts" :depth="0" :parent-id="null" />
+          </div>
+        </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm"><thead><tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
             <th v-for="c in cols" :key="c.k" class="text-left py-3 px-3 font-medium">{{ c.t }}</th>
@@ -22,11 +29,13 @@
                 <span :class="c.k==='is_active' ? 'text-xs '+(r[c.k]?'text-green-600':'text-red-400'):''">{{ c.k==='is_active' ? (r[c.k]?'启用':'禁用') : (r[c.k] ?? '') }}</span>
               </td>
               <td class="py-3 px-3 whitespace-nowrap">
+                <div class="flex gap-1 justify-end whitespace-nowrap">
                 <button @click="openDetail(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
                 <button @click="toggleActive(r)" class="px-2.5 py-1 rounded-full text-xs font-medium" :class="r.is_active ? 'bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400'">{{ r.is_active ? '停用' : '启用' }}</button>
                 <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
                 <button @click="deleteItem(r.id)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
-              </td>
+                              </div>
+</td>
             </tr>
                     <tr v-if="items.length === 0">
               <td colspan="5" class="py-16 text-center text-slate-400">
@@ -36,14 +45,7 @@
             </tr>
 </tbody></table>
         </div>
-
-        <!-- 组织架构图 -->
-        <div v-if="items.length>0" class="border-t border-slate-200 dark:border-slate-700">
-          <div class="px-4 py-3 text-sm font-medium text-slate-500 bg-slate-50 dark:bg-slate-700/50">组织架构图</div>
-          <div class="p-6 overflow-x-auto">
-            <org-chart :items="items" :depth="0" :parent-id="null" />
-          </div>
-        </div>
+      <Pagination :page="page" :page-size="pageSize" :total="total" @update:page="page=$event; load()" @update:page-size="pageSize=$event; page=1; load()" />
       </div>
 
       <!-- 组织成员：表格 -->
@@ -55,10 +57,12 @@
           <tr v-for="r in items" :key="r.id" class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
             <td v-for="c in cols" :key="c.k" class="py-3 px-3">{{ c.k==='project_role' ? projectRoleText(r[c.k]) : r[c.k] ?? '' }}</td>
             <td class="py-3 px-3 whitespace-nowrap">
+                <div class="flex gap-1 justify-end whitespace-nowrap">
               <button @click="openDetail(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
               <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
               <button @click="deleteItem(r.id)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
-            </td>
+                            </div>
+</td>
           </tr>
         </tbody></table>
       </div>
@@ -228,12 +232,20 @@ import request from '@/api/request'
 import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
 import { useProjectStore } from '@/stores/project'
+import { getDepartments, createDepartment, updateDepartment, deleteDepartment,
+  getOrgMembers, createOrgMember, updateOrgMember, deleteOrgMember } from '@/api/modules/organizations'
+import { getConsultants } from '@/api/modules/resources'
 import OrgChart from '@/components/OrgChart.vue'
+import Pagination from '@/components/Pagination.vue'
 const confirm = useConfirmStore()
 const projectStore = useProjectStore()
 const toast = useToastStore()
 const tab = ref('dept')
 const items = ref<any[]>([])
+const page = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+const allDepts = ref<any[]>([])
 const depts = ref<any[]>([])
 const users = ref<any[]>([])
 const loading = ref(false)
@@ -307,7 +319,12 @@ function hasNextSiblingInTree(t: any, ancestorDepth: number): boolean {
 async function load() {
   if (!cur.value) return
   loading.value = true
-  try { const r = await request.get('/' + cur.value.e + '/', { params: { project: projectStore.activeProjectId || undefined } }); items.value = (r.data.results ?? r.data) as any[] } catch { items.value = [] }
+  try {
+    const params = { page: page.value, page_size: pageSize.value, project: projectStore.activeProjectId || undefined }
+    const r = tab.value === 'dept' ? await getDepartments(params) : await getOrgMembers(params)
+    items.value = (r.data.results ?? r.data) as any[]
+    total.value = r.data.count ?? items.value.length
+  } catch { items.value = [] }
   finally { loading.value = false }
   // 默认展开所有部门节点（仅 dept 标签有效）
   if (tab.value === 'dept') {
@@ -316,10 +333,11 @@ async function load() {
     expandedIds.value = s
   }
 }
-async function loadDepts() { try { const r=await request.get('/departments/', { params: { page_size: 9999, project: projectStore.activeProjectId || undefined } }); depts.value = r.data.results ?? r.data } catch {} }
-async function loadUsers() { try { const r=await request.get('/users/', { params: { page_size: 9999 } }); users.value = r.data.results ?? r.data } catch {} }
+async function loadDepts() { try { const r=await getDepartments({ page: page.value, page_size: pageSize.value, project: projectStore.activeProjectId || undefined }); depts.value = r.data.results ?? r.data } catch {} }
+async function loadAllDepts() { try { const r=await getDepartments({ page_size: 9999, project: projectStore.activeProjectId || undefined }); allDepts.value = r.data.results ?? r.data } catch {} }
+async function loadUsers() { try { const r=await request.get('/users/', { params: { page: page.value, page_size: pageSize.value } }); users.value = r.data.results ?? r.data } catch {} }
 const consultants = ref<any[]>([])
-async function loadConsultants() { try { const r=await request.get('/consultants/', { params: { page_size: 9999, project: projectStore.activeProjectId || undefined } }); consultants.value = r.data.results ?? r.data } catch {} }
+async function loadConsultants() { try { const r=await getConsultants({ page: page.value, page_size: pageSize.value, project: projectStore.activeProjectId || undefined }); consultants.value = r.data.results ?? r.data } catch {} }
 const assignedConsultantIds = computed(() => {
   if (tab.value !== 'members') return new Set<number>()
   const ids = new Set<number>()
@@ -358,8 +376,13 @@ async function saveItem() {
     if (k in payload && payload[k] === '') payload[k] = null
   }
   try {
-    if (editing.value) { await request.patch('/' + cur.value!.e + '/' + editing.value.id + '/', payload) }
-    else { await request.post('/' + cur.value!.e + '/', payload) }
+    if (editing.value) {
+      if (tab.value === 'dept') { await updateDepartment(editing.value.id, payload) }
+      else { await updateOrgMember(editing.value.id, payload) }
+    } else {
+      if (tab.value === 'dept') { await createDepartment(payload) }
+      else { await createOrgMember(payload) }
+    }
     showForm.value=false; load(); loadDepts()
   } catch (e: any) {
     console.error('saveItem error', e)
@@ -376,7 +399,7 @@ async function saveItem() {
 function openDetail(r: any) { detailItem.value = r; showDetail.value = true }
 async function toggleActive(r: any) {
   try {
-    await request.patch('/departments/' + r.id + '/', { is_active: !r.is_active })
+    await updateDepartment(r.id, { is_active: !r.is_active })
     r.is_active = !r.is_active
     toast.show(r.is_active ? '已启用' : '已停用', 'success')
   } catch { toast.show('操作失败', 'error') }
@@ -384,11 +407,15 @@ async function toggleActive(r: any) {
 async function deleteItem(id: number) {
   const msg = tab.value === 'dept' ? '确认删除此部门？' : '确认删除此成员？'
   if (!(await confirm.show(msg))) return
-  try { await request.delete('/' + cur.value!.e + '/' + id + '/'); toast.show('删除成功', 'success'); load(); if (tab.value==='dept') loadDepts() } catch { toast.show('删除失败', 'error') }
+  try {
+    if (tab.value === 'dept') { await deleteDepartment(id) }
+    else { await deleteOrgMember(id) }
+    toast.show('删除成功', 'success'); load(); if (tab.value==='dept') loadDepts()
+  } catch { toast.show('删除失败', 'error') }
 }
 function projectRoleText(v: string) {
   return ({ project_director: '项目总监', project_manager: '项目经理', consulting_expert: '咨询专家', consulting_advisor: '咨询顾问', consulting_assistant: '咨询助理', other: '其他' })[v] || v || ''
 }
-watch(tab, () => { load(); if (tab.value==='members') loadDepts() })
-onMounted(() => { load(); loadDepts(); loadUsers(); loadConsultants() })
+watch(tab, () => { load(); if (tab.value==='members') loadDepts(); loadAllDepts() })
+onMounted(() => { load(); loadDepts(); loadAllDepts(); loadUsers(); loadConsultants() })
 </script>

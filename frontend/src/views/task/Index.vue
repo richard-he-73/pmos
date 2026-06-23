@@ -10,15 +10,8 @@
 
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <div v-if="loading" class="text-center py-12 text-slate-400 text-sm">加载中...</div>
-
-      <div v-else-if="items.length === 0" class="flex flex-col items-center justify-center py-16 text-slate-400">
-        <svg class="w-16 h-16 mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-        </svg>
-        <span class="text-sm">暂无数据</span>
-      </div>
-
-      <div v-else class="overflow-x-auto">
+      <div v-else>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
@@ -48,9 +41,9 @@
               <td class="py-3 px-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">{{ row.due_date || '—' }}</td>
               <td class="py-3 px-3 whitespace-nowrap text-right">
                 <div class="flex gap-1 justify-end whitespace-nowrap">
-                  <button @click="viewDetail(row)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
-                  <button @click="openEditModal(row)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
-                  <button @click="deleteTask(row.id)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
+                  <button @click="viewDetail(row)" class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
+                  <button @click="openEditModal(row)" class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
+                  <button @click="deleteTask(row.id)" class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
                 </div>
               </td>
             </tr>
@@ -62,6 +55,8 @@
             </tr>
 </tbody>
         </table>
+        </div>
+      <Pagination :page="page" :page-size="pageSize" :total="total" @update:page="page=$event; fetchTasks()" @update:page-size="pageSize=$event; page=1; fetchTasks()" />
       </div>
     </div>
 
@@ -250,12 +245,16 @@ import SmartDateInput from '@/components/SmartDateInput.vue'
 import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
 import request from '@/api/request'
+import Pagination from '@/components/Pagination.vue'
 
 const projectStore = useProjectStore()
 const toast = useToastStore()
 const confirmStore = useConfirmStore()
 
 const items = ref<any[]>([])
+const page = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const loading = ref(true)
 const showModal = ref(false)
 const editingId = ref<number | null>(null)
@@ -536,12 +535,16 @@ async function fetchOrgMembers() {
 
 async function fetchTasks() {
   try {
-    const params: Record<string, string> = {}
+    const params: Record<string, any> = {
+      page: page.value,
+      page_size: pageSize.value,
+    }
     if (projectStore.activeProjectId) {
       params.project = String(projectStore.activeProjectId)
     }
     const r = await request.get('/tasks/', { params })
-    items.value = r.data.results ?? r.data ?? []
+    items.value = (r.data.results ?? r.data) as any[]
+    total.value = r.data.count ?? items.value.length
   } catch {
     // ignore
   } finally {

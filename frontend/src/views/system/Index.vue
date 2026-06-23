@@ -6,7 +6,7 @@
         :class="tab===t.k?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200'"
         @click="tab=t.k">{{ t.l }}</button>
       <div class="flex-1"></div>
-      <button v-if="tab==='users'" @click="openCreate" class="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新建用户</button>
+      <button v-if="tab==='users'" @click="openCreate" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">+ 新建用户</button>
       <button v-if="tab==='backup'" @click="createBackup" :disabled="backupLoading"
         class="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition disabled:opacity-50">
         {{ backupLoading ? '备份中...' : '+ 创建备份' }}
@@ -29,7 +29,7 @@
                 <span v-else>{{ r[c.k] ?? '' }}</span>
               </td>
               <td class="py-3 px-3 whitespace-nowrap">
-                <div class="flex gap-1.5 whitespace-nowrap">
+                <div class="flex gap-1 whitespace-nowrap">
                   <button @click="editItem(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 transition">编辑</button>
                   <button @click="changePwd(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 transition">修改密码</button>
                   <button v-if="isAdmin" @click="resetPwd(r)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 transition">重置密码</button>
@@ -45,6 +45,7 @@
             </tr>
           </tbody></table>
       </div>
+      <Pagination :page="page" :page-size="pageSize" :total="total" @update:page="page=$event; fetchData()" @update:page-size="pageSize=$event; page=1; fetchData()" />
     </div>
 
     <!-- 数据备份 -->
@@ -77,10 +78,10 @@
                 </td>
                 <td class="py-3 px-3 whitespace-nowrap text-right">
                   <div class="flex gap-1 justify-end whitespace-nowrap">
-                    <button @click="previewBackup(b)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-sky-100 text-sky-700 hover:bg-sky-200 dark:bg-sky-900/30 dark:text-sky-400">预览</button>
-                    <button @click="viewBackupDetail(b)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
-                    <button @click="restoreBackup(b)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400">恢复</button>
-                    <button @click="deleteBackup(b)" class="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
+                    <button @click="previewBackup(b)" class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-sky-100 text-sky-700 hover:bg-sky-200 dark:bg-sky-900/30 dark:text-sky-400">预览</button>
+                    <button @click="viewBackupDetail(b)" class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
+                    <button @click="restoreBackup(b)" class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400">恢复</button>
+                    <button @click="deleteBackup(b)" class="px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">删除</button>
                   </div>
                 </td>
               </tr>
@@ -94,7 +95,7 @@
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-bold">备份详情</h2>
-            <button @click="backupDetail = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xl leading-none">&times;</button>
+            <button @click="backupDetail = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 w-7 h-7 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-lg">✕</button>
           </div>
           <div class="mb-4 text-sm space-y-1">
             <div><span class="text-slate-400 text-xs">文件名：</span><span class="font-medium break-all">{{ backupDetail.filename }}</span></div>
@@ -134,12 +135,9 @@
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-3xl mx-4 p-6 overflow-hidden" style="max-height:85vh;">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-bold">备份文件预览</h2>
-            <button @click="previewContent = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xl leading-none">&times;</button>
+            <button @click="previewContent = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 w-7 h-7 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-lg">✕</button>
           </div>
           <pre class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 text-xs text-slate-600 dark:text-slate-300" style="height:calc(85vh - 120px); overflow:auto; white-space:pre; font-family:'SF Mono',Monaco,'Cascadia Code',monospace;">{{ previewContent }}</pre>
-          <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-            <button @click="previewContent = null" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition">关闭</button>
-          </div>
         </div>
       </div>
     </div>
@@ -199,6 +197,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useConfirmStore } from '@/stores/confirm'
+import Pagination from '@/components/Pagination.vue'
 const confirm = useConfirmStore()
 
 
@@ -216,6 +215,9 @@ const tab = ref('users')
 const search = ref('')
 const items = ref<any[]>([])
 const showForm = ref(false)
+const page = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const editing = ref<any>(null)
 const saving = ref(false)
 const formError = ref('')
@@ -259,11 +261,13 @@ async function fetchData() { await load() }
 async function load() {
   if (!cur.value) return
   try {
-    let url = '/api/v1/' + cur.value.e + '/'
-    if (search.value) url += '?search=' + encodeURIComponent(search.value)
+    let url = '/api/v1/' + cur.value.e + '/?page=' + page.value + '&page_size=' + pageSize.value
+    if (cur.value.e === 'users') url += '&ordering=username'
+    if (search.value) url += '&search=' + encodeURIComponent(search.value)
     const r = await api(url)
     const d = await r.json()
     items.value = d.results ?? []
+    total.value = d.count ?? items.value.length
   } catch { items.value = [] }
 }
 
@@ -386,10 +390,9 @@ async function deleteBackup(b: any) {
 
 async function previewBackup(b: any) {
   try {
-    const r = await api('/api/v1/system/backup/' + encodeURIComponent(b.filename) + '/')
+    const r = await api('/api/v1/system/backup/' + encodeURIComponent(b.filename) + '/?raw=true')
     if (r.ok) {
-      const data = await r.json()
-      previewContent.value = JSON.stringify(data, null, 2)
+      previewContent.value = await r.text()
     } else {
       previewContent.value = '无法读取备份文件'
     }
