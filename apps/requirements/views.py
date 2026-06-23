@@ -123,3 +123,23 @@ class RequirementChangeViewSet(viewsets.ModelViewSet):
         latest = RequirementChange.objects.filter(baseline=baseline).order_by('-created_at').first()
         version = latest.baseline_version if latest else baseline.version
         serializer.save(created_by=self.request.user, baseline_version=version)
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        """审批通过"""
+        change = self.get_object()
+        if change.approval_status != 'pending':
+            return Response({'detail': '仅待审批状态可操作'}, status=status.HTTP_400_BAD_REQUEST)
+        change.approval_status = 'approved'
+        change.save()
+        return Response(RequirementChangeSerializer(change).data)
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        """审批驳回"""
+        change = self.get_object()
+        if change.approval_status != 'pending':
+            return Response({'detail': '仅待审批状态可操作'}, status=status.HTTP_400_BAD_REQUEST)
+        change.approval_status = 'rejected'
+        change.save()
+        return Response(RequirementChangeSerializer(change).data)

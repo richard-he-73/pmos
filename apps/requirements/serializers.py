@@ -53,11 +53,21 @@ class RequirementBaselineSerializer(serializers.ModelSerializer):
     requirement_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True, required=False)
     requirements_data = RequirementSerializer(source='requirements', many=True, read_only=True)
     created_by_name = serializers.CharField(source='created_by.real_name', read_only=True, allow_null=True)
+    change_counts = serializers.SerializerMethodField()
 
     class Meta:
         model = RequirementBaseline
         fields = '__all__'
         read_only_fields = ['created_by', 'created_at', 'requirements']
+
+    def get_change_counts(self, obj):
+        """返回 { requirement_id: 审批通过的变更次数 }"""
+        approved_changes = obj.changes.filter(approval_status='approved')
+        result = {}
+        for req in obj.requirements.all():
+            count = approved_changes.filter(object_desc__contains=req.name).count()
+            result[req.id] = count
+        return result
 
 
 class RequirementChangeSerializer(serializers.ModelSerializer):
@@ -69,4 +79,4 @@ class RequirementChangeSerializer(serializers.ModelSerializer):
     class Meta:
         model = RequirementChange
         fields = '__all__'
-        read_only_fields = ['created_by', 'created_at', 'updated_at']
+        read_only_fields = ['created_by', 'created_at', 'updated_at', 'baseline_version']

@@ -78,7 +78,7 @@
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm"><thead><tr class="text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/50">
-            <th class="text-left py-2 px-3 font-medium text-xs">需求名称</th><th class="text-left py-2 px-3 font-medium text-xs">需求描述</th><th class="text-left py-2 px-3 font-medium text-xs hidden sm:table-cell">类型</th><th class="text-left py-2 px-3 font-medium text-xs hidden sm:table-cell">需求负责人</th><th class="text-left py-2 px-3 font-medium text-xs hidden sm:table-cell">完成日期</th>
+            <th class="text-left py-2 px-3 font-medium text-xs">需求名称</th><th class="text-left py-2 px-3 font-medium text-xs">需求描述</th><th class="text-left py-2 px-3 font-medium text-xs hidden sm:table-cell">类型</th><th class="text-left py-2 px-3 font-medium text-xs hidden sm:table-cell">需求负责人</th><th class="text-left py-2 px-3 font-medium text-xs hidden sm:table-cell">完成日期</th><th class="text-left py-2 px-3 font-medium text-xs">变更次数</th>
           </tr></thead><tbody>
             <tr v-for="req in (bl.requirements_data||[])" :key="req.id" class="border-b border-slate-100 dark:border-slate-700/50">
               <td class="py-2 px-3 text-xs">{{ req.name }}</td>
@@ -86,6 +86,7 @@
               <td class="py-2 px-3 text-xs hidden sm:table-cell">{{ typeLabels[req.type] || req.type }}</td>
               <td class="py-2 px-3 text-xs hidden sm:table-cell">{{ req.assignee_name || '—' }}</td>
               <td class="py-2 px-3 text-xs hidden sm:table-cell">{{ req.due_date || '—' }}</td>
+              <td class="py-2 px-3 text-xs">{{ bl.change_counts?.[req.id] ?? 0 }}</td>
             </tr>
           </tbody></table>
         </div>
@@ -107,7 +108,10 @@
             <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-xs font-medium" :class="approvalCls(c.approval_status)">{{ approvalLabels[c.approval_status] }}</span></td>
             <td class="py-3 px-3 text-right whitespace-nowrap">
               <div class="flex gap-1 justify-end whitespace-nowrap">
-                <button @click="editChange(c)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
+                <button v-if="c.approval_status==='pending'" @click="editChange(c)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400">编辑</button>
+                <button v-if="c.approval_status==='pending'" @click="openApproveDialog(c, 'approved')" class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400">审批通过</button>
+                <button v-if="c.approval_status==='pending'" @click="openApproveDialog(c, 'rejected')" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">驳回</button>
+                <button @click="viewChangeDetail(c)" class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400">详情</button>
               </div>
             </td>
           </tr>
@@ -240,7 +244,26 @@
               </div>
             </div>
           </div>
-          <div><label class="block text-sm font-medium mb-1">变更对象</label><textarea v-model="changeForm.object_desc" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
+          <div><label class="block text-sm font-medium mb-1">变更对象</label>
+            <div v-if="!changeForm.baseline" class="px-3 py-2 text-sm text-slate-400 border border-dashed border-slate-300 dark:border-slate-600 rounded-lg">请先选择基线</div>
+            <template v-else>
+              <input v-model="reqSearch" placeholder="搜索需求..." class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500 mb-1" />
+              <div class="max-h-32 overflow-y-auto border border-slate-200 dark:border-slate-600 rounded-lg">
+                <div v-if="baselineReqs.length===0" class="px-3 py-2 text-sm text-slate-400">该基线暂无需求</div>
+                <div v-for="r in filteredBaselineReqs" :key="r.id"
+                  class="px-3 py-1.5 text-sm cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                  :class="changeForm.object_desc.includes(r.name) ? 'bg-blue-50 dark:bg-blue-900/20 font-medium' : ''"
+                  @click="selectReq(r)">
+                  <span class="text-xs text-slate-400 mr-1">{{ typeLabels[r.type] || r.type }}</span>
+                  {{ r.name }}
+                </div>
+              </div>
+              <div v-if="changeForm.object_desc" class="mt-1 px-2 py-1 text-xs text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20 rounded">
+                已选: {{ changeForm.object_desc }}
+                <button @click="changeForm.object_desc = ''" class="ml-1 text-red-500 hover:text-red-700">×</button>
+              </div>
+            </template>
+          </div>
           <div><label class="block text-sm font-medium mb-1">变更内容</label><textarea v-model="changeForm.content" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
           <div><label class="block text-sm font-medium mb-1">变更负责人</label>
             <select v-model="changeForm.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
@@ -259,6 +282,85 @@
         <div class="flex justify-end gap-2 mt-6">
           <button @click="showChange=false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">取消</button>
           <button @click="saveChange" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">保存</button>
+        </div>
+      </div>
+    </div>
+    <!-- 变更审批弹窗 -->
+    <div v-if="showApprove" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showApprove=false">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <h2 class="text-lg font-bold mb-4">{{ approveAction==='approved' ? '审批通过' : '驳回' }}变更</h2>
+        <div class="space-y-3">
+          <div class="text-sm"><span class="text-slate-400">基线：</span><span class="font-medium">{{ approveTarget?.baseline_name }} v{{ approveTarget?.baseline_version }}</span></div>
+          <div class="text-sm"><span class="text-slate-400">变更对象：</span><span class="font-medium">{{ approveTarget?.object_desc }}</span></div>
+          <div class="text-sm"><span class="text-slate-400">变更内容：</span><span class="font-medium">{{ approveTarget?.content }}</span></div>
+          <div v-if="approveAction==='rejected'" class="pt-2 border-t border-slate-200 dark:border-slate-700">
+            <label class="block text-sm font-medium mb-1">驳回原因</label>
+            <textarea v-model="approveReason" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" placeholder="请填写驳回原因..."></textarea>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+          <button @click="showApprove=false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">取消</button>
+          <button @click="confirmApprove" class="px-4 py-2 rounded-lg text-sm text-white" :class="approveAction==='approved' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'">{{ approveAction==='approved' ? '确认通过' : '确认驳回' }}</button>
+        </div>
+      </div>
+    </div>
+    <!-- 变更详情弹窗 -->
+    <div v-if="showChangeDetail && changeDetailItem" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="showChangeDetail=false">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold">变更详情</h2>
+          <button @click="showChangeDetail=false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xl leading-none">&times;</button>
+        </div>
+        <div class="space-y-4 text-sm">
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">基线</span>
+            <span class="font-medium">{{ changeDetailItem.baseline_name }} <span class="text-xs text-slate-400 font-mono">v{{ changeDetailItem.baseline_version }}</span></span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">变更对象</span>
+            <span class="font-medium">{{ changeDetailItem.object_desc }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-xs mb-0.5">变更内容</span>
+            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{{ changeDetailItem.content }}</div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <span class="text-slate-400 block text-xs mb-0.5">变更负责人</span>
+              <span>{{ changeDetailItem.assignee_name || '—' }}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block text-xs mb-0.5">变更审批人</span>
+              <span>{{ changeDetailItem.approver_name || '—' }}</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <span class="text-slate-400 block text-xs mb-0.5">审批状态</span>
+              <span class="inline-block px-2 py-0.5 rounded text-xs font-medium" :class="approvalCls(changeDetailItem.approval_status)">{{ approvalLabels[changeDetailItem.approval_status] }}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block text-xs mb-0.5">创建人</span>
+              <span>{{ changeDetailItem.created_by_name || '—' }}</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <span class="text-slate-400 block text-xs mb-0.5">创建时间</span>
+              <span>{{ formatTime(changeDetailItem.created_at) }}</span>
+            </div>
+            <div v-if="changeDetailItem.updated_at">
+              <span class="text-slate-400 block text-xs mb-0.5">更新时间</span>
+              <span>{{ formatTime(changeDetailItem.updated_at) }}</span>
+            </div>
+          </div>
+          <div v-if="changeDetailItem.notes">
+            <span class="text-slate-400 block text-xs mb-0.5">备注说明</span>
+            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{{ changeDetailItem.notes }}</div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <button @click="showChangeDetail=false" class="px-4 py-2 rounded-lg text-sm border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition">关闭</button>
         </div>
       </div>
     </div>
@@ -336,8 +438,9 @@ import {
   getRequirements, createRequirement, updateRequirement, deleteRequirement,
   submitReview, withdrawReview,
   getReqReviews, createReqReview,
-  getReqBaselines, createReqBaseline, deleteReqBaseline,
+  getReqBaselines, getReqBaseline, createReqBaseline, deleteReqBaseline,
   getReqChanges, createReqChange, updateReqChange,
+  approveReqChange, rejectReqChange,
   TYPE_LABELS, STATUS_LABELS,
 } from '@/api/modules/requirements'
 import type { Requirement } from '@/api/modules/requirements'
@@ -385,11 +488,27 @@ const blForm = reactive<Record<string, any>>({ type: 'business', name: '', versi
 // Change
 const showChange = ref(false), changeEditing = ref<any>(null), blSearch = ref('')
 const changeForm = reactive<Record<string, any>>({ baseline: '', object_desc: '', content: '', assignee: null, approver: null, notes: '' })
+const baselineReqs = ref<Requirement[]>([])
+const reqSearch = ref('')
+const showApprove = ref(false), approveTarget = ref<any>(null), approveAction = ref(''), approveReason = ref('')
+const showChangeDetail = ref(false), changeDetailItem = ref<any>(null)
 
 const filteredBaselines = computed(() =>
   baselines.value.filter(bl => !blSearch.value || bl.name.includes(blSearch.value) || bl.version.includes(blSearch.value))
 )
-function selectBaseline(bl: any) { changeForm.baseline = bl.id; blSearch.value = bl.name + ' v' + bl.version }
+const filteredBaselineReqs = computed(() =>
+  baselineReqs.value.filter(r => !reqSearch.value || r.name.includes(reqSearch.value) || (r.description && r.description.includes(reqSearch.value)))
+)
+async function selectBaseline(bl: any) {
+  changeForm.baseline = bl.id; blSearch.value = bl.name + ' v' + bl.version; reqSearch.value = ''; changeForm.object_desc = ''
+  try {
+    const r = await getReqBaseline(bl.id)
+    baselineReqs.value = r.data.requirements_data ?? []
+  } catch { baselineReqs.value = [] }
+}
+function selectReq(req: Requirement) {
+  changeForm.object_desc = `[${typeLabels[req.type] || req.type}] ${req.name}`
+}
 
 function formatTime(t: string | null | undefined) {
   if (!t) return '—'
@@ -565,6 +684,8 @@ function editChange(c: any) {
   changeEditing.value = c
   Object.assign(changeForm, { baseline: c.baseline, object_desc: c.object_desc, content: c.content, assignee: c.assignee, approver: c.approver, notes: c.notes })
   showChange.value = true
+  blSearch.value = (c.baseline_name || '') + ' v' + (c.baseline_version || '')
+  getReqBaseline(c.baseline).then(r => { baselineReqs.value = r.data.requirements_data ?? [] }).catch(() => { baselineReqs.value = [] })
 }
 async function saveChange() {
   try {
@@ -573,7 +694,36 @@ async function saveChange() {
     showChange.value = false; toast.show('保存成功', 'success'); loadChanges()
   } catch { toast.show('保存失败', 'error') }
 }
+function openApproveDialog(c: any, action: string) {
+  approveTarget.value = c; approveAction.value = action; approveReason.value = ''
+  showApprove.value = true
+}
+async function confirmApprove() {
+  try {
+    if (approveAction.value === 'approved') {
+      await approveReqChange(approveTarget.value.id)
+      toast.show('审批通过', 'success')
+    } else {
+      await rejectReqChange(approveTarget.value.id)
+      toast.show('已驳回', 'success')
+    }
+    showApprove.value = false
+    loadChanges()
+  } catch (e: any) {
+    const data = e?.response?.data
+    let msg = '操作失败'
+    if (data) {
+      if (typeof data === 'string') msg = data
+      else if (typeof data === 'object') msg = Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join('；') : v}`).join(' | ')
+    }
+    toast.show(msg, 'error')
+  }
+}
 
+function viewChangeDetail(c: any) {
+  changeDetailItem.value = c
+  showChangeDetail.value = true
+}
 function viewDetail(r: any) {
   detailItem.value = r
   showDetail.value = true

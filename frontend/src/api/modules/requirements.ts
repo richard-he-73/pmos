@@ -114,6 +114,9 @@ export function createReqReview(data: Partial<RequirementReview>) {
 export function getReqBaselines(params?: Record<string, any>) {
   return request.get<{ results: RequirementBaseline[] }>('/req-baselines/', { params })
 }
+export function getReqBaseline(id: number) {
+  return request.get<RequirementBaseline>(`/req-baselines/${id}/`)
+}
 export function createReqBaseline(data: Partial<RequirementBaseline>) {
   return request.post<RequirementBaseline>('/req-baselines/', data)
 }
@@ -129,4 +132,10 @@ export function createReqChange(data: Partial<RequirementChange>) {
 }
 export function updateReqChange(id: number, data: Partial<RequirementChange>) {
   return request.patch<RequirementChange>(`/req-changes/${id}/`, data)
+}
+export function approveReqChange(id: number) {
+  return request.post<RequirementChange>(`/req-changes/${id}/approve/`)
+}
+export function rejectReqChange(id: number) {
+  return request.post<RequirementChange>(`/req-changes/${id}/reject/`)
 }
