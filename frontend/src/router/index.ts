@@ -9,6 +9,12 @@ const routes = [
     component: () => import('@/views/login/Index.vue'),
   },
   {
+    path: '/smart-date-test',
+    name: 'SmartDateTest',
+    meta: { requiresAuth: false },
+    component: () => import('@/views/smart-date-test/Index.vue'),
+  },
+  {
     path: '/',
     component: () => import('@/views/layout/AppLayout.vue'),
     meta: { requiresAuth: true },

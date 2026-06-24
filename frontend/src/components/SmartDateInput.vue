@@ -1,86 +1,116 @@
 <template>
-  <div class="flex gap-1 items-center">
-    <input ref="yRef" type="text" inputmode="numeric" maxlength="4" placeholder="yyyy"
-      :value="year" @input="onYearInput" @keydown.backspace="onYearBackspace"
-      class="w-16 px-2 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-center outline-none focus:ring-2 focus:ring-blue-500" />
-    <span class="text-slate-400 text-sm">-</span>
-    <input ref="mRef" type="text" inputmode="numeric" maxlength="2" placeholder="mm"
-      :value="month" @input="onMonthInput" @keydown.backspace="onMonthBackspace"
-      class="w-14 px-2 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-center outline-none focus:ring-2 focus:ring-blue-500" />
-    <span class="text-slate-400 text-sm">-</span>
-    <input ref="dRef" type="text" inputmode="numeric" maxlength="2" placeholder="dd"
-      :value="day" @input="onDayInput"
-      class="w-14 px-2 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-center outline-none focus:ring-2 focus:ring-blue-500" />
+  <div class="relative">
+    <input
+      ref="inputRef"
+      type="text"
+      :value="displayText"
+      @input="onInput"
+      @keydown.enter="onEnter"
+      @blur="onBlur"
+      :placeholder="placeholder"
+      class="w-full px-3 py-2 rounded-lg border text-sm outline-none"
+      :class="inputClass"
+    />
+    <span
+      v-if="status"
+      class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none"
+      :class="statusCls"
+    >{{ status }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { tryRecognize, fmtDate } from '@/utils/smartDate'
 
-const props = defineProps<{ modelValue: string }>()
-const emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>()
+const props = withDefaults(defineProps<{
+  modelValue: string
+  placeholder?: string
+}>(), {
+  placeholder: '输入日期，如下周五、625、6-25',
+})
 
-const yRef = ref<HTMLInputElement | null>(null)
-const mRef = ref<HTMLInputElement | null>(null)
-const dRef = ref<HTMLInputElement | null>(null)
+const emit = defineEmits<{
+  (e: 'update:modelValue', v: string): void
+}>()
 
-const year = ref('')
-const month = ref('')
-const day = ref('')
+const inputRef = ref<HTMLInputElement | null>(null)
+const rawInput = ref('')
+const recognized = ref<string | null>(null)
+const status = ref<'✓' | '✗' | ''>('')
+const statusType = ref<'ok' | 'err' | ''>('')
 
-// 从初始值解析
+const displayText = computed(() => recognized.value || rawInput.value)
+
+const inputClass = computed(() => {
+  if (!status.value) return 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100'
+  if (statusType.value === 'ok') return 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/10 text-slate-900 dark:text-slate-100'
+  return 'border-red-300 bg-red-50 dark:bg-red-900/10 text-slate-900 dark:text-slate-100'
+})
+
+const statusCls = computed(() => {
+  if (statusType.value === 'ok') return 'text-emerald-500'
+  if (statusType.value === 'err') return 'text-red-400'
+  return 'text-slate-400'
+})
+
+function onInput(e: Event) {
+  const t = e.target as HTMLInputElement
+  rawInput.value = t.value
+  recognized.value = null
+  status.value = ''
+  statusType.value = ''
+  emit('update:modelValue', '')
+}
+
+function onEnter() {
+  tryRecognizeOnBlur()
+  inputRef.value?.blur()
+}
+
+function tryRecognizeOnBlur() {
+  const val = rawInput.value.trim()
+  if (!val || recognized.value) return
+  const result = tryRecognize(val)
+  if (result) {
+    const formatted = fmtDate(result)
+    recognized.value = formatted
+    status.value = '✓'
+    statusType.value = 'ok'
+    if (inputRef.value) {
+      inputRef.value.value = formatted
+      rawInput.value = formatted
+    }
+    emit('update:modelValue', formatted)
+  }
+}
+
+function onBlur() {
+  if (recognized.value && inputRef.value) {
+    inputRef.value.value = recognized.value
+  }
+  tryRecognizeOnBlur()
+  if (rawInput.value.trim() && !recognized.value) {
+    status.value = '✗'
+    statusType.value = 'err'
+    setTimeout(() => {
+      if (!inputRef.value?.matches(':focus')) {
+        status.value = ''
+        statusType.value = ''
+      }
+    }, 2000)
+  }
+}
+
 watch(() => props.modelValue, (val) => {
-  if (!val) { year.value = ''; month.value = ''; day.value = ''; return }
-  const parts = val.split('-')
-  year.value = parts[0] || ''
-  month.value = parts[1] || ''
-  day.value = parts[2] || ''
-}, { immediate: true })
-
-function emitValue() {
-  if (year.value && month.value && day.value) {
-    emit('update:modelValue', `${year.value}-${month.value}-${day.value}`)
-  } else {
-    emit('update:modelValue', '')
+  if (val && val !== recognized.value) {
+    recognized.value = val
+    rawInput.value = val
+    if (inputRef.value) inputRef.value.value = val
   }
-}
+})
 
-function onYearInput(e: Event) {
-  const t = e.target as HTMLInputElement
-  year.value = t.value.replace(/\D/g, '').slice(0, 4)
-  t.value = year.value
-  if (year.value.length === 4) mRef.value?.focus()
-  emitValue()
-}
-
-function onYearBackspace(e: KeyboardEvent) {
-  if (year.value.length === 0) {
-    // 已在最前，不做特殊处理
-  }
-}
-
-function onMonthInput(e: Event) {
-  const t = e.target as HTMLInputElement
-  let v = t.value.replace(/\D/g, '').slice(0, 2)
-  if (v.length === 1 && parseInt(v) > 1) v = '0' + v
-  if (parseInt(v) > 12) v = '12'
-  month.value = v
-  t.value = v
-  if (month.value.length === 2) dRef.value?.focus()
-  emitValue()
-}
-
-function onMonthBackspace(e: KeyboardEvent) {
-  if (month.value.length === 0) yRef.value?.focus()
-}
-
-function onDayInput(e: Event) {
-  const t = e.target as HTMLInputElement
-  let v = t.value.replace(/\D/g, '').slice(0, 2)
-  if (v.length === 1 && parseInt(v) > 3) v = '0' + v
-  if (parseInt(v) > 31) v = '31'
-  day.value = v
-  t.value = v
-  emitValue()
-}
+function focus() { inputRef.value?.focus() }
+function select() { inputRef.value?.select() }
+defineExpose({ focus, select })
 </script>
