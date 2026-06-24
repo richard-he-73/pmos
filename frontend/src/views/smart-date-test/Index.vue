@@ -15,13 +15,13 @@
 
       <div class="flex items-center gap-3">
         <label class="w-20 text-sm font-medium text-slate-600 dark:text-slate-300">开始</label>
-        <SmartDateInput v-model="date2" placeholder="如后天、下周五" class="flex-1" />
+        <SmartDateInput v-model="date2" class="flex-1" />
         <code class="text-xs text-slate-400 font-mono min-w-[120px]">{{ date2 || '未识别' }}</code>
       </div>
 
       <div class="flex items-center gap-3">
         <label class="w-20 text-sm font-medium text-slate-600 dark:text-slate-300">结束</label>
-        <SmartDateInput v-model="date3" placeholder="如下月1号、625" class="flex-1" />
+        <SmartDateInput v-model="date3" class="flex-1" />
         <code class="text-xs text-slate-400 font-mono min-w-[120px]">{{ date3 || '未识别' }}</code>
       </div>
     </div>

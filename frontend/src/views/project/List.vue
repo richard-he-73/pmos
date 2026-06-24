@@ -77,7 +77,7 @@
             </select>
           </div>
           <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">日期范围</label>
-            <div class="flex gap-2"><SmartDateInput v-model="form.start_date" placeholder="开始日期" class="flex-1" /><SmartDateInput v-model="form.end_date" placeholder="结束日期" class="flex-1" /></div>
+            <div class="flex gap-2"><SmartDateInput v-model="form.start_date" class="flex-1" /><SmartDateInput v-model="form.end_date" class="flex-1" /></div>
           </div>
           <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">项目负责人</label>
             <select v-model="form.owner" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
