@@ -138,7 +138,7 @@
               <option v-for="m in orgMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
             </select>
           </div>
-          <div><label class="block text-sm font-medium mb-1">需求完成日期</label><input v-model="form.due_date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
+          <div><label class="block text-sm font-medium mb-1">需求完成日期</label><SmartDateInput v-model="form.due_date" /></div>
           <div><label class="block text-sm font-medium mb-1">备注说明</label><textarea v-model="form.notes" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
         </div>
         <div class="flex justify-end gap-2 mt-6">
@@ -180,7 +180,7 @@
               <option value="meeting">会议</option><option value="email">邮件</option><option value="circulation">传签</option><option value="other">其他</option>
             </select>
           </div>
-          <div><label class="block text-sm font-medium mb-1">评审日期</label><input v-model="reviewForm.review_date" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
+          <div><label class="block text-sm font-medium mb-1">评审日期</label><SmartDateInput v-model="reviewForm.review_date" /></div>
           <div><label class="block text-sm font-medium mb-1">评审干系人</label>
             <div class="max-h-32 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg p-2 space-y-1">
               <label v-for="m in orgMembers" :key="m.id" class="flex items-center gap-2 text-sm cursor-pointer">
@@ -443,6 +443,7 @@ import {
   approveReqChange, rejectReqChange,
   TYPE_LABELS, STATUS_LABELS,
 } from '@/api/modules/requirements'
+import SmartDateInput from '@/components/SmartDateInput.vue'
 import type { Requirement } from '@/api/modules/requirements'
 
 const projectStore = useProjectStore()

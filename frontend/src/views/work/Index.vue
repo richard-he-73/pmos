@@ -136,7 +136,7 @@
             <input v-model="form[f.k]" v-else-if="f.type==='datetime-local'" type="datetime-local" @focus="e.target.showPicker?.()" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
 
             <!-- Date input -->
-            <input v-model="form[f.k]" v-else-if="f.type==='date'" type="date" @focus="e.target.showPicker?.()" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+            <SmartDateInput v-model="form[f.k]" v-else-if="f.type==='date'" class="w-full" />
 
             <!-- Number -->
             <input v-model="form[f.k]" v-else-if="f.type==='number'" type="number" min="0" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
@@ -161,6 +161,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useProjectStore } from '@/stores/project'
 import { useConfirmStore } from '@/stores/confirm'
 import { useToastStore } from '@/stores/toast'
+import SmartDateInput from '@/components/SmartDateInput.vue'
 import request from '@/api/request'
 
 import { getEquipments, createEquipment, updateEquipment, deleteEquipment,
@@ -214,13 +215,13 @@ const tabs = [
   { k:'equipment', l:'设备', e:'equipments', cols:[{k:'type',t:'设备类型'},{k:'specs',t:'规格'},{k:'quantity',t:'数量'},{k:'status',t:'状态'}], fields:[{k:'type',t:'设备类型',type:'select',options:[{v:'server',t:'服务器'},{v:'computer',t:'计算机'},{v:'printer',t:'打印机'},{v:'storage',t:'移动存储'},{v:'consumable',t:'耗材'},{v:'other',t:'其他'}]},{k:'specs',t:'设备规格'},{k:'quantity',t:'设备数量',type:'number'},{k:'status',t:'设备状态',type:'select',options:[{v:'not_issued',t:'未出库'},{v:'in_use',t:'使用中'},{v:'recycled',t:'已回收'},{v:'scrapped',t:'已报废'},{v:'other',t:'其他'}]},{k:'notes',t:'备注说明',type:'textarea'}] },
   { k:'leave', l:'请假', e:'leaves',
     cols:[
-      {k:'applicant_name',t:'申请人'},{k:'type',t:'类型'},{k:'start_date',t:'开始时间'},{k:'end_date',t:'结束时间'},{k:'status',t:'审批状态'},{k:'is_cancelled',t:'销假'}
+      {k:'applicant_name',t:'申请人'},{k:'type',t:'类型'},{k:'start_date',t:'开始日期'},{k:'end_date',t:'结束日期'},{k:'status',t:'审批状态'},{k:'is_cancelled',t:'销假'}
     ],
     fields:[
       {k:'applicant',t:'申请人',type:'select',options:'org-members'},
       {k:'type',t:'请假类型',type:'select',options:[{v:'personal',t:'事假'},{v:'sick',t:'病假'},{v:'annual',t:'年假'},{v:'marriage',t:'婚假'},{v:'funeral',t:'丧假'},{v:'paternity',t:'陪产假'},{v:'compensatory',t:'调休假'},{v:'family_visit',t:'探亲假'},{v:'other',t:'其他'}]},
-      {k:'start_date',t:'开始时间',type:'datetime-local'},
-      {k:'end_date',t:'结束时间',type:'datetime-local'},
+      {k:'start_date',t:'开始日期',type:'date'},
+      {k:'end_date',t:'结束日期',type:'date'},
       {k:'status',t:'审批状态',type:'select',options:[{v:'pending',t:'待审批'},{v:'approved',t:'已批准'},{v:'rejected',t:'已驳回'}]},
       {k:'approver',t:'审批人',type:'select',options:'org-approvers'},
       {k:'is_cancelled',t:'销假状态',type:'switch'},
