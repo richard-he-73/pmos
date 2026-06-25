@@ -121,9 +121,9 @@ onMounted(async () => {
       getConsultants({ page_size: 999, project: id }).catch(() => null),
     ])
     project.value = pr.data
-    if (st) stats.value = st.data
-    if (pl?.data?.results) plans.value = pl.data.results
-    if (tm?.data?.results) teamMembers.value = tm.data.results
+    if (st) stats.value = st.data as any
+    if ((pl as any)?.data?.results) plans.value = (pl as any).data.results
+    if ((tm as any)?.data?.results) teamMembers.value = (tm as any).data.results
   } catch {}
 })
 </script>

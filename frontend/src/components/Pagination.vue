@@ -14,7 +14,7 @@
         <button @click="goPage(page - 1)" :disabled="page <= 1" class="px-2 py-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed">上一页</button>
         <template v-for="p in pages" :key="p">
           <button v-if="p === '...'" disabled class="px-1 text-slate-400 text-xs">...</button>
-          <button v-else @click="goPage(p)" class="px-2.5 py-1 rounded text-xs font-medium" :class="p === page ? 'bg-blue-600 text-white' : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700'">{{ p }}</button>
+          <button v-else @click="goPage(p as number)" class="px-2.5 py-1 rounded text-xs font-medium" :class="p === page ? 'bg-blue-600 text-white' : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700'">{{ p }}</button>
         </template>
         <button @click="goPage(page + 1)" :disabled="page >= totalPages" class="px-2 py-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed">下一页</button>
       </template>

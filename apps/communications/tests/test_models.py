@@ -16,19 +16,15 @@ def demo_project(admin_user):
 @pytest.mark.django_db
 class TestCommType:
     def test_create(self, admin_user, demo_project):
-        from apps.communications.models import CommType
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.communications.models import CommType
         pass
 
 @pytest.mark.django_db
 class TestCommRecord:
     def test_create(self, admin_user, demo_project):
-        from apps.communications.models import CommRecord
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.communications.models import CommRecord
         pass

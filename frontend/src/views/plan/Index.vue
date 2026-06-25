@@ -124,9 +124,20 @@
                 <option v-for="m in orgMembers" :key="m.id" :value="m.name">{{ memberLabel(m) }}</option>
               </select>
             </div>
-            <div>
+            <div class="relative" data-picker="stakeholder">
               <label class="block text-sm font-medium mb-1">干系人</label>
-              <input v-model="form.stakeholders" placeholder="逗号分隔" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+              <div @click="showStakeholderPicker = !showStakeholderPicker" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm cursor-pointer flex flex-wrap gap-1 min-h-[38px]">
+                <span v-if="!form.stakeholders?.length" class="text-slate-400">请选择干系人</span>
+                <span v-for="s in form.stakeholders" :key="s" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                  {{ s }}
+                </span>
+              </div>
+              <div v-if="showStakeholderPicker" class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 shadow-lg p-2 space-y-1">
+                <label v-for="m in orgMembers" :key="m.id" class="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 py-1 rounded">
+                  <input type="checkbox" :value="m.real_name || m.name" v-model="form.stakeholders" class="w-4 h-4 rounded border-slate-300 text-blue-600" />
+                  <span>{{ memberLabel(m) }}</span>
+                </label>
+              </div>
             </div>
           </div>
           <div class="grid grid-cols-2 gap-6">
@@ -228,31 +239,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import request from '@/api/request'
 import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
 import { useProjectStore } from '@/stores/project'
 import SmartDateInput from '@/components/SmartDateInput.vue'
+import { memberLabel } from '@/composables/useMemberLabel'
 const toast = useToastStore()
 const confirmStore = useConfirmStore()
 const projectStore = useProjectStore()
-const roleLabel: Record<string, string> = {
-  project_director: '项目总监',
-  project_manager: '项目经理',
-  consulting_expert: '咨询专家',
-  consulting_advisor: '咨询顾问',
-  consulting_assistant: '咨询助理',
-  other: '其他',
-}
-function memberLabel(m: any): string {
-  const name = m.real_name || m.name || ''
-  const parts = []
-  if (m.dept_name) parts.push(m.dept_name)
-  if (m.project_role && roleLabel[m.project_role]) parts.push(roleLabel[m.project_role])
-  const suffix = parts.length ? `（${parts.join('-')}）` : ''
-  return `${name}${suffix}`
-}
 
 
 
@@ -270,6 +266,7 @@ const loading = ref(false)
 const showForm = ref(false)
 const editing = ref<any>(null)
 const form = ref<any>({})
+const showStakeholderPicker = ref(false)
 
 const filteredPlans = computed(() => allPlans.value.filter(p => p.type === planTab.value))
 
@@ -382,18 +379,19 @@ function onStatusChange() {
 
 function openForm() {
   editing.value = null
-  form.value = { type: planTab.value, status: 'not_started', progress: 0 }
+  form.value = { type: planTab.value, status: 'not_started', progress: 0, stakeholders: [] }
   showForm.value = true
 }
 function editPlan(p: any) {
   editing.value = p
-  form.value = { ...p }
+  form.value = { ...p, stakeholders: p.stakeholders ? p.stakeholders.split(',').map((s: string) => s.trim()).filter(Boolean) : [] }
   showForm.value = true
 }
 
 async function savePlan() {
   if (!form.value.name) { toast.show('请输入计划名称', 'error'); return }
   const payload = { ...form.value, type: planTab.value }
+  payload.stakeholders = Array.isArray(payload.stakeholders) ? payload.stakeholders.join(', ') : (payload.stakeholders || '')
   if (!payload.start_date) { toast.show('请选择开始日期', 'error'); return }
   if (!payload.end_date) { toast.show('请选择结束日期', 'error'); return }
   for (const k of ['parent']) {
@@ -422,6 +420,12 @@ async function deletePlan(id: number) {
   try { await request.delete('/plans/' + id + '/'); toast.show('删除成功', 'success'); load() } catch { toast.show('删除失败', 'error') }
 }
 
+function handleClickOutside(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (!target.closest('[data-picker="stakeholder"]')) showStakeholderPicker.value = false
+}
+
 watch(planTab, () => { load() })
-onMounted(() => { load(); loadMembers() })
+onMounted(() => { load(); loadMembers(); document.addEventListener('click', handleClickOutside) })
+onUnmounted(() => { document.removeEventListener('click', handleClickOutside) })
 </script>

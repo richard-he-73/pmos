@@ -183,26 +183,28 @@
           <div><label class="block text-sm font-medium mb-1">报告人</label>
             <select v-model="issueForm.reporter" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option value="">请选择</option>
-              <option v-for="u in orgMembersWithUser" :key="u.user_id" :value="u.user_id">{{ u.name }}</option>
+              <option v-for="u in orgMembersWithUser" :key="u.user_id" :value="u.user_id">{{ memberLabel(u) }}</option>
             </select>
           </div>
           <div><label class="block text-sm font-medium mb-1">负责人</label>
             <select v-model="issueForm.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option value="">请选择</option>
-              <option v-for="u in orgMembersWithUser" :key="u.user_id" :value="u.user_id">{{ u.name }}</option>
+              <option v-for="u in orgMembersWithUser" :key="u.user_id" :value="u.user_id">{{ memberLabel(u) }}</option>
             </select>
           </div>
           <div class="col-span-2"><label class="block text-sm font-medium mb-1">干系人</label>
-            <div class="flex flex-wrap gap-2 p-2 border border-slate-300 dark:border-slate-600 rounded-lg min-h-[42px] bg-white dark:bg-slate-700">
-              <span v-for="u in selectedIssueStakeholders" :key="u.user_id" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                {{ u.name }}
-                <button @click="removeIssueStakeholder(u)" class="hover:text-red-500">&times;</button>
-              </span>
-              <div class="relative" data-picker="stakeholder">
-                <input v-model="issueStakeholderSearch" placeholder="搜索添加干系人..." class="text-sm border-0 outline-none bg-transparent min-w-[120px]" @focus="issueStakeholderOpen=true" @input="issueStakeholderOpen=true" />
-                <div v-if="issueStakeholderOpen && filteredIssueMembers.length" class="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg max-h-40 overflow-y-auto z-10">
-                  <button v-for="u in filteredIssueMembers" :key="u.user_id" class="block w-full text-left px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" @click="addIssueStakeholder(u)">{{ u.name }}</button>
-                </div>
+            <div class="relative" data-picker="stakeholder">
+              <div @click="issueStakeholderOpen = !issueStakeholderOpen" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm cursor-pointer flex flex-wrap gap-1 min-h-[38px]">
+                <span v-if="!issueStakeholderIds.length" class="text-slate-400">请选择干系人</span>
+                <span v-for="uid in issueStakeholderIds" :key="uid" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                  {{ (orgMembers.find(m=>m.user_id===uid) ? memberLabel(orgMembers.find(m=>m.user_id===uid)) : uid) }}
+                </span>
+              </div>
+              <div v-if="issueStakeholderOpen" class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 shadow-lg p-2 space-y-1">
+                <label v-for="m in orgMembers" :key="m.user_id" class="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 py-1 rounded">
+                  <input type="checkbox" :value="m.user_id" v-model="issueStakeholderIds" class="w-4 h-4 rounded border-slate-300 text-blue-600" />
+                  <span>{{ memberLabel(m) }}</span>
+                </label>
               </div>
             </div>
           </div>
@@ -298,26 +300,28 @@
           <div><label class="block text-sm font-medium mb-1">报告人</label>
             <select v-model="riskForm.reporter" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option value="">请选择</option>
-              <option v-for="u in orgMembersWithUser" :key="u.user_id" :value="u.user_id">{{ u.name }}</option>
+              <option v-for="u in orgMembersWithUser" :key="u.user_id" :value="u.user_id">{{ memberLabel(u) }}</option>
             </select>
           </div>
           <div><label class="block text-sm font-medium mb-1">负责人</label>
             <select v-model="riskForm.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option value="">请选择</option>
-              <option v-for="u in orgMembersWithUser" :key="u.user_id" :value="u.user_id">{{ u.name }}</option>
+              <option v-for="u in orgMembersWithUser" :key="u.user_id" :value="u.user_id">{{ memberLabel(u) }}</option>
             </select>
           </div>
           <div class="col-span-2"><label class="block text-sm font-medium mb-1">干系人</label>
-            <div class="flex flex-wrap gap-2 p-2 border border-slate-300 dark:border-slate-600 rounded-lg min-h-[42px] bg-white dark:bg-slate-700">
-              <span v-for="u in selectedRiskStakeholders" :key="u.user_id" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                {{ u.name }}
-                <button @click="removeRiskStakeholder(u)" class="hover:text-red-500">&times;</button>
-              </span>
-              <div class="relative" data-picker="stakeholder">
-                <input v-model="riskStakeholderSearch" placeholder="搜索添加干系人..." class="text-sm border-0 outline-none bg-transparent min-w-[120px]" @focus="riskStakeholderOpen=true" @input="riskStakeholderOpen=true" />
-                <div v-if="riskStakeholderOpen && filteredRiskMembers.length" class="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg max-h-40 overflow-y-auto z-10">
-                  <button v-for="u in filteredRiskMembers" :key="u.user_id" class="block w-full text-left px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" @click="addRiskStakeholder(u)">{{ u.name }}</button>
-                </div>
+            <div class="relative" data-picker="stakeholder">
+              <div @click="riskStakeholderOpen = !riskStakeholderOpen" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm cursor-pointer flex flex-wrap gap-1 min-h-[38px]">
+                <span v-if="!riskStakeholderIds.length" class="text-slate-400">请选择干系人</span>
+                <span v-for="uid in riskStakeholderIds" :key="uid" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                  {{ (orgMembers.find(m=>m.user_id===uid) ? memberLabel(orgMembers.find(m=>m.user_id===uid)) : uid) }}
+                </span>
+              </div>
+              <div v-if="riskStakeholderOpen" class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 shadow-lg p-2 space-y-1">
+                <label v-for="m in orgMembers" :key="m.user_id" class="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 py-1 rounded">
+                  <input type="checkbox" :value="m.user_id" v-model="riskStakeholderIds" class="w-4 h-4 rounded border-slate-300 text-blue-600" />
+                  <span>{{ memberLabel(m) }}</span>
+                </label>
               </div>
             </div>
           </div>
@@ -366,6 +370,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { memberLabel } from '@/composables/useMemberLabel'
 import { useProjectStore } from '@/stores/project'
 import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
@@ -431,24 +436,8 @@ const defaultIssueForm = {
 const issueForm = reactive({ ...defaultIssueForm })
 
 // 干系人选择
-const issueStakeholderSearch = ref('')
 const issueStakeholderOpen = ref(false)
-const selectedIssueStakeholders = ref<any[]>([])
-
-const filteredIssueMembers = computed(() => {
-  const ids = new Set(selectedIssueStakeholders.value.map(u => u.user_id))
-  const q = issueStakeholderSearch.value.trim().toLowerCase()
-  return orgMembers.value.filter((u: any) => !ids.has(u.user_id) && (!q || u.name.includes(q)))
-})
-
-function addIssueStakeholder(u: any) {
-  selectedIssueStakeholders.value.push(u)
-  issueStakeholderSearch.value = ''
-  issueStakeholderOpen.value = false
-}
-function removeIssueStakeholder(u: any) {
-  selectedIssueStakeholders.value = selectedIssueStakeholders.value.filter(x => x.user_id !== u.user_id)
-}
+const issueStakeholderIds = ref<number[]>([])
 
 async function loadIssues() {
   issueLoading.value = true
@@ -464,11 +453,11 @@ async function loadIssues() {
 function openIssueForm(r: Issue | null) {
   issueEditing.value = r
   issueFile.value = null
-  selectedIssueStakeholders.value = []
+  issueStakeholderIds.value = []
   if (r) {
     Object.assign(issueForm, r)
     if (r.stakeholder_names && r.stakeholders) {
-      selectedIssueStakeholders.value = orgMembers.value.filter((u: any) => (r.stakeholders as any)?.includes(u.user_id))
+      issueStakeholderIds.value = (r.stakeholders as any[]) || []
     }
   } else {
     Object.assign(issueForm, { ...defaultIssueForm, project: projectStore.activeProjectId })
@@ -486,7 +475,7 @@ async function saveIssue() {
   issueSaving.value = true
   try {
     const payload: Record<string, any> = { ...issueForm }
-    payload.stakeholder_ids = selectedIssueStakeholders.value.map((u: any) => u.user_id)
+    payload.stakeholder_ids = issueStakeholderIds.value
     payload.project = projectStore.activeProjectId
 
     if (issueFile.value) {
@@ -533,7 +522,7 @@ async function doDeleteIssue(r: Issue) {
 function doReportRisk(r: Issue) {
   // 切换到风险管理标签并预填表单
   tab.value = 'risks'
-  selectedRiskStakeholders.value = []
+  riskStakeholderIds.value = []
   Object.assign(riskForm, {
     ...defaultRiskForm,
     project: projectStore.activeProjectId,
@@ -543,7 +532,7 @@ function doReportRisk(r: Issue) {
     assignee: r.assignee,
   })
   if (r.stakeholders?.length) {
-    selectedRiskStakeholders.value = orgMembers.value.filter((u: any) => (r.stakeholders as any)?.includes(u.user_id))
+    riskStakeholderIds.value = (r.stakeholders as any[]) || []
   }
   autoCalcRiskLevel()
   riskEditing.value = null
@@ -578,24 +567,8 @@ const defaultRiskForm = {
 const riskForm = reactive({ ...defaultRiskForm })
 
 // 干系人选择
-const riskStakeholderSearch = ref('')
 const riskStakeholderOpen = ref(false)
-const selectedRiskStakeholders = ref<any[]>([])
-
-const filteredRiskMembers = computed(() => {
-  const ids = new Set(selectedRiskStakeholders.value.map(u => u.user_id))
-  const q = riskStakeholderSearch.value.trim().toLowerCase()
-  return orgMembers.value.filter((u: any) => !ids.has(u.user_id) && (!q || u.name.includes(q)))
-})
-
-function addRiskStakeholder(u: any) {
-  selectedRiskStakeholders.value.push(u)
-  riskStakeholderSearch.value = ''
-  riskStakeholderOpen.value = false
-}
-function removeRiskStakeholder(u: any) {
-  selectedRiskStakeholders.value = selectedRiskStakeholders.value.filter(x => x.user_id !== u.user_id)
-}
+const riskStakeholderIds = ref<number[]>([])
 
 // ── 工具函数 ──
 function formatDT(s: string | null | undefined): string {
@@ -631,11 +604,11 @@ async function loadRisks() {
 function openRiskForm(r: Risk | null) {
   riskEditing.value = r
   riskFile.value = null
-  selectedRiskStakeholders.value = []
+  riskStakeholderIds.value = []
   if (r) {
     Object.assign(riskForm, r)
     if (r.stakeholder_names && r.stakeholders) {
-      selectedRiskStakeholders.value = orgMembers.value.filter((u: any) => (r.stakeholders as any)?.includes(u.user_id))
+      riskStakeholderIds.value = (r.stakeholders as any[]) || []
     }
   } else {
     Object.assign(riskForm, { ...defaultRiskForm, project: projectStore.activeProjectId, risk_level: '' })
@@ -654,7 +627,7 @@ async function saveRisk() {
   riskSaving.value = true
   try {
     const payload: Record<string, any> = { ...riskForm }
-    payload.stakeholder_ids = selectedRiskStakeholders.value.map((u: any) => u.user_id)
+    payload.stakeholder_ids = riskStakeholderIds.value
     payload.project = projectStore.activeProjectId
 
     if (riskFile.value) {
@@ -701,7 +674,7 @@ async function doDeleteRisk(r: Risk) {
 function doConvertToIssue(r: Risk) {
   // 切换到问题管理标签并预填表单
   tab.value = 'issues'
-  selectedIssueStakeholders.value = []
+  issueStakeholderIds.value = []
   Object.assign(issueForm, {
     ...defaultIssueForm,
     project: projectStore.activeProjectId,
@@ -711,7 +684,7 @@ function doConvertToIssue(r: Risk) {
     assignee: r.assignee,
   })
   if (r.stakeholders?.length) {
-    selectedIssueStakeholders.value = orgMembers.value.filter((u: any) => (r.stakeholders as any)?.includes(u.user_id))
+    issueStakeholderIds.value = (r.stakeholders as any[]) || []
   }
   issueEditing.value = null
   issueFile.value = null

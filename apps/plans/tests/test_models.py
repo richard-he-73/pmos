@@ -16,19 +16,15 @@ def demo_project(admin_user):
 @pytest.mark.django_db
 class TestPlan:
     def test_create(self, admin_user, demo_project):
-        from apps.plans.models import Plan
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.plans.models import Plan
         pass
 
 @pytest.mark.django_db
 class TestTask:
     def test_create(self, admin_user, demo_project):
-        from apps.plans.models import Task
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.plans.models import Task
         pass

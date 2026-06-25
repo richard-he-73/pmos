@@ -101,7 +101,7 @@
             <!-- Consultant select (members tab): auto-populate name/gender/age/rank -->
             <select v-model="form.consultant" v-else-if="f.type==='consultant_select'" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" @change="onConsultantSelect">
               <option value="">请选择资源</option>
-              <option v-for="c in availableConsultants" :key="c.id" :value="c.id">{{ c.name }} ({{ {male:'男',female:'女'}[c.gender] || c.gender }} / {{ ({director:'咨询总监',senior:'高级咨询师',consultant:'咨询师',assistant:'咨询助理',other:'其他'})[c.rank] || c.rank }})</option>
+              <option v-for="c in availableConsultants" :key="c.id" :value="c.id">{{ c.name }} ({{ {male:'男',female:'女'}[c.gender as string] || c.gender }} / {{ ({director:'咨询总监',senior:'高级咨询师',consultant:'咨询师',assistant:'咨询助理',other:'其他'})[c.rank as string] || c.rank }})</option>
             </select>
 
             <!-- Department select (members tab) -->
@@ -196,7 +196,7 @@
           </div>
           <div>
             <span class="text-slate-400 block text-xs mb-0.5">性别</span>
-            <span>{{ {male:'男',female:'女'}[detailItem.gender] || detailItem.gender || '—' }}</span>
+            <span>{{ {male:'男',female:'女'}[detailItem.gender as string] || detailItem.gender || '—' }}</span>
           </div>
           <div>
             <span class="text-slate-400 block text-xs mb-0.5">年龄</span>
@@ -204,7 +204,7 @@
           </div>
           <div>
             <span class="text-slate-400 block text-xs mb-0.5">职级</span>
-            <span>{{ ({director:'咨询总监',senior:'高级咨询师',consultant:'咨询师',assistant:'咨询助理',other:'其他'})[detailItem.rank] || detailItem.rank || '—' }}</span>
+            <span>{{ ({director:'咨询总监',senior:'高级咨询师',consultant:'咨询师',assistant:'咨询助理',other:'其他'})[detailItem.rank as string] || detailItem.rank || '—' }}</span>
           </div>
           <div>
             <span class="text-slate-400 block text-xs mb-0.5">项目岗位</span>
@@ -263,59 +263,6 @@ const cur = computed(() => views[tab.value])
 const cols = computed(() => cur.value?.cols || [])
 const curFields = computed(() => cur.value?.fields || [])
 
-// 树形结构计算
-const expandedIds = ref<Set<number>>(new Set())
-function toggleExpand(id: number) {
-  const s = new Set(expandedIds.value)
-  if (s.has(id)) s.delete(id); else s.add(id)
-  expandedIds.value = s
-}
-const treeItems = computed(() => {
-  const idMap = new Map<number, any>()
-  for (const item of items.value) idMap.set(item.id, item)
-  const depthMap = new Map<number, number>()
-  function getDepth(id: number): number {
-    if (depthMap.has(id)) return depthMap.get(id)!
-    const item = idMap.get(id)
-    if (!item || !item.parent) { depthMap.set(id, 0); return 0 }
-    const d = getDepth(item.parent) + 1
-    depthMap.set(id, d)
-    return d
-  }
-  // 父id → 子列表
-  const childrenOf = new Map<number, any[]>()
-  for (const item of items.value) {
-    const pid = item.parent ?? 0
-    if (!childrenOf.has(pid)) childrenOf.set(pid, [])
-    childrenOf.get(pid)!.push(item)
-  }
-  function hasChildren(id: number) { return childrenOf.has(id) }
-  
-  const result: Array<{item: any, depth: number, hasChildren: boolean, expanded: boolean}> = []
-  function walk(items: any[]) {
-    for (const item of items) {
-      const depth = getDepth(item.id)
-      const hc = hasChildren(item.id)
-      const exp = expandedIds.value.has(item.id)
-      result.push({ item, depth, hasChildren: hc, expanded: exp })
-      if (exp && hc) walk(childrenOf.get(item.id)!)
-    }
-  }
-  walk(childrenOf.get(0) || [])
-  return result
-})
-function hasNextSiblingInTree(t: any, ancestorDepth: number): boolean {
-  // 在 treeItems 中查找同层级的后续节点
-  const idx = treeItems.value.indexOf(t)
-  if (idx < 0) return false
-  for (let i = idx + 1; i < treeItems.value.length; i++) {
-    const next = treeItems.value[i]
-    if (next.depth < ancestorDepth) return false
-    if (next.depth === ancestorDepth) return true
-  }
-  return false
-}
-
 async function load() {
   if (!cur.value) return
   loading.value = true
@@ -323,14 +270,12 @@ async function load() {
     const params = { page: page.value, page_size: pageSize.value, project: projectStore.activeProjectId || undefined }
     const r = tab.value === 'dept' ? await getDepartments(params) : await getOrgMembers(params)
     items.value = (r.data.results ?? r.data) as any[]
-    total.value = r.data.count ?? items.value.length
+    total.value = (r.data as any).count ?? items.value.length
   } catch { items.value = [] }
   finally { loading.value = false }
   // 默认展开所有部门节点（仅 dept 标签有效）
   if (tab.value === 'dept') {
-    const s = new Set<number>()
-    for (const item of items.value) s.add(item.id)
-    expandedIds.value = s
+    // auto-expanded (previously used tree items)
   }
 }
 async function loadDepts() { try { const r=await getDepartments({ page: page.value, page_size: pageSize.value, project: projectStore.activeProjectId || undefined }); depts.value = r.data.results ?? r.data } catch {} }

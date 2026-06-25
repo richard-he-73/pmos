@@ -50,7 +50,7 @@
 </tbody></table>
         
       </div>
-      <Pagination :page="page" :page-size="listPageSize" :total="total" @update:page="page=$event; fetchData()" @update:page-size="listPageSize=$event; page=1; fetchData()" />
+      <Pagination :page="page" :page-size="listPageSize" :total="total" @update:page="page=$event; load()" @update:page-size="listPageSize=$event; page=1; load()" />
     </div>
     <!-- 详情弹窗 -->
     <div v-if="showDetail && detailItem" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" @click.self="showDetail=false">
@@ -133,7 +133,7 @@
             </select>
 
             <!-- Datetime-local input -->
-            <input v-model="form[f.k]" v-else-if="f.type==='datetime-local'" type="datetime-local" @focus="e.target.showPicker?.()" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+            <input v-model="form[f.k]" v-else-if="f.type==='datetime-local'" type="datetime-local" @focus="($event.target as HTMLInputElement).showPicker?.()" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
 
             <!-- Date input -->
             <SmartDateInput v-model="form[f.k]" v-else-if="f.type==='date'" class="w-full" />
@@ -166,8 +166,7 @@ import request from '@/api/request'
 
 import { getEquipments, createEquipment, updateEquipment, deleteEquipment,
   getLeaves, createLeave, updateLeave, deleteLeave,
-  getTimesheets, createTimesheet, getTimesheetDetails } from '@/api/modules/work_management'
-import { getOrgMembers } from '@/api/modules/organizations'
+  getTimesheets, createTimesheet } from '@/api/modules/work_management'
 import Pagination from '@/components/Pagination.vue'
 const confirm = useConfirmStore()
 const projectStore = useProjectStore()
@@ -181,22 +180,7 @@ const total = ref(0)
 const form = ref<Record<string,any>>({})
 
 
-const roleLabel: Record<string, string> = {
-  project_director: '项目总监',
-  project_manager: '项目经理',
-  consulting_expert: '咨询专家',
-  consulting_advisor: '咨询顾问',
-  consulting_assistant: '咨询助理',
-  other: '其他',
-}
-function memberLabel(m: any): string {
-  const name = m.real_name || m.name || ''
-  const parts = []
-  if (m.dept_name) parts.push(m.dept_name)
-  if (m.project_role && roleLabel[m.project_role]) parts.push(roleLabel[m.project_role])
-  const suffix = parts.length ? `（${parts.join('-')}）` : ''
-  return `${name}${suffix}`
-}
+import { memberLabel } from '@/composables/useMemberLabel'
 
 const orgMembers = ref<any[]>([])
 const showDetail = ref(false)
@@ -212,8 +196,8 @@ const leaveStatusLabels: Record<string,string> = { pending:'待审批', approved
 const statusLabels: Record<string,string> = { not_issued:'未出库', in_use:'使用中', recycled:'已回收', scrapped:'已报废', other:'其他' }
 
 const tabs = [
-  { k:'equipment', l:'设备', e:'equipments', cols:[{k:'type',t:'设备类型'},{k:'specs',t:'规格'},{k:'quantity',t:'数量'},{k:'status',t:'状态'}], fields:[{k:'type',t:'设备类型',type:'select',options:[{v:'server',t:'服务器'},{v:'computer',t:'计算机'},{v:'printer',t:'打印机'},{v:'storage',t:'移动存储'},{v:'consumable',t:'耗材'},{v:'other',t:'其他'}]},{k:'specs',t:'设备规格'},{k:'quantity',t:'设备数量',type:'number'},{k:'status',t:'设备状态',type:'select',options:[{v:'not_issued',t:'未出库'},{v:'in_use',t:'使用中'},{v:'recycled',t:'已回收'},{v:'scrapped',t:'已报废'},{v:'other',t:'其他'}]},{k:'notes',t:'备注说明',type:'textarea'}] },
-  { k:'leave', l:'请假', e:'leaves',
+  { k:'equipment', l:'设备管理', e:'equipments', cols:[{k:'type',t:'设备类型'},{k:'specs',t:'规格'},{k:'quantity',t:'数量'},{k:'status',t:'状态'}], fields:[{k:'type',t:'设备类型',type:'select',options:[{v:'server',t:'服务器'},{v:'computer',t:'计算机'},{v:'printer',t:'打印机'},{v:'storage',t:'移动存储'},{v:'consumable',t:'耗材'},{v:'other',t:'其他'}]},{k:'specs',t:'设备规格'},{k:'quantity',t:'设备数量',type:'number'},{k:'status',t:'设备状态',type:'select',options:[{v:'not_issued',t:'未出库'},{v:'in_use',t:'使用中'},{v:'recycled',t:'已回收'},{v:'scrapped',t:'已报废'},{v:'other',t:'其他'}]},{k:'notes',t:'备注说明',type:'textarea'}] },
+  { k:'leave', l:'请假管理', e:'leaves',
     cols:[
       {k:'applicant_name',t:'申请人'},{k:'type',t:'类型'},{k:'start_date',t:'开始日期'},{k:'end_date',t:'结束日期'},{k:'status',t:'审批状态'},{k:'is_cancelled',t:'销假'}
     ],
@@ -227,7 +211,7 @@ const tabs = [
       {k:'is_cancelled',t:'销假状态',type:'switch'},
       {k:'notes',t:'备注说明',type:'textarea'},
     ] },
-  { k:'timesheet', l:'工时', e:'timesheets',
+  { k:'timesheet', l:'工时管理', e:'timesheets',
     cols:[{k:'reporter_name',t:'填报人'},{k:'start_date',t:'开始日期'},{k:'end_date',t:'结束日期'},{k:'type',t:'工时类型'},{k:'status',t:'工时状态'},{k:'approval_status',t:'审批状态'}],
     fields:[
       {k:'reporter',t:'填报人',type:'select',options:'org-members'},
@@ -253,7 +237,7 @@ async function load() {
     else if (tab.value === 'timesheet') r = await getTimesheets(params)
     else return
     items.value = (r.data.results ?? r.data) as any[]
-    total.value = r.data.count ?? items.value.length
+    total.value = (r as any).data.count ?? items.value.length
   } catch { items.value = [] }
 }
 const orgApprovers = computed(() => orgMembers.value.filter(m => m.project_role === 'project_director' || m.project_role === 'project_manager'))

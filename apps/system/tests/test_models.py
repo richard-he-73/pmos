@@ -16,19 +16,15 @@ def demo_project(admin_user):
 @pytest.mark.django_db
 class TestOperationLog:
     def test_create(self, admin_user, demo_project):
-        from apps.system.models import OperationLog
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.system.models import OperationLog
         pass
 
 @pytest.mark.django_db
 class TestSystemConfig:
     def test_create(self, admin_user, demo_project):
-        from apps.system.models import SystemConfig
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.system.models import SystemConfig
         pass

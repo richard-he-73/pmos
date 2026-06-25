@@ -10,7 +10,7 @@ pytestmark = pytest.mark.django_db
 class TestReleaseDrill:
     def test_create(self):
         user = User.objects.create_user('drilluser', password='test123')
-        project = Project.objects.create(name='测试项目', code='T001', owner=user)
+        Project.objects.create(name='测试项目', code='T001', owner=user)
         from apps.releases.models import ReleaseDrill
         drill = ReleaseDrill.objects.create(
             name='演练测试',
@@ -42,7 +42,7 @@ class TestReleaseDrill:
 class TestReleasePlan:
     def test_create(self):
         user = User.objects.create_user('planuser', password='test123')
-        project = Project.objects.create(name='测试项目', code='P001', owner=user)
+        Project.objects.create(name='测试项目', code='P001', owner=user)
         from apps.releases.models import ReleasePlan
         plan = ReleasePlan.objects.create(
             name='计划测试',

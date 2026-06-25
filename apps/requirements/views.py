@@ -1,7 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Q
 from .models import Requirement, RequirementReview, RequirementBaseline, RequirementChange
 from .serializers import (
     RequirementSerializer, RequirementReviewSerializer,

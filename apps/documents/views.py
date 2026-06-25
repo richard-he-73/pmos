@@ -1,6 +1,5 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from rest_framework.response import Response
 from django.utils import timezone
 from .models import DocumentCategory, Document
 from .serializers import DocumentCategorySerializer, DocumentSerializer

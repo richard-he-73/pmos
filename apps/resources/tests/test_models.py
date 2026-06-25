@@ -16,19 +16,15 @@ def demo_project(admin_user):
 @pytest.mark.django_db
 class TestProjectResource:
     def test_create(self, admin_user, demo_project):
-        from apps.resources.models import ProjectResource
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.resources.models import ProjectResource
         pass
 
 @pytest.mark.django_db
 class TestResourceChangeLog:
     def test_create(self, admin_user, demo_project):
-        from apps.resources.models import ResourceChangeLog
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.resources.models import ResourceChangeLog
         pass

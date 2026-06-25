@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from apps.notifications.models import Notification, NotificationTemplate
 from apps.notifications.services import (
-    _render_template, _get_template, _build_title, _build_content,
+    _render_template, _build_title, _build_content,
     notify_user,
 )
 from apps.projects.models import Project

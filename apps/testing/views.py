@@ -155,9 +155,6 @@ class TestDefectViewSet(viewsets.ModelViewSet):
             qs = qs.filter(Q(name__icontains=search) | Q(description__icontains=search))
         return qs
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
-
     def _notify_defect_participants(self, defect):
         """向负责人发送消息通知"""
         if defect.assignee:

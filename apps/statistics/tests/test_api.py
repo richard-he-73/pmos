@@ -1,7 +1,5 @@
 import pytest
 from apps.projects.models import Project
-from apps.plans.models import Plan, Task
-from apps.work_management.models import Timesheet
 
 
 @pytest.fixture

@@ -246,6 +246,7 @@ import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
 import request from '@/api/request'
 import Pagination from '@/components/Pagination.vue'
+import { memberLabel } from '@/composables/useMemberLabel'
 
 const projectStore = useProjectStore()
 const toast = useToastStore()
@@ -331,23 +332,6 @@ function priorityClass(p: string) {
     low: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
   }
   return map[p] || map.medium
-}
-
-const roleLabel: Record<string, string> = {
-  project_director: '项目总监',
-  project_manager: '项目经理',
-  consulting_expert: '咨询专家',
-  consulting_advisor: '咨询顾问',
-  consulting_assistant: '咨询助理',
-  other: '其他',
-}
-function memberLabel(m: any): string {
-  const name = m.real_name || m.name || ''
-  const parts = []
-  if (m.dept_name) parts.push(m.dept_name)
-  if (m.project_role && roleLabel[m.project_role]) parts.push(roleLabel[m.project_role])
-  const suffix = parts.length ? `（${parts.join('-')}）` : ''
-  return `${name}${suffix}`
 }
 
 function onMilestoneChange() {

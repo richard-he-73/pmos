@@ -16,19 +16,15 @@ def demo_project(admin_user):
 @pytest.mark.django_db
 class TestDocumentCategory:
     def test_create(self, admin_user, demo_project):
-        from apps.documents.models import DocumentCategory
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.documents.models import DocumentCategory
         pass
 
 @pytest.mark.django_db
 class TestDocument:
     def test_create(self, admin_user, demo_project):
-        from apps.documents.models import Document
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.documents.models import Document
         pass

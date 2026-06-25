@@ -1,14 +1,14 @@
-import os, json, io
+import os
+import json
 from datetime import datetime
 from django.conf import settings
-from django.http import JsonResponse, HttpResponse
-from rest_framework import viewsets, status
-from rest_framework.decorators import action, api_view, permission_classes
+from django.http import HttpResponse
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from django.core import serializers
 from django.apps import apps
-from django.db import connection
 
 BACKUP_DIR = os.path.join(settings.BASE_DIR, 'data_backup')
 os.makedirs(BACKUP_DIR, exist_ok=True)
@@ -154,7 +154,7 @@ def backup_detail(request, filename):
                         for obj in serializers.deserialize('json', json.dumps(records), ignorenonexistent=True):
                             obj.save()
                             count += 1
-                    except Exception as e:
+                    except Exception:
                         pass
             return Response({'status': 'ok', 'restored_records': count})
         except Exception as e:

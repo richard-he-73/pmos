@@ -104,19 +104,22 @@
           <div><label class="block text-sm font-medium mb-1">负责人</label>
             <select v-model="drillForm.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option value="">请选择</option>
-              <option v-for="u in orgMembersWithUser" :key="u.user_id" :value="u.user_id">{{ u.name }}</option>
+              <option v-for="u in orgMembersWithUser" :key="u.user_id" :value="u.user_id">{{ memberLabel(u) }}</option>
             </select>
           </div>
           <div><label class="block text-sm font-medium mb-1">干系人</label>
-            <div class="flex flex-wrap gap-2 p-2 border border-slate-300 dark:border-slate-600 rounded-lg min-h-[42px] bg-white dark:bg-slate-700">
-              <span v-for="u in selectedDrillStakeholders" :key="u.user_id" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                {{ u.name }}<button @click="removeDrillStakeholder(u)" class="hover:text-red-500">&times;</button>
-              </span>
-              <div class="relative" data-picker="stakeholder">
-                <input v-model="drillStakeholderSearch" placeholder="搜索添加..." class="text-sm border-0 outline-none bg-transparent min-w-[120px]" @focus="drillStakeholderOpen=true" @input="drillStakeholderOpen=true" />
-                <div v-if="drillStakeholderOpen && filteredDrillMembers.length" class="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg max-h-40 overflow-y-auto z-10">
-                  <button v-for="u in filteredDrillMembers" :key="u.user_id" class="block w-full text-left px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" @click="addDrillStakeholder(u)">{{ u.name }}</button>
-                </div>
+            <div class="relative" data-picker="stakeholder">
+              <div @click="drillStakeholderOpen = !drillStakeholderOpen" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm cursor-pointer flex flex-wrap gap-1 min-h-[38px]">
+                <span v-if="!drillStakeholderIds.length" class="text-slate-400">请选择干系人</span>
+                <span v-for="uid in drillStakeholderIds" :key="uid" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                  {{ (orgMembers.find(m=>m.user_id===uid) ? memberLabel(orgMembers.find(m=>m.user_id===uid)) : uid) }}
+                </span>
+              </div>
+              <div v-if="drillStakeholderOpen" class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 shadow-lg p-2 space-y-1">
+                <label v-for="m in orgMembers" :key="m.user_id" class="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 py-1 rounded">
+                  <input type="checkbox" :value="m.user_id" v-model="drillStakeholderIds" class="w-4 h-4 rounded border-slate-300 text-blue-600" />
+                  <span>{{ memberLabel(m) }}</span>
+                </label>
               </div>
             </div>
           </div>
@@ -183,7 +186,7 @@
               <option v-for="(l,k) in PLAN_ENV_LABELS" :key="k" :value="k">{{ l }}</option>
             </select>
           </div>
-          <div class="col-span-2"><label class="block text-sm font-medium mb-1">关联系统</label><input v-model="planForm.related_system" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
+          <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">关联系统</label><input v-model="planForm.related_system" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
           <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">部署方式</label>
             <select v-model="planForm.deployment_method" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option v-for="(l,k) in DEPLOY_METHOD_LABELS" :key="k" :value="k">{{ l }}</option>
@@ -195,19 +198,22 @@
           <div><label class="block text-sm font-medium mb-1">负责人</label>
             <select v-model="planForm.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option value="">请选择</option>
-              <option v-for="u in orgMembersWithUser" :key="u.user_id" :value="u.user_id">{{ u.name }}</option>
+              <option v-for="u in orgMembersWithUser" :key="u.user_id" :value="u.user_id">{{ memberLabel(u) }}</option>
             </select>
           </div>
           <div><label class="block text-sm font-medium mb-1">干系人</label>
-            <div class="flex flex-wrap gap-2 p-2 border border-slate-300 dark:border-slate-600 rounded-lg min-h-[42px] bg-white dark:bg-slate-700">
-              <span v-for="u in selectedPlanStakeholders" :key="u.user_id" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                {{ u.name }}<button @click="removePlanStakeholder(u)" class="hover:text-red-500">&times;</button>
-              </span>
-              <div class="relative" data-picker="stakeholder">
-                <input v-model="planStakeholderSearch" placeholder="搜索添加..." class="text-sm border-0 outline-none bg-transparent min-w-[120px]" @focus="planStakeholderOpen=true" @input="planStakeholderOpen=true" />
-                <div v-if="planStakeholderOpen && filteredPlanMembers.length" class="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg max-h-40 overflow-y-auto z-10">
-                  <button v-for="u in filteredPlanMembers" :key="u.user_id" class="block w-full text-left px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" @click="addPlanStakeholder(u)">{{ u.name }}</button>
-                </div>
+            <div class="relative" data-picker="stakeholder">
+              <div @click="planStakeholderOpen = !planStakeholderOpen" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm cursor-pointer flex flex-wrap gap-1 min-h-[38px]">
+                <span v-if="!planStakeholderIds.length" class="text-slate-400">请选择干系人</span>
+                <span v-for="uid in planStakeholderIds" :key="uid" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                  {{ (orgMembers.find(m=>m.user_id===uid) ? memberLabel(orgMembers.find(m=>m.user_id===uid)) : uid) }}
+                </span>
+              </div>
+              <div v-if="planStakeholderOpen" class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 shadow-lg p-2 space-y-1">
+                <label v-for="m in orgMembers" :key="m.user_id" class="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 py-1 rounded">
+                  <input type="checkbox" :value="m.user_id" v-model="planStakeholderIds" class="w-4 h-4 rounded border-slate-300 text-blue-600" />
+                  <span>{{ memberLabel(m) }}</span>
+                </label>
               </div>
             </div>
           </div>
@@ -267,6 +273,7 @@ import {
   drillConclusionClass,
 } from '@/api/modules/releases'
 import type { ReleaseDrill, ReleasePlan } from '@/api/modules/releases'
+import { memberLabel } from '@/composables/useMemberLabel'
 
 const projectStore = useProjectStore()
 const toast = useToastStore()
@@ -321,18 +328,8 @@ const defaultDrillForm = {
 }
 const drillForm = reactive({ ...defaultDrillForm })
 
-const drillStakeholderSearch = ref('')
 const drillStakeholderOpen = ref(false)
-const selectedDrillStakeholders = ref<any[]>([])
-
-const filteredDrillMembers = computed(() => {
-  const ids = new Set(selectedDrillStakeholders.value.map((u: any) => u.user_id))
-  const q = drillStakeholderSearch.value.trim().toLowerCase()
-  return orgMembers.value.filter((u: any) => !ids.has(u.user_id) && (!q || u.name.includes(q)))
-})
-
-function addDrillStakeholder(u: any) { selectedDrillStakeholders.value.push(u); drillStakeholderSearch.value = ''; drillStakeholderOpen.value = false }
-function removeDrillStakeholder(u: any) { selectedDrillStakeholders.value = selectedDrillStakeholders.value.filter((x: any) => x.user_id !== u.user_id) }
+const drillStakeholderIds = ref<number[]>([])
 
 async function loadDrills() {
   drillLoading.value = true
@@ -348,11 +345,11 @@ async function loadDrills() {
 function openDrillForm(r: ReleaseDrill | null) {
   drillEditing.value = r
   drillFile.value = null
-  selectedDrillStakeholders.value = []
+  drillStakeholderIds.value = []
   if (r) {
     Object.assign(drillForm, r)
     if (r.stakeholders?.length) {
-      selectedDrillStakeholders.value = orgMembers.value.filter((u: any) => (r.stakeholders as any)?.includes(u.user_id))
+      drillStakeholderIds.value = (r.stakeholders as any[]) || []
     }
   } else {
     Object.assign(drillForm, { ...defaultDrillForm, project: projectStore.activeProjectId })
@@ -370,7 +367,7 @@ async function saveDrill() {
   drillSaving.value = true
   try {
     const payload: Record<string, any> = { ...drillForm }
-    payload.stakeholder_ids = selectedDrillStakeholders.value.map((u: any) => u.user_id)
+    payload.stakeholder_ids = drillStakeholderIds.value
     payload.project = projectStore.activeProjectId
     if (drillFile.value) {
       const fd = new FormData()
@@ -435,18 +432,8 @@ const plannedStartTime = ref('')
 const expectedEndDate = ref('')
 const expectedEndTime = ref('')
 
-const planStakeholderSearch = ref('')
 const planStakeholderOpen = ref(false)
-const selectedPlanStakeholders = ref<any[]>([])
-
-const filteredPlanMembers = computed(() => {
-  const ids = new Set(selectedPlanStakeholders.value.map((u: any) => u.user_id))
-  const q = planStakeholderSearch.value.trim().toLowerCase()
-  return orgMembers.value.filter((u: any) => !ids.has(u.user_id) && (!q || u.name.includes(q)))
-})
-
-function addPlanStakeholder(u: any) { selectedPlanStakeholders.value.push(u); planStakeholderSearch.value = ''; planStakeholderOpen.value = false }
-function removePlanStakeholder(u: any) { selectedPlanStakeholders.value = selectedPlanStakeholders.value.filter((x: any) => x.user_id !== u.user_id) }
+const planStakeholderIds = ref<number[]>([])
 
 async function loadPlans() {
   planLoading.value = true
@@ -462,7 +449,7 @@ async function loadPlans() {
 function openPlanForm(r: ReleasePlan | null) {
   planEditing.value = r
   planFile.value = null
-  selectedPlanStakeholders.value = []
+  planStakeholderIds.value = []
   plannedStartDate.value = ''
   plannedStartTime.value = ''
   expectedEndDate.value = ''
@@ -480,7 +467,7 @@ function openPlanForm(r: ReleasePlan | null) {
       expectedEndTime.value = (parts[1] || '').slice(0, 5)
     }
     if (r.stakeholders?.length) {
-      selectedPlanStakeholders.value = orgMembers.value.filter((u: any) => (r.stakeholders as any)?.includes(u.user_id))
+      planStakeholderIds.value = (r.stakeholders as any[]) || []
     }
   } else {
     Object.assign(planForm, { ...defaultPlanForm, project: projectStore.activeProjectId })
@@ -498,7 +485,7 @@ async function savePlan() {
   planSaving.value = true
   try {
     const payload: Record<string, any> = { ...planForm }
-    payload.stakeholder_ids = selectedPlanStakeholders.value.map((u: any) => u.user_id)
+    payload.stakeholder_ids = planStakeholderIds.value
     payload.project = projectStore.activeProjectId
     payload.planned_start_time = plannedStartDate.value ? plannedStartDate.value + 'T' + (plannedStartTime.value || '00:00') : null
     payload.expected_end_time = expectedEndDate.value ? expectedEndDate.value + 'T' + (expectedEndTime.value || '00:00') : null

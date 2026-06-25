@@ -43,7 +43,6 @@ const menuItems = [
   { path: '/issues', icon: '⚠️', label: '问题风险' },
   { path: '/work', icon: '🔧', label: '工作管理' },
   { path: '/documents', icon: '📄', label: '文档管理' },
-  { path: '/statistics', icon: '📊', label: '统计分析' },
   { path: '/notifications', icon: '🔔', label: '消息通知' },
   { path: '/system', icon: '⚙️', label: '系统管理' },
 ]

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { mount, flushPromises } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import Card from '@/components/Card.vue'
 import { useConfirmStore } from '@/stores/confirm'

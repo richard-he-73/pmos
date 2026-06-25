@@ -16,19 +16,15 @@ def demo_project(admin_user):
 @pytest.mark.django_db
 class TestNotification:
     def test_create(self, admin_user, demo_project):
-        from apps.notifications.models import Notification
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.notifications.models import Notification
         pass
 
 @pytest.mark.django_db
 class TestNotificationTemplate:
     def test_create(self, admin_user, demo_project):
-        from apps.notifications.models import NotificationTemplate
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.notifications.models import NotificationTemplate
         pass

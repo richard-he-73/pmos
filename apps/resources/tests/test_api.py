@@ -1,6 +1,5 @@
 import pytest
 from apps.projects.models import Project
-from apps.resources.models import Consultant
 
 
 @pytest.fixture

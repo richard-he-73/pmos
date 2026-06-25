@@ -60,7 +60,7 @@
           <div><label class="block text-sm font-medium mb-1">负责人</label>
             <select v-model="form.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option :value="null">不指定</option>
-              <option v-for="m in orgMembersWithUser" :key="m.user_id" :value="m.user_id">{{ m.name }}</option>
+              <option v-for="m in orgMembersWithUser" :key="m.user_id" :value="m.user_id">{{ memberLabel(m) }}</option>
             </select>
           </div>
           <div><label class="block text-sm font-medium mb-1">缺陷状态</label>
@@ -80,6 +80,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { memberLabel } from '@/composables/useMemberLabel'
 import { useProjectStore } from '@/stores/project'
 import { useToastStore } from '@/stores/toast'
 import { getTestDefects, createTestDefect, updateTestDefect, deleteTestDefect } from '@/api/modules/testing'
@@ -115,7 +116,7 @@ async function load() {
   finally { loading.value = false }
 }
 
-const projId = () => projectStore.activeProjectId
+const projId = () => projectStore.activeProjectId ?? undefined
 
 async function loadMembers() {
   try {

@@ -16,19 +16,15 @@ def demo_project(admin_user):
 @pytest.mark.django_db
 class TestDepartment:
     def test_create(self, admin_user, demo_project):
-        from apps.organizations.models import Department
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.organizations.models import Department
         pass
 
 @pytest.mark.django_db
 class TestUserOrganization:
     def test_create(self, admin_user, demo_project):
-        from apps.organizations.models import UserOrganization
         pass
         
     def test_str(self, admin_user, demo_project):
-        from apps.organizations.models import UserOrganization
         pass

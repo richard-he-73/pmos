@@ -48,7 +48,6 @@ class TimesheetSerializer(serializers.ModelSerializer):
     def _generate_details(self, instance):
         from datetime import timedelta
         from .models import TimesheetDetail
-        from apps.organizations.models import UserOrganization
         from apps.work_management.models import Leave
 
         current = instance.start_date

@@ -1,5 +1,4 @@
 import re
-from django.conf import settings
 
 NOTIFICATION_TYPES = {
     'task_assigned': '任务分配',

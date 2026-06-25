@@ -21,7 +21,7 @@
             </tr>
 </tbody></table>
       </div>
-      <Pagination :page="page" :page-size="pageSize" :total="total" @update:page="page=$event; fetchData()" @update:page-size="pageSize=$event; page=1; fetchData()" />
+      <Pagination :page="page" :page-size="pageSize" :total="total" @update:page="page=$event; load()" @update:page-size="pageSize=$event; page=1; load()" />
     </div>
   </div>
 </template>
@@ -36,12 +36,16 @@ const page = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const columns: { k: string; t: string }[] = []
-onMounted(async () => {
+
+async function load() {
+  loading.value = true
   try {
     const r = await fetch('/api/v1/statistics/project_overview/?project=' + (projectStore.activeProjectId || ''))
     const d = await r.json()
     items.value = d.results ?? []
   } catch {}
   finally { loading.value = false }
-})
+}
+
+onMounted(load)
 </script>

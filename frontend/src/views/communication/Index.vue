@@ -40,7 +40,7 @@
 </tbody></table>
         
       </div>
-      <Pagination :page="page" :page-size="pageSize" :total="total" @update:page="page=$event; fetchData()" @update:page-size="pageSize=$event; page=1; fetchData()" />
+      <Pagination :page="page" :page-size="pageSize" :total="total" @update:page="page=$event; load()" @update:page-size="pageSize=$event; page=1; load()" />
     </div>
     <!-- 详情弹窗 -->
     <div v-if="showDetail && detailItem" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" @click.self="showDetail=false">
@@ -118,7 +118,7 @@
             </div>
 
             <!-- Datetime-local -->
-            <input v-model="form[f.k]" v-else-if="f.type==='datetime-local'" type="datetime-local" @focus="e.target.showPicker?.()" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+            <input v-model="form[f.k]" v-else-if="f.type==='datetime-local'" type="datetime-local" @focus="($event.target as HTMLInputElement).showPicker?.()" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
 
             <!-- Number input -->
             <input v-model="form[f.k]" v-else-if="f.type==='number'" type="number" min="0" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
@@ -164,27 +164,12 @@ const projectMembers = ref<any[]>([])
 const users = ref<any[]>([])
 const uploadQueue = ref<{name:string;url:string}[]>([])
 
-const roleLabel: Record<string, string> = {
-  project_director: '项目总监',
-  project_manager: '项目经理',
-  consulting_expert: '咨询专家',
-  consulting_advisor: '咨询顾问',
-  consulting_assistant: '咨询助理',
-  other: '其他',
-}
-function memberLabel(m: any): string {
-  const name = m.real_name || m.name || ''
-  const parts = []
-  if (m.dept_name) parts.push(m.dept_name)
-  if (m.project_role && roleLabel[m.project_role]) parts.push(roleLabel[m.project_role])
-  const suffix = parts.length ? `（${parts.join('-')}）` : ''
-  return `${name}${suffix}`
-}
+import { memberLabel } from '@/composables/useMemberLabel'
 
 const showUserPicker = ref(false)
 const uploadLoading = ref(false)
 
-const views: Record<string,{e:string;cols:{k:string;t:string}[];fields:{k:string;t:string;type?:string}[]}> = {
+const views: Record<string,{e:string;cols:{k:string;t:string}[];fields:{k:string;t:string;type?:string;optionEndpoint?:string}[]}> = {
   comm: { e:'comm-records',
     cols:[{k:'subject',t:'主题'},{k:'comm_type_name',t:'类型'},{k:'initiator_name',t:'发起人'},{k:'comm_date',t:'时间'},{k:'duration_minutes',t:'时长(分钟)'},{k:'location',t:'地点'}],
     fields:[

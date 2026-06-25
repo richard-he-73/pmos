@@ -135,7 +135,7 @@
           <div><label class="block text-sm font-medium mb-1">需求负责人</label>
             <select v-model="form.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option :value="null">不指定</option>
-              <option v-for="m in orgMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
+              <option v-for="m in orgMembers" :key="m.id" :value="m.id">{{ memberLabel(m) }}</option>
             </select>
           </div>
           <div><label class="block text-sm font-medium mb-1">需求完成日期</label><SmartDateInput v-model="form.due_date" /></div>
@@ -155,7 +155,7 @@
         <div><label class="block text-sm font-medium mb-1">评审负责人</label>
           <select v-model="reviewAssigneeId" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
             <option :value="null">不指定</option>
-            <option v-for="m in orgMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
+            <option v-for="m in orgMembers" :key="m.id" :value="m.id">{{ memberLabel(m) }}</option>
           </select>
         </div>
         <div class="flex justify-end gap-2 mt-6">
@@ -186,13 +186,13 @@
             <div @click="reviewStakePicker = !reviewStakePicker" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm cursor-pointer flex flex-wrap gap-1 min-h-[38px]">
               <span v-if="!reviewForm.stakeholders_ids?.length" class="text-slate-400">请选择评审干系人</span>
               <span v-for="sid in reviewForm.stakeholders_ids" :key="sid" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
-                {{ orgMembers.find(m=>m.id===sid)?.name || sid }}
+                {{ (orgMembers.find(m=>m.id===sid) ? memberLabel(orgMembers.find(m=>m.id===sid)) : sid) }}
               </span>
             </div>
             <div v-if="reviewStakePicker" class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 shadow-lg p-2 space-y-1">
               <label v-for="m in orgMembers" :key="m.id" class="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 py-1 rounded">
                 <input type="checkbox" :value="m.id" v-model="reviewForm.stakeholders_ids" class="w-4 h-4 rounded border-slate-300 text-blue-600" />
-                <span>{{ m.name }}</span>
+                <span>{{ memberLabel(m) }}</span>
               </label>
             </div>
           </div>
@@ -283,13 +283,13 @@
           <div><label class="block text-sm font-medium mb-1">变更负责人</label>
             <select v-model="changeForm.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option :value="null">不指定</option>
-              <option v-for="m in orgMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
+              <option v-for="m in orgMembers" :key="m.id" :value="m.id">{{ memberLabel(m) }}</option>
             </select>
           </div>
           <div><label class="block text-sm font-medium mb-1">变更审批人</label>
             <select v-model="changeForm.approver" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option :value="null">不指定</option>
-              <option v-for="m in orgMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
+              <option v-for="m in orgMembers" :key="m.id" :value="m.id">{{ memberLabel(m) }}</option>
             </select>
           </div>
           <div><label class="block text-sm font-medium mb-1">备注说明</label><textarea v-model="changeForm.notes" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
@@ -443,7 +443,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted, computed } from 'vue'
+import { ref, reactive, watch, onMounted, onUnmounted, computed } from 'vue'
+import { memberLabel } from '@/composables/useMemberLabel'
 import { useProjectStore } from '@/stores/project'
 import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
@@ -452,7 +453,7 @@ import Pagination from '@/components/Pagination.vue'
 import {
   getRequirements, createRequirement, updateRequirement, deleteRequirement,
   submitReview, withdrawReview,
-  getReqReviews, createReqReview,
+  createReqReview,
   getReqBaselines, getReqBaseline, createReqBaseline, deleteReqBaseline,
   getReqChanges, createReqChange, updateReqChange,
   approveReqChange, rejectReqChange,
@@ -754,8 +755,18 @@ watch(tab, (v) => {
   if (v === 'change') { loadChanges(); loadBaselines() }
 })
 
+function handleClickOutside(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (!target.closest('[data-picker="stakeholder"]')) reviewStakePicker.value = false
+}
+
 onMounted(async () => {
   await loadOrgMembers()
   load()
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>

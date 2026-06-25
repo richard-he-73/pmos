@@ -1,11 +1,10 @@
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Sum
 from apps.projects.models import Project
 from apps.plans.models import Task, Plan
 from apps.testing.models import TestDefect, TestExecution, TestCase
-from apps.work_management.models import Timesheet
 
 
 class StatisticsViewSet(viewsets.ViewSet):

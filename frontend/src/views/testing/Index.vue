@@ -357,7 +357,7 @@
           <div><label class="block text-sm font-medium mb-1">测试负责人</label>
             <select v-model="planForm.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option :value="null">不指定</option>
-              <option v-for="m in orgMembersWithUser" :key="m.user_id" :value="m.user_id">{{ m.name }}</option>
+              <option v-for="m in orgMembersWithUser" :key="m.user_id" :value="m.user_id">{{ memberLabel(m) }}</option>
             </select>
           </div>
           <div class="relative" data-picker="stakeholder">
@@ -365,13 +365,13 @@
             <div @click="showStakePicker = !showStakePicker" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm cursor-pointer flex flex-wrap gap-1 min-h-[38px]">
               <span v-if="!planForm.stakeholder_ids?.length" class="text-slate-400">请选择干系人</span>
               <span v-for="sid in planForm.stakeholder_ids" :key="sid" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
-                {{ orgMembersWithUser.find(m=>m.user_id===sid)?.name || sid }}
+                {{ (orgMembersWithUser.find(m=>m.user_id===sid) ? memberLabel(orgMembersWithUser.find(m=>m.user_id===sid)) : sid) }}
               </span>
             </div>
             <div v-if="showStakePicker" class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 shadow-lg p-2 space-y-1">
               <label v-for="m in orgMembersWithUser" :key="m.user_id" class="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 py-1 rounded">
                 <input type="checkbox" :value="m.user_id" v-model="planForm.stakeholder_ids" class="w-4 h-4 rounded border-slate-300 text-blue-600" />
-                <span>{{ m.name }}</span>
+                <span>{{ memberLabel(m) }}</span>
               </label>
             </div>
           </div>
@@ -422,7 +422,7 @@
             <div><label class="block text-sm font-medium mb-1">执行人</label>
               <select v-model="execForm.executor" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
                 <option :value="null">不指定</option>
-                <option v-for="m in orgMembersWithUser" :key="m.user_id" :value="m.user_id">{{ m.name }}</option>
+                <option v-for="m in orgMembersWithUser" :key="m.user_id" :value="m.user_id">{{ memberLabel(m) }}</option>
               </select>
             </div>
             <div><label class="block text-sm font-medium mb-1">执行日期</label><SmartDateInput v-model="execForm.execution_date" /></div>
@@ -480,7 +480,7 @@
           <div><label class="block text-sm font-medium mb-1">负责人</label>
             <select v-model="defectForm.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
               <option :value="null">不指定</option>
-              <option v-for="m in orgMembersWithUser" :key="m.user_id" :value="m.user_id">{{ m.name }}</option>
+              <option v-for="m in orgMembersWithUser" :key="m.user_id" :value="m.user_id">{{ memberLabel(m) }}</option>
             </select>
           </div>
           <div><label class="block text-sm font-medium mb-1">缺陷状态</label>
@@ -601,7 +601,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
+import { memberLabel } from '@/composables/useMemberLabel'
 import { useProjectStore } from '@/stores/project'
 import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
@@ -1135,8 +1136,18 @@ watch(tab, (v) => {
   else if (v === 'report') loadReport()
 })
 
+function handleClickOutside(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (!target.closest('[data-picker="stakeholder"]')) showStakePicker.value = false
+}
+
 onMounted(async () => {
   await loadOrgMembers()
   loadCases()
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
