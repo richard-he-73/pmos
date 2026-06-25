@@ -189,8 +189,8 @@
               <option v-for="(l,k) in DEPLOY_METHOD_LABELS" :key="k" :value="k">{{ l }}</option>
             </select>
           </div>
-          <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">计划开始时间</label><input v-model="planForm.planned_start_time" type="datetime-local" @focus="($event.target as HTMLInputElement).showPicker?.()" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
-          <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">预期结束时间</label><input v-model="planForm.expected_end_time" type="datetime-local" @focus="($event.target as HTMLInputElement).showPicker?.()" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
+          <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">计划开始时间</label><div class="flex gap-2"><SmartDateInput v-model="plannedStartDate" class="flex-1" /><input v-model="plannedStartTime" type="time" class="w-28 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div></div>
+          <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">预期结束时间</label><div class="flex gap-2"><SmartDateInput v-model="expectedEndDate" class="flex-1" /><input v-model="expectedEndTime" type="time" class="w-28 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div></div>
           <div class="col-span-2"><label class="block text-sm font-medium mb-1">上线内容</label><textarea v-model="planForm.content" rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
           <div><label class="block text-sm font-medium mb-1">负责人</label>
             <select v-model="planForm.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
@@ -258,6 +258,7 @@ import { useToastStore } from '@/stores/toast'
 import { useConfirmStore } from '@/stores/confirm'
 import request from '@/api/request'
 import Pagination from '@/components/Pagination.vue'
+import SmartDateInput from '@/components/SmartDateInput.vue'
 import {
   getReleaseDrills, createReleaseDrill, updateReleaseDrill, deleteReleaseDrill,
   getReleasePlans, createReleasePlan, updateReleasePlan, deleteReleasePlan,
@@ -429,6 +430,11 @@ const defaultPlanForm = {
 }
 const planForm = reactive({ ...defaultPlanForm })
 
+const plannedStartDate = ref('')
+const plannedStartTime = ref('')
+const expectedEndDate = ref('')
+const expectedEndTime = ref('')
+
 const planStakeholderSearch = ref('')
 const planStakeholderOpen = ref(false)
 const selectedPlanStakeholders = ref<any[]>([])
@@ -457,8 +463,22 @@ function openPlanForm(r: ReleasePlan | null) {
   planEditing.value = r
   planFile.value = null
   selectedPlanStakeholders.value = []
+  plannedStartDate.value = ''
+  plannedStartTime.value = ''
+  expectedEndDate.value = ''
+  expectedEndTime.value = ''
   if (r) {
     Object.assign(planForm, r)
+    if (r.planned_start_time) {
+      const parts = r.planned_start_time.split('T')
+      plannedStartDate.value = parts[0]
+      plannedStartTime.value = (parts[1] || '').slice(0, 5)
+    }
+    if (r.expected_end_time) {
+      const parts = r.expected_end_time.split('T')
+      expectedEndDate.value = parts[0]
+      expectedEndTime.value = (parts[1] || '').slice(0, 5)
+    }
     if (r.stakeholders?.length) {
       selectedPlanStakeholders.value = orgMembers.value.filter((u: any) => (r.stakeholders as any)?.includes(u.user_id))
     }
@@ -480,6 +500,8 @@ async function savePlan() {
     const payload: Record<string, any> = { ...planForm }
     payload.stakeholder_ids = selectedPlanStakeholders.value.map((u: any) => u.user_id)
     payload.project = projectStore.activeProjectId
+    payload.planned_start_time = plannedStartDate.value ? plannedStartDate.value + 'T' + (plannedStartTime.value || '00:00') : null
+    payload.expected_end_time = expectedEndDate.value ? expectedEndDate.value + 'T' + (expectedEndTime.value || '00:00') : null
     if (planFile.value) {
       const fd = new FormData()
       for (const k of Object.keys(payload)) fd.append(k, payload[k] ?? '')
