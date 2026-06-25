@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Equipment, Leave, Timesheet
+from .models import Equipment, Leave, Timesheet, Issue, Risk
 
 
 @admin.register(Equipment)
@@ -20,3 +20,17 @@ class LeaveAdmin(admin.ModelAdmin):
 class TimesheetAdmin(admin.ModelAdmin):
     list_display = ['reporter', 'start_date', 'end_date', 'type', 'approval_status']
     list_filter = ['type', 'approval_status']
+
+
+@admin.register(Issue)
+class IssueAdmin(admin.ModelAdmin):
+    list_display = ['title', 'project', 'issue_type', 'severity', 'priority', 'status', 'assignee', 'created_at']
+    list_filter = ['issue_type', 'severity', 'priority', 'status', 'source']
+    search_fields = ['title', 'description']
+
+
+@admin.register(Risk)
+class RiskAdmin(admin.ModelAdmin):
+    list_display = ['title', 'project', 'category', 'probability', 'impact', 'risk_level', 'status', 'assignee', 'created_at']
+    list_filter = ['category', 'probability', 'impact', 'risk_level', 'status']
+    search_fields = ['title', 'description']
