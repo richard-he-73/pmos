@@ -132,7 +132,7 @@
 
       <!-- 备份预览弹窗 -->
       <div v-if="previewContent" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="previewContent = null">
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-3xl mx-4 p-6 overflow-hidden" style="max-height:85vh;">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-[64rem] mx-4 p-6 overflow-hidden" style="max-height:85vh;">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-bold">备份文件预览</h2>
             <button @click="previewContent = null" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 w-7 h-7 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-lg">✕</button>

@@ -52,8 +52,8 @@
           <div class="grid grid-cols-2 gap-2 text-center">
             <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><div class="text-xl font-bold text-blue-600">{{ stats.tasks.total }}</div><div class="text-xs text-slate-400">任务总数</div></div>
             <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><div class="text-xl font-bold text-green-600">{{ stats.tasks.completed }}</div><div class="text-xs text-slate-400">已完成任务</div></div>
-            <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><div class="text-xl font-bold text-orange-600">{{ stats.bugs.total }}</div><div class="text-xs text-slate-400">缺陷总数</div></div>
-            <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><div class="text-xl font-bold text-red-600">{{ stats.bugs.open }}</div><div class="text-xs text-slate-400">未关闭缺陷</div></div>
+            <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><div class="text-xl font-bold text-orange-600">{{ stats.defects.total }}</div><div class="text-xs text-slate-400">缺陷总数</div></div>
+            <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><div class="text-xl font-bold text-red-600">{{ stats.defects.open }}</div><div class="text-xs text-slate-400">未关闭缺陷</div></div>
             <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><div class="text-xl font-bold text-purple-600">{{ stats.plans.total }}</div><div class="text-xs text-slate-400">计划总数</div></div>
             <div class="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><div class="text-xl font-bold text-teal-600">{{ stats.test_cases.total }}</div><div class="text-xs text-slate-400">测试用例</div></div>
           </div>
@@ -98,7 +98,7 @@ const router = useRouter()
 const project = ref<any>(null)
 const plans = ref<any[]>([])
 const teamMembers = ref<any[]>([])
-const stats = ref({ plans: { total: 0, completed: 0, in_progress: 0 }, tasks: { total: 0, completed: 0, in_progress: 0 }, bugs: { total: 0, open: 0, by_severity: [] }, test_cases: { total: 0 } })
+const stats = ref({ plans: { total: 0, completed: 0, in_progress: 0 }, tasks: { total: 0, completed: 0, in_progress: 0 }, defects: { total: 0, open: 0, by_severity: [] as { severity: string; count: number }[] }, test_cases: { total: 0, by_type: [] as { type: string; count: number }[], by_status: [] as { status: string; count: number }[] }, test_executions: { total: 0, by_result: [] as { result: string; count: number }[] } })
 
 function stCls(s: string) {
   return { planning: 'text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/20', active: 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20', pending_acceptance: 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/20', closed: 'text-slate-500 bg-slate-50 dark:text-slate-400 dark:bg-slate-800' }[s] || ''

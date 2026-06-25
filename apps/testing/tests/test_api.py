@@ -23,26 +23,26 @@ class TestTestPlanViewSet:
 
 
 @pytest.mark.django_db
-class TestBugViewSet:
-    """缺陷 API 测试"""
+class TestTestDefectViewSet:
+    """测试缺陷 API 测试"""
 
-    def test_create_bug(self, admin_client, project):
-        res = admin_client.post('/api/v1/bugs/', {
-            'title': '登录按钮不响应', 'severity': 'major',
-            'source': '功能测试', 'module': '登录模块',
+    def test_create_defect(self, admin_client, project):
+        res = admin_client.post('/api/v1/test-defects/', {
+            'name': '登录按钮不响应', 'severity': 'fatal',
+            'project': project.id,
         }, format='json')
         assert res.status_code == 201
-        assert res.data['title'] == '登录按钮不响应'
+        assert res.data['name'] == '登录按钮不响应'
 
-    def test_update_bug_status(self, admin_client, project):
-        bug = admin_client.post('/api/v1/bugs/', {
-            'title': '页面崩溃', 'severity': 'critical',
-            'source': '回归测试', 'module': '首页',
+    def test_update_defect_status(self, admin_client, project):
+        bug = admin_client.post('/api/v1/test-defects/', {
+            'name': '页面崩溃', 'severity': 'fatal',
+            'project': project.id,
         }, format='json').data
-        res = admin_client.patch(f'/api/v1/bugs/{bug["id"]}/', {'status': 'resolved'}, format='json')
+        res = admin_client.patch(f'/api/v1/test-defects/{bug["id"]}/', {'status': 'resolved'}, format='json')
         assert res.status_code == 200
         assert res.data['status'] == 'resolved'
 
-    def test_list_bugs(self, auth_client, project):
-        res = auth_client.get('/api/v1/bugs/')
+    def test_list_defects(self, auth_client, project):
+        res = auth_client.get('/api/v1/test-defects/')
         assert res.status_code == 200

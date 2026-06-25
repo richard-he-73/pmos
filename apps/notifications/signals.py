@@ -51,12 +51,10 @@ def task_saved(sender, instance, created, **kwargs):
 
 # ── 缺陷 ──
 
-@receiver(post_save, sender='testing.Bug')
-def bug_saved(sender, instance, created, **kwargs):
+@receiver(post_save, sender='testing.TestDefect')
+def defect_saved(sender, instance, created, **kwargs):
     if instance.assignee_id:
         notify_user(instance.assignee_id, 'bug_assigned', instance)
-    if created and instance.reporter_id and instance.reporter_id != instance.assignee_id:
-        pass
 
 
 # ── 需求 ──

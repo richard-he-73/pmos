@@ -1,7 +1,6 @@
 import pytest
 from apps.projects.models import Project
 from apps.plans.models import Plan, Task
-from apps.testing.models import Bug
 from apps.work_management.models import Timesheet
 
 
@@ -42,7 +41,7 @@ class TestStatisticsViewSet:
         assert res.status_code == 200
         assert 'plans' in res.data
         assert 'tasks' in res.data
-        assert 'bugs' in res.data
+        assert 'defects' in res.data
         assert 'test_cases' in res.data
 
     def test_project_detail_with_data(self, admin_client, project):

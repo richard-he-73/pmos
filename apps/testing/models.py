@@ -1,38 +1,40 @@
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 
-class TestPlan(models.Model):
-    """测试计划"""
+class TestEnvironment(models.Model):
+    """测试环境"""
 
     class Status(models.TextChoices):
-        DRAFT = 'draft', '草稿'
-        IN_PROGRESS = 'in_progress', '执行中'
-        COMPLETED = 'completed', '已完成'
-        BLOCKED = 'blocked', '已阻塞'
+        PLANNED = 'planned', '计划'
+        ACTIVE = 'active', '启用'
+        INACTIVE = 'inactive', '停用'
+        DISCARDED = 'discarded', '废弃'
 
-    name = models.CharField('计划名称', max_length=200)
+    name = models.CharField('环境名称', max_length=200)
+    description = models.TextField('环境描述', blank=True, default='')
+    config_info = models.TextField('配置信息', blank=True, default='')
+    db_info = models.TextField('数据库信息', blank=True, default='')
+    address_info = models.TextField('地址信息', blank=True, default='')
+    status = models.CharField(
+        '环境状态', max_length=20, choices=Status.choices, default=Status.PLANNED,
+    )
+    notes = models.TextField('备注说明', blank=True, default='')
     project = models.ForeignKey(
         'projects.Project', on_delete=models.CASCADE,
-        related_name='test_plans', verbose_name='所属项目',
+        related_name='test_environments', verbose_name='所属项目',
     )
-    version = models.CharField('版本', max_length=50, blank=True)
-    status = models.CharField(
-        '状态', max_length=20, choices=Status.choices, default=Status.DRAFT,
-    )
-    assignee = models.ForeignKey(
+    created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, blank=True, verbose_name='负责人',
+        null=True, verbose_name='创建人',
     )
-    start_date = models.DateField('开始日期', null=True, blank=True)
-    end_date = models.DateField('结束日期', null=True, blank=True)
-    description = models.TextField('描述', blank=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
 
     class Meta:
-        verbose_name = '测试计划'
-        verbose_name_plural = '测试计划'
+        verbose_name = '测试环境'
+        verbose_name_plural = '测试环境'
         ordering = ['-created_at']
 
     def __str__(self):
@@ -44,29 +46,52 @@ class TestCase(models.Model):
 
     class Type(models.TextChoices):
         FUNCTIONAL = 'functional', '功能测试'
+        API = 'api', '接口测试'
         PERFORMANCE = 'performance', '性能测试'
         SECURITY = 'security', '安全测试'
-        UI = 'ui', 'UI测试'
-        API = 'api', '接口测试'
+        OTHER = 'other', '其他'
 
     class Priority(models.TextChoices):
-        HIGH = 'high', '高'
-        MEDIUM = 'medium', '中'
-        LOW = 'low', '低'
+        P0 = 'p0', 'P0-致命'
+        P1 = 'p1', 'P1-高'
+        P2 = 'p2', 'P2-中'
+        P3 = 'p3', 'P3-低'
+
+    class Status(models.TextChoices):
+        DRAFT = 'draft', '草稿'
+        ACTIVE = 'active', '启用'
+        INACTIVE = 'inactive', '停用'
+        DISCARDED = 'discarded', '废弃'
 
     name = models.CharField('用例名称', max_length=200)
-    precondition = models.TextField('前置条件', blank=True)
-    steps = models.JSONField('测试步骤', blank=True, default=list)
-    expected_result = models.TextField('预期结果', blank=True)
     type = models.CharField(
-        '类型', max_length=20, choices=Type.choices, default=Type.FUNCTIONAL,
+        '用例类型', max_length=20, choices=Type.choices, default=Type.FUNCTIONAL,
+    )
+    module = models.CharField('所属模块', max_length=100, blank=True, default='')
+    test_steps = models.TextField('测试步骤', blank=True, default='')
+    expected_result = models.TextField('预期结果', blank=True, default='')
+    requirement_baseline = models.ForeignKey(
+        'requirements.RequirementBaseline', on_delete=models.SET_NULL,
+        null=True, blank=True, verbose_name='需求基线',
+    )
+    related_requirements = models.ManyToManyField(
+        'requirements.Requirement', blank=True,
+        verbose_name='关联需求',
     )
     priority = models.CharField(
-        '优先级', max_length=20, choices=Priority.choices, default=Priority.MEDIUM,
+        '优先级', max_length=10, choices=Priority.choices, default=Priority.P2,
     )
-    status = models.CharField('状态', max_length=20, default='active')
-    module = models.CharField('模块', max_length=100, blank=True)
-
+    status = models.CharField(
+        '用例状态', max_length=20, choices=Status.choices, default=Status.ACTIVE,
+    )
+    test_document = models.FileField(
+        '测试文档', upload_to='testing/test_cases/', blank=True,
+    )
+    notes = models.TextField('备注说明', blank=True, default='')
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.CASCADE,
+        related_name='test_cases', verbose_name='所属项目',
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
         null=True, verbose_name='创建人',
@@ -83,34 +108,92 @@ class TestCase(models.Model):
         return self.name
 
 
-class TestRun(models.Model):
-    """测试执行记录"""
+class TestPlan(models.Model):
+    """测试计划"""
+
+    name = models.CharField('计划名称', max_length=200)
+    goal = models.TextField('计划目标', blank=True, default='')
+    start_date = models.DateField('开始日期', null=True, blank=True)
+    end_date = models.DateField('结束日期', null=True, blank=True)
+    test_cases = models.ManyToManyField(
+        TestCase, blank=True,
+        verbose_name='测试用例',
+    )
+    test_environment = models.ForeignKey(
+        TestEnvironment, on_delete=models.SET_NULL,
+        null=True, blank=True, verbose_name='测试环境',
+    )
+    assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='test_plan_assignees',
+        verbose_name='测试负责人',
+    )
+    stakeholders = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, blank=True,
+        related_name='test_plan_stakeholders',
+        verbose_name='干系人',
+    )
+    notes = models.TextField('备注说明', blank=True, default='')
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.CASCADE,
+        related_name='test_plans', verbose_name='所属项目',
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, verbose_name='创建人',
+    )
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        verbose_name = '测试计划'
+        verbose_name_plural = '测试计划'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name
+
+
+class TestExecution(models.Model):
+    """测试执行"""
 
     class Result(models.TextChoices):
         PASS = 'pass', '通过'
         FAIL = 'fail', '失败'
         BLOCKED = 'blocked', '阻塞'
-        UNTESTED = 'untested', '未执行'
+        SKIPPED = 'skipped', '跳过'
 
-    test_case = models.ForeignKey(
-        TestCase, on_delete=models.CASCADE, related_name='test_runs',
-        verbose_name='测试用例',
-    )
     test_plan = models.ForeignKey(
-        TestPlan, on_delete=models.CASCADE, related_name='test_runs',
-        verbose_name='测试计划',
+        TestPlan, on_delete=models.CASCADE,
+        related_name='executions', verbose_name='计划名称',
+    )
+    test_case = models.ForeignKey(
+        TestCase, on_delete=models.CASCADE,
+        related_name='executions', verbose_name='关联用例',
     )
     executor = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, verbose_name='执行人',
+        null=True, related_name='test_executions',
+        verbose_name='执行人',
     )
+    execution_date = models.DateField('执行日期', null=True, blank=True)
     result = models.CharField(
-        '执行结果', max_length=20, choices=Result.choices, default=Result.UNTESTED,
+        '执行结果', max_length=20, choices=Result.choices, default=Result.PASS,
     )
-    actual_result = models.TextField('实际结果', blank=True)
-    notes = models.TextField('备注', blank=True)
-    executed_at = models.DateTimeField('执行时间', null=True, blank=True)
+    evidence = models.FileField(
+        '执行凭证', upload_to='testing/evidences/', blank=True,
+    )
+    notes = models.TextField('备注说明', blank=True, default='')
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.CASCADE,
+        related_name='test_executions', verbose_name='所属项目',
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, verbose_name='创建人',
+    )
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
 
     class Meta:
         verbose_name = '测试执行'
@@ -118,69 +201,70 @@ class TestRun(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'{self.test_case.name} - {self.get_result_display()}'
+        return f'{self.test_plan.name} - {self.test_case.name}'
 
 
-class Bug(models.Model):
-    """缺陷"""
+class TestDefect(models.Model):
+    """测试缺陷"""
 
     class Severity(models.TextChoices):
-        CRITICAL = 'critical', '致命'
-        MAJOR = 'major', '严重'
-        MINOR = 'minor', '一般'
-        TRIVIAL = 'trivial', '轻微'
+        FATAL = 'fatal', '致命'
+        SERIOUS = 'serious', '严重'
+        NORMAL = 'normal', '一般'
+        SUGGESTION = 'suggestion', '建议'
+
+    class Priority(models.TextChoices):
+        P0 = 'p0', 'P0-致命'
+        P1 = 'p1', 'P1-高'
+        P2 = 'p2', 'P2-中'
+        P3 = 'p3', 'P3-低'
 
     class Status(models.TextChoices):
-        NEW = 'new', '新建'
-        CONFIRMED = 'confirmed', '已确认'
-        IN_PROGRESS = 'in_progress', '处理中'
+        REPRODUCING = 'reproducing', '复现中'
+        LOCATED = 'located', '已定位'
+        RETESTING = 'retesting', '复测中'
+        SUSPENDED = 'suspended', '已挂起'
         RESOLVED = 'resolved', '已解决'
-        CLOSED = 'closed', '已关闭'
 
-    class Resolution(models.TextChoices):
-        FIXED = 'fixed', '已修复'
-        DUPLICATE = 'duplicate', '重复'
-        NOT_A_BUG = 'not_a_bug', '非缺陷'
-        DEFERRED = 'deferred', '延期处理'
-
-    title = models.CharField('标题', max_length=200)
-    description = models.TextField('描述', blank=True)
+    name = models.CharField('缺陷名称', max_length=200)
+    description = models.TextField('缺陷描述', blank=True, default='')
+    related_test_case = models.ForeignKey(
+        TestCase, on_delete=models.SET_NULL,
+        null=True, blank=True, verbose_name='关联用例',
+    )
     severity = models.CharField(
-        '严重程度', max_length=20, choices=Severity.choices, default=Severity.MINOR,
+        '严重程度', max_length=20, choices=Severity.choices, default=Severity.NORMAL,
     )
-    status = models.CharField(
-        '状态', max_length=20, choices=Status.choices, default=Status.NEW,
-    )
-    source = models.CharField('来源', max_length=50, default='test')
-    module = models.CharField('模块', max_length=100, blank=True)
-    version_found = models.CharField('发现版本', max_length=50, blank=True)
-    version_fixed = models.CharField('修复版本', max_length=50, blank=True)
-    reporter = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, related_name='reported_bugs', verbose_name='报告人',
+    priority = models.CharField(
+        '优先级', max_length=10, choices=Priority.choices, default=Priority.P2,
     )
     assignee = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='assigned_bugs',
-        verbose_name='处理人',
+        null=True, blank=True, related_name='test_defects',
+        verbose_name='负责人',
     )
-    related_test_run = models.ForeignKey(
-        TestRun, on_delete=models.SET_NULL, null=True, blank=True,
-        verbose_name='关联测试执行',
+    status = models.CharField(
+        '缺陷状态', max_length=20, choices=Status.choices, default=Status.REPRODUCING,
     )
-
-    resolution = models.CharField(
-        '解决方案', max_length=20, choices=Resolution.choices,
-        null=True, blank=True,
+    notes = models.TextField('备注说明', blank=True, default='')
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.CASCADE,
+        related_name='test_defects', verbose_name='所属项目',
     )
-    resolution_notes = models.TextField('解决说明', blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, verbose_name='创建人',
+    )
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
 
     class Meta:
-        verbose_name = '缺陷'
-        verbose_name_plural = '缺陷'
+        verbose_name = '测试缺陷'
+        verbose_name_plural = '测试缺陷'
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'[{self.get_severity_display()}] {self.title}'
+        return f'[{self.get_severity_display()}] {self.name}'
+
+
+# ---- 测试报告通过 API 聚合，不需要独立模型 ----

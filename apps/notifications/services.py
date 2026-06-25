@@ -88,12 +88,10 @@ def _build_var_map(obj):
         m['priority'] = getattr(obj, 'get_priority_display', lambda: '')() or ''
         m['assignee'] = getattr(obj, 'assignee_name', '') or ''
         m['due_date'] = str(getattr(obj, 'due_date', '') or '')[:10]
-    elif model_name == 'bug':
+    elif model_name in ('bug', 'testdefect'):
         m['bug_title'] = m['name']
-        m['module'] = getattr(obj, 'module', '') or ''
-        m['source'] = getattr(obj, 'source', '') or ''
-        # name 对 Bug 是 title
-        m['name'] = getattr(obj, 'title', '') or ''
+        m['severity'] = getattr(obj, 'get_severity_display', lambda: '')() or ''
+        # TestDefect uses 'name' directly
     elif model_name == 'project':
         m['project_name'] = m['name']
         m['project_code'] = m['code']

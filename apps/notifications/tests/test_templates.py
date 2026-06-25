@@ -79,27 +79,25 @@ class TestTemplateRendering:
         assert '2026-07-15' in result
         assert '高' in result
 
-    def test_render_bug_vars(self, admin_user):
+    def test_render_bug_vars(self, admin_user, project):
         """缺陷变量渲染"""
-        from apps.testing.models import Bug
-        bug = Bug.objects.create(
-            title='登录页崩溃', severity='critical',
-            source='功能测试', module='登录模块',
-            reporter=admin_user,
+        from apps.testing.models import TestDefect
+        bug = TestDefect.objects.create(
+            name='登录页崩溃', severity='fatal',
+            assignee=admin_user, project=project,
         )
-        result = _render_template('{{bug_title}} [{{severity}}] @{{module}}', bug)
+        result = _render_template('{{name}} [{{severity}}] @{{project}}', bug)
         assert '登录页崩溃' in result
         assert '致命' in result  # severity display
-        assert '登录模块' in result
 
-    def test_render_project_with_template_obj(self, admin_user):
+    def test_render_project_with_template_obj(self, admin_user, project):
         """没有模板时回退到空替换"""
-        from apps.testing.models import Bug
-        bug = Bug.objects.create(
-            title='测试缺陷', severity='minor',
-            source='回归', module='首页', reporter=admin_user,
+        from apps.testing.models import TestDefect
+        bug = TestDefect.objects.create(
+            name='测试缺陷', severity='normal',
+            assignee=admin_user, project=project,
         )
-        result = _render_template('Bug: {{bug_title}}', bug)
+        result = _render_template('Bug: {{name}}', bug)
         assert '测试缺陷' in result
 
 
@@ -149,20 +147,18 @@ class TestTemplateIntegration:
         assert '新任务' in n.title
         assert '完整链路测试' in n.title
 
-    def test_bug_template_renders_correctly(self, admin_user, bug_template):
+    def test_bug_template_renders_correctly(self, admin_user, bug_template, project):
         """缺陷模板完整测试"""
-        from apps.testing.models import Bug
-        bug = Bug.objects.create(
-            title='API超时', severity='major',
-            source='压力测试', module='用户服务',
-            reporter=admin_user,
+        from apps.testing.models import TestDefect
+        bug = TestDefect.objects.create(
+            name='API超时', severity='fatal',
+            assignee=admin_user, project=project,
         )
         title = _build_title('bug_assigned', bug)
         content = _build_content('bug_assigned', bug)
         assert 'API超时' in title
-        assert '严重' in title  # major → 严重
+        assert '致命' in title  # fatal → 致命
         assert 'API超时' in content
-        assert '用户服务' in content
 
     def test_partial_template_fallback(self, admin_user, project, task_template):
         """模板中部分字段缺失时仍正常渲染"""

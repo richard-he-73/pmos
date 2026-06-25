@@ -1,0 +1,2277 @@
+{
+  "accounts.User": [
+    {
+      "model": "accounts.user",
+      "pk": 20,
+      "fields": {
+        "password": "pbkdf2_sha256$870000$9KFq37A1xmalH9rbf7ztjK$BvlFZmiDtbNLkLlh4YGvdZf42cWh0EjjSANck8QawU4=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "zhangxu",
+        "first_name": "",
+        "last_name": "",
+        "email": "zhangxu@pmos.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-22T08:15:04.887Z",
+        "real_name": "张旭",
+        "phone": "",
+        "avatar": "",
+        "position": "咨询师",
+        "department": "业务咨询部",
+        "active_project": null,
+        "created_at": "2026-06-22T08:15:04.972Z",
+        "updated_at": "2026-06-22T08:33:32.128Z",
+        "groups": [],
+        "user_permissions": []
+      }
+    },
+    {
+      "model": "accounts.user",
+      "pk": 18,
+      "fields": {
+        "password": "pbkdf2_sha256$870000$MkScvr6ILcOQKV68uMRz89$wnm8knAwVU2nZkfjYIueF8ge1A/rGgqALo+jSZc1V2I=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "jubichen",
+        "first_name": "",
+        "last_name": "",
+        "email": "jubichen@pmos.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-22T07:56:15.624Z",
+        "real_name": "鞠璧尘",
+        "phone": "",
+        "avatar": "",
+        "position": "咨询助理",
+        "department": "业务咨询部",
+        "active_project": null,
+        "created_at": "2026-06-22T07:56:15.690Z",
+        "updated_at": "2026-06-22T08:33:32.203Z",
+        "groups": [],
+        "user_permissions": []
+      }
+    },
+    {
+      "model": "accounts.user",
+      "pk": 16,
+      "fields": {
+        "password": "pbkdf2_sha256$870000$CiBPDaybpefXoITI1hUMjx$zgF2EtjcUHvKiRCb8OpL2fA8mCOBvlJedd4F8WIHw6c=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "wangmingyu",
+        "first_name": "",
+        "last_name": "",
+        "email": "wangmingyu@pmos.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-22T07:56:15.484Z",
+        "real_name": "王明玉",
+        "phone": "",
+        "avatar": "",
+        "position": "总裁",
+        "department": "总裁办公室",
+        "active_project": null,
+        "created_at": "2026-06-22T07:56:15.551Z",
+        "updated_at": "2026-06-22T08:33:32.286Z",
+        "groups": [],
+        "user_permissions": []
+      }
+    },
+    {
+      "model": "accounts.user",
+      "pk": 14,
+      "fields": {
+        "password": "pbkdf2_sha256$870000$xEh5kU5b2e32mkn9eLjtrs$Z5Bjbgb/PdHuYF23aqeTH5Tj9NDe/KBJ799c4zYUYls=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "caopan",
+        "first_name": "",
+        "last_name": "",
+        "email": "caopan@pmos.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-22T07:56:15.348Z",
+        "real_name": "曹攀",
+        "phone": "",
+        "avatar": "",
+        "position": "高级咨询师",
+        "department": "业务咨询部",
+        "active_project": null,
+        "created_at": "2026-06-22T07:56:15.415Z",
+        "updated_at": "2026-06-23T02:12:37.511Z",
+        "groups": [],
+        "user_permissions": []
+      }
+    },
+    {
+      "model": "accounts.user",
+      "pk": 13,
+      "fields": {
+        "password": "pbkdf2_sha256$870000$yrIxpsL16M7K8p9x2LnIWp$7u3Dgwi+IOovJyYTu0LsbiaeUYlGT+H/reviP0a2m2w=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "jizhening",
+        "first_name": "",
+        "last_name": "",
+        "email": "jizhening@pmos.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-22T07:56:15.280Z",
+        "real_name": "季哲宁",
+        "phone": "",
+        "avatar": "",
+        "position": "咨询助理",
+        "department": "业务咨询部",
+        "active_project": null,
+        "created_at": "2026-06-22T07:56:15.347Z",
+        "updated_at": "2026-06-22T08:33:32.435Z",
+        "groups": [],
+        "user_permissions": []
+      }
+    },
+    {
+      "model": "accounts.user",
+      "pk": 12,
+      "fields": {
+        "password": "pbkdf2_sha256$870000$btxgXpZzuK2Os1Fcg4GlLA$jP82y8d2reNCq5s3Yrni05m19izNrj0eeVwQNe+3mMU=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "mengqingfeng",
+        "first_name": "",
+        "last_name": "",
+        "email": "mengqingfeng@pmos.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-22T07:56:15.212Z",
+        "real_name": "孟庆丰",
+        "phone": "",
+        "avatar": "",
+        "position": "高级咨询师",
+        "department": "业务咨询部",
+        "active_project": null,
+        "created_at": "2026-06-22T07:56:15.279Z",
+        "updated_at": "2026-06-23T02:12:43.677Z",
+        "groups": [],
+        "user_permissions": []
+      }
+    },
+    {
+      "model": "accounts.user",
+      "pk": 11,
+      "fields": {
+        "password": "pbkdf2_sha256$870000$3w3LeGinZYLMzusPKBRITO$GQu7Y23+rnz/BJfVXOlVEsVx087cgqI/8j2CMaoQ04Y=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "liuzhenhan",
+        "first_name": "",
+        "last_name": "",
+        "email": "liuzhenhan@pmos.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-22T07:56:15.143Z",
+        "real_name": "刘珍汉",
+        "phone": "",
+        "avatar": "",
+        "position": "咨询师",
+        "department": "业务咨询部",
+        "active_project": null,
+        "created_at": "2026-06-22T07:56:15.210Z",
+        "updated_at": "2026-06-22T08:33:32.619Z",
+        "groups": [],
+        "user_permissions": []
+      }
+    },
+    {
+      "model": "accounts.user",
+      "pk": 10,
+      "fields": {
+        "password": "pbkdf2_sha256$870000$uckShZE2TkfsMbSvC7nxpR$RBjmu9YwKdEdHAbjvLw3+26ZGhZ4hOoKljJC3zZ/Dpw=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "niyiwen",
+        "first_name": "",
+        "last_name": "",
+        "email": "niyiwen@pmos.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-22T07:56:15.069Z",
+        "real_name": "倪艺文",
+        "phone": "",
+        "avatar": "",
+        "position": "咨询助理",
+        "department": "业务咨询部",
+        "active_project": null,
+        "created_at": "2026-06-22T07:56:15.141Z",
+        "updated_at": "2026-06-22T08:33:32.712Z",
+        "groups": [],
+        "user_permissions": []
+      }
+    },
+    {
+      "model": "accounts.user",
+      "pk": 9,
+      "fields": {
+        "password": "pbkdf2_sha256$870000$gmabIGNkmFpVdhYOB446dv$lCi2s6vXmdUQliRxFN7mwEHWxn1KnDeL7mcbv5jm1T0=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "chengxinling",
+        "first_name": "",
+        "last_name": "",
+        "email": "chengxinling@pmos.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-22T07:54:32.612Z",
+        "real_name": "程新玲",
+        "phone": "",
+        "avatar": "",
+        "position": "高级咨询师",
+        "department": "业务咨询部",
+        "active_project": null,
+        "created_at": "2026-06-22T07:54:32.681Z",
+        "updated_at": "2026-06-23T02:12:33.149Z",
+        "groups": [],
+        "user_permissions": []
+      }
+    },
+    {
+      "model": "accounts.user",
+      "pk": 8,
+      "fields": {
+        "password": "pbkdf2_sha256$870000$GSlsg1gavmk6rFPw6SeKLm$x1j+p1015aR7B5B/n2Gqzi7A20lG4G4pt+hHLoz885k=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "guanfeng",
+        "first_name": "",
+        "last_name": "",
+        "email": "guanfeng@pmos.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-22T07:27:27.761Z",
+        "real_name": "关锋",
+        "phone": "",
+        "avatar": "",
+        "position": "咨询师",
+        "department": "业务咨询部",
+        "active_project": null,
+        "created_at": "2026-06-22T07:27:27.842Z",
+        "updated_at": "2026-06-22T08:33:32.867Z",
+        "groups": [],
+        "user_permissions": []
+      }
+    },
+    {
+      "model": "accounts.user",
+      "pk": 6,
+      "fields": {
+        "password": "pbkdf2_sha256$870000$omAVej0cAVo9G8swG1Gfg1$eaLV7i+fXiXSe1vMqqUzuKezVxVRzLOGh5bFQwfloyk=",
+        "last_login": null,
+        "is_superuser": false,
+        "username": "hefeng",
+        "first_name": "",
+        "last_name": "",
+        "email": "hefeng@pmos.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-06-19T14:23:05.033Z",
+        "real_name": "何峰",
+        "phone": "",
+        "avatar": "",
+        "position": "咨询总监",
+        "department": "业务咨询部",
+        "active_project": 3,
+        "created_at": "2026-06-19T14:23:05.114Z",
+        "updated_at": "2026-06-22T08:33:32.940Z",
+        "groups": [],
+        "user_permissions": []
+      }
+    },
+    {
+      "model": "accounts.user",
+      "pk": 2,
+      "fields": {
+        "password": "pbkdf2_sha256$870000$2Tj6F1nOi5mVCcCd4T20qd$3/CVgmAC1XyFp2hpkcxSEE8RSHG7YXyM+V9zXHZBIKo=",
+        "last_login": "2026-06-20T19:39:42.644Z",
+        "is_superuser": true,
+        "username": "sysadmin",
+        "first_name": "",
+        "last_name": "",
+        "email": "sysadmin@pmos.com",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2026-06-19T13:51:31.922Z",
+        "real_name": "系统管理员",
+        "phone": "",
+        "avatar": "",
+        "position": "系统管理员",
+        "department": "系统管理部",
+        "active_project": 2,
+        "created_at": "2026-06-19T13:51:31.988Z",
+        "updated_at": "2026-06-23T07:26:27.518Z",
+        "groups": [],
+        "user_permissions": []
+      }
+    }
+  ],
+  "projects.Project": [
+    {
+      "model": "projects.project",
+      "pk": 3,
+      "fields": {
+        "code": "PM-2026-0001",
+        "name": "海南农村商业银行新核心项目群管理项目",
+        "description": "",
+        "project_domain": "project_management",
+        "consulting_direction": "core",
+        "project_type": "fixed",
+        "start_date": "2025-10-01",
+        "end_date": "2026-12-31",
+        "owner": null,
+        "status": "active",
+        "contract_price": "10000000.00",
+        "budget_price": null,
+        "contract_status": "draft",
+        "created_by": 2,
+        "created_at": "2026-06-22T01:06:05.217Z",
+        "updated_at": "2026-06-22T01:06:05.217Z"
+      }
+    },
+    {
+      "model": "projects.project",
+      "pk": 2,
+      "fields": {
+        "code": "GH-2026-0001",
+        "name": "辽宁农村商业银行科技发展规划项目",
+        "description": "辽宁农村商业银行2026-2030年科技发展规划咨询",
+        "project_domain": "overall_planning",
+        "consulting_direction": "other",
+        "project_type": "fixed",
+        "start_date": "2026-05-01",
+        "end_date": "2026-09-30",
+        "owner": null,
+        "status": "active",
+        "contract_price": "2850000.00",
+        "budget_price": null,
+        "contract_status": "draft",
+        "created_by": 6,
+        "created_at": "2026-06-19T14:37:18.396Z",
+        "updated_at": "2026-06-19T14:37:18.396Z"
+      }
+    }
+  ],
+  "plans.Plan": [
+    {
+      "model": "plans.plan",
+      "pk": 3,
+      "fields": {
+        "name": "现状调研",
+        "type": "milestone",
+        "parent": null,
+        "project": 2,
+        "description": "对业务、系统现状进行调研访谈，调研对象包括行领导、总行业务部门、科技团队、典型分支机构",
+        "assignee_name": "程新玲",
+        "stakeholders": "王明玉，何峰",
+        "start_date": "2026-05-08",
+        "end_date": "2026-07-08",
+        "actual_end_date": null,
+        "status": "in_progress",
+        "progress": 80,
+        "sort_order": 0,
+        "created_at": "2026-06-20T04:50:04.595Z",
+        "updated_at": "2026-06-20T04:50:04.595Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 13,
+      "fields": {
+        "name": "开展调研访谈",
+        "type": "middle",
+        "parent": 3,
+        "project": 2,
+        "description": "",
+        "assignee_name": "程新玲",
+        "stakeholders": "",
+        "start_date": "2026-05-10",
+        "end_date": "2026-06-20",
+        "actual_end_date": null,
+        "status": "delayed",
+        "progress": 87,
+        "sort_order": 0,
+        "created_at": "2026-06-20T19:12:04.041Z",
+        "updated_at": "2026-06-20T19:12:04.041Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 22,
+      "fields": {
+        "name": "科技团队访谈",
+        "type": "detail",
+        "parent": 13,
+        "project": 2,
+        "description": "",
+        "assignee_name": "程新玲",
+        "stakeholders": "",
+        "start_date": "2026-05-10",
+        "end_date": "2026-05-31",
+        "actual_end_date": null,
+        "status": "completed_on_time",
+        "progress": 100,
+        "sort_order": 0,
+        "created_at": "2026-06-20T19:21:27.649Z",
+        "updated_at": "2026-06-20T19:21:27.649Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 24,
+      "fields": {
+        "name": "分支机构调研",
+        "type": "detail",
+        "parent": 13,
+        "project": 2,
+        "description": "",
+        "assignee_name": "程新玲",
+        "stakeholders": "",
+        "start_date": "2026-05-10",
+        "end_date": "2026-06-20",
+        "actual_end_date": null,
+        "status": "completed_on_time",
+        "progress": 100,
+        "sort_order": 0,
+        "created_at": "2026-06-20T19:22:40.886Z",
+        "updated_at": "2026-06-20T19:22:40.886Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 14,
+      "fields": {
+        "name": "开展条目化分析",
+        "type": "middle",
+        "parent": 3,
+        "project": 2,
+        "description": "",
+        "assignee_name": "程新玲",
+        "stakeholders": "",
+        "start_date": "2026-05-12",
+        "end_date": "2026-06-25",
+        "actual_end_date": null,
+        "status": "in_progress",
+        "progress": 70,
+        "sort_order": 0,
+        "created_at": "2026-06-20T19:12:59.340Z",
+        "updated_at": "2026-06-20T19:12:59.340Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 21,
+      "fields": {
+        "name": "行领导访谈",
+        "type": "detail",
+        "parent": 13,
+        "project": 2,
+        "description": "",
+        "assignee_name": "王明玉",
+        "stakeholders": "",
+        "start_date": "2026-05-25",
+        "end_date": "2026-06-20",
+        "actual_end_date": null,
+        "status": "delayed",
+        "progress": 20,
+        "sort_order": 0,
+        "created_at": "2026-06-20T19:20:53.414Z",
+        "updated_at": "2026-06-20T19:20:53.414Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 23,
+      "fields": {
+        "name": "业务部门访谈",
+        "type": "detail",
+        "parent": 13,
+        "project": 2,
+        "description": "",
+        "assignee_name": "程新玲",
+        "stakeholders": "",
+        "start_date": "2026-05-25",
+        "end_date": "2026-06-10",
+        "actual_end_date": null,
+        "status": "suspended",
+        "progress": 95,
+        "sort_order": 0,
+        "created_at": "2026-06-20T19:22:10.001Z",
+        "updated_at": "2026-06-20T19:22:10.001Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 15,
+      "fields": {
+        "name": "撰写现状分析报告",
+        "type": "middle",
+        "parent": 3,
+        "project": 2,
+        "description": "",
+        "assignee_name": "程新玲",
+        "stakeholders": "",
+        "start_date": "2026-06-15",
+        "end_date": "2026-07-08",
+        "actual_end_date": null,
+        "status": "in_progress",
+        "progress": 30,
+        "sort_order": 0,
+        "created_at": "2026-06-20T19:14:16.425Z",
+        "updated_at": "2026-06-20T19:14:32.446Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 10,
+      "fields": {
+        "name": "规划设计",
+        "type": "milestone",
+        "parent": null,
+        "project": 2,
+        "description": "",
+        "assignee_name": "程新玲",
+        "stakeholders": "",
+        "start_date": "2026-07-01",
+        "end_date": "2026-08-31",
+        "actual_end_date": null,
+        "status": "not_started",
+        "progress": 0,
+        "sort_order": 0,
+        "created_at": "2026-06-20T06:42:05.284Z",
+        "updated_at": "2026-06-20T06:42:05.285Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 16,
+      "fields": {
+        "name": "撰写方案",
+        "type": "middle",
+        "parent": 10,
+        "project": 2,
+        "description": "",
+        "assignee_name": "程新玲",
+        "stakeholders": "",
+        "start_date": "2026-07-01",
+        "end_date": "2026-08-15",
+        "actual_end_date": null,
+        "status": "not_started",
+        "progress": 0,
+        "sort_order": 0,
+        "created_at": "2026-06-20T19:15:34.732Z",
+        "updated_at": "2026-06-20T19:15:34.732Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 17,
+      "fields": {
+        "name": "撰写信贷专题报告",
+        "type": "middle",
+        "parent": 10,
+        "project": 2,
+        "description": "",
+        "assignee_name": "何峰",
+        "stakeholders": "刘珍汉",
+        "start_date": "2026-07-01",
+        "end_date": "2026-07-31",
+        "actual_end_date": null,
+        "status": "not_started",
+        "progress": 0,
+        "sort_order": 0,
+        "created_at": "2026-06-20T19:16:33.499Z",
+        "updated_at": "2026-06-20T19:16:33.499Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 18,
+      "fields": {
+        "name": "撰写AI专题报告",
+        "type": "middle",
+        "parent": 10,
+        "project": 2,
+        "description": "",
+        "assignee_name": "何峰",
+        "stakeholders": "倪艺文",
+        "start_date": "2026-07-01",
+        "end_date": "2026-07-31",
+        "actual_end_date": null,
+        "status": "not_started",
+        "progress": 0,
+        "sort_order": 0,
+        "created_at": "2026-06-20T19:17:21.352Z",
+        "updated_at": "2026-06-20T19:18:46.424Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 12,
+      "fields": {
+        "name": "方案交付",
+        "type": "milestone",
+        "parent": null,
+        "project": 2,
+        "description": "",
+        "assignee_name": "程新玲",
+        "stakeholders": "",
+        "start_date": "2026-09-01",
+        "end_date": "2026-09-30",
+        "actual_end_date": null,
+        "status": "not_started",
+        "progress": 0,
+        "sort_order": 0,
+        "created_at": "2026-06-20T09:58:55.160Z",
+        "updated_at": "2026-06-20T09:58:55.160Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 19,
+      "fields": {
+        "name": "方案征求意见",
+        "type": "middle",
+        "parent": 12,
+        "project": 2,
+        "description": "",
+        "assignee_name": "程新玲",
+        "stakeholders": "",
+        "start_date": "2026-09-01",
+        "end_date": "2026-09-15",
+        "actual_end_date": null,
+        "status": "not_started",
+        "progress": 0,
+        "sort_order": 0,
+        "created_at": "2026-06-20T19:18:29.276Z",
+        "updated_at": "2026-06-20T19:18:29.276Z"
+      }
+    },
+    {
+      "model": "plans.plan",
+      "pk": 20,
+      "fields": {
+        "name": "方案汇报",
+        "type": "middle",
+        "parent": 12,
+        "project": 2,
+        "description": "",
+        "assignee_name": "程新玲",
+        "stakeholders": "",
+        "start_date": "2026-09-16",
+        "end_date": "2026-09-30",
+        "actual_end_date": null,
+        "status": "not_started",
+        "progress": 0,
+        "sort_order": 0,
+        "created_at": "2026-06-20T19:19:41.544Z",
+        "updated_at": "2026-06-20T19:19:41.544Z"
+      }
+    }
+  ],
+  "plans.Task": [
+    {
+      "model": "plans.task",
+      "pk": 2,
+      "fields": {
+        "name": "丹东分行调研",
+        "description": "",
+        "plan": 24,
+        "status": "completed_on_time",
+        "priority": "medium",
+        "assignee": null,
+        "assignee_name": "程新玲",
+        "stakeholders": "倪艺文, 何峰, 关锋",
+        "start_date": "2026-06-17",
+        "due_date": "2026-06-17",
+        "estimated_hours": null,
+        "actual_hours": null,
+        "parent": null,
+        "sort_order": 0,
+        "created_by": 2,
+        "created_at": "2026-06-22T07:35:03.218Z",
+        "updated_at": "2026-06-22T07:41:23.313Z"
+      }
+    },
+    {
+      "model": "plans.task",
+      "pk": 4,
+      "fields": {
+        "name": "吴涛行长访谈",
+        "description": "",
+        "plan": 21,
+        "status": "delayed",
+        "priority": "high",
+        "assignee": 16,
+        "assignee_name": "王明玉",
+        "stakeholders": "程新玲, 何峰",
+        "start_date": "2026-05-25",
+        "due_date": "2026-06-20",
+        "estimated_hours": null,
+        "actual_hours": null,
+        "parent": null,
+        "sort_order": 0,
+        "created_by": 2,
+        "created_at": "2026-06-23T05:31:49.047Z",
+        "updated_at": "2026-06-23T05:32:11.551Z"
+      }
+    }
+  ],
+  "requirements.Requirement": [
+    {
+      "model": "requirements.requirement",
+      "pk": 3,
+      "fields": {
+        "type": "business",
+        "name": "测试需求",
+        "description": "",
+        "assignee": null,
+        "due_date": "2026-06-20",
+        "notes": "",
+        "document": "",
+        "status": "baselined",
+        "project": 2,
+        "submitter": 2,
+        "review_assignee": null,
+        "created_at": "2026-06-23T09:12:38.175Z",
+        "updated_at": "2026-06-23T09:45:33.429Z"
+      }
+    },
+    {
+      "model": "requirements.requirement",
+      "pk": 2,
+      "fields": {
+        "type": "business",
+        "name": "测试数据",
+        "description": "",
+        "assignee": 6,
+        "due_date": "2026-06-20",
+        "notes": "",
+        "document": "",
+        "status": "baselined",
+        "project": 2,
+        "submitter": 2,
+        "review_assignee": null,
+        "created_at": "2026-06-23T07:57:06.576Z",
+        "updated_at": "2026-06-23T08:38:33.698Z"
+      }
+    }
+  ],
+  "requirements.RequirementReview": [
+    {
+      "model": "requirements.requirementreview",
+      "pk": 2,
+      "fields": {
+        "requirement": 3,
+        "reviewer": null,
+        "review_method": "meeting",
+        "review_date": "2026-06-22",
+        "conclusion": "conditional_pass",
+        "notes": "",
+        "document": "",
+        "created_at": "2026-06-23T09:45:33.422Z",
+        "stakeholders": [
+          2
+        ]
+      }
+    },
+    {
+      "model": "requirements.requirementreview",
+      "pk": 1,
+      "fields": {
+        "requirement": 2,
+        "reviewer": null,
+        "review_method": "meeting",
+        "review_date": "2026-06-23",
+        "conclusion": "pass",
+        "notes": "",
+        "document": "",
+        "created_at": "2026-06-23T08:38:33.695Z",
+        "stakeholders": []
+      }
+    }
+  ],
+  "requirements.RequirementBaseline": [
+    {
+      "model": "requirements.requirementbaseline",
+      "pk": 3,
+      "fields": {
+        "type": "business",
+        "name": "测试基线",
+        "description": "",
+        "version": "0.1",
+        "notes": "",
+        "project": 2,
+        "created_by": 2,
+        "created_at": "2026-06-23T09:46:05.788Z",
+        "requirements": [
+          3,
+          2
+        ]
+      }
+    }
+  ],
+  "requirements.RequirementChange": [
+    {
+      "model": "requirements.requirementchange",
+      "pk": 2,
+      "fields": {
+        "baseline": 3,
+        "baseline_version": "0.1",
+        "object_desc": "[业务需求] 测试数据",
+        "content": "修改数据逻辑",
+        "assignee": 6,
+        "approver": 3,
+        "approval_status": "pending",
+        "notes": "",
+        "created_by": 2,
+        "created_at": "2026-06-23T15:26:30.086Z",
+        "updated_at": "2026-06-23T15:26:30.086Z"
+      }
+    },
+    {
+      "model": "requirements.requirementchange",
+      "pk": 1,
+      "fields": {
+        "baseline": 3,
+        "baseline_version": "0.1",
+        "object_desc": "[业务需求] 测试需求",
+        "content": "增加业务规则",
+        "assignee": 6,
+        "approver": 2,
+        "approval_status": "approved",
+        "notes": "",
+        "created_by": 2,
+        "created_at": "2026-06-23T15:14:09.155Z",
+        "updated_at": "2026-06-23T15:19:16.247Z"
+      }
+    }
+  ],
+  "resources.Consultant": [
+    {
+      "model": "resources.consultant",
+      "pk": 30,
+      "fields": {
+        "project": 2,
+        "name": "张旭",
+        "gender": "male",
+        "age": null,
+        "rank": "consultant",
+        "status": "pending_entry",
+        "entry_date": "2026-06-23",
+        "exit_date": null,
+        "user": 20,
+        "created_at": "2026-06-22T08:15:04.883Z"
+      }
+    },
+    {
+      "model": "resources.consultant",
+      "pk": 27,
+      "fields": {
+        "project": 2,
+        "name": "行方科技人员",
+        "gender": "male",
+        "age": null,
+        "rank": "other",
+        "status": "entered",
+        "entry_date": "2026-05-01",
+        "exit_date": null,
+        "user": null,
+        "created_at": "2026-06-22T01:52:13.756Z"
+      }
+    },
+    {
+      "model": "resources.consultant",
+      "pk": 26,
+      "fields": {
+        "project": null,
+        "name": "测试",
+        "gender": "male",
+        "age": null,
+        "rank": "consultant",
+        "status": "pending_entry",
+        "entry_date": null,
+        "exit_date": null,
+        "user": null,
+        "created_at": "2026-06-22T01:50:37.089Z"
+      }
+    },
+    {
+      "model": "resources.consultant",
+      "pk": 25,
+      "fields": {
+        "project": null,
+        "name": "行方科技人员",
+        "gender": "male",
+        "age": null,
+        "rank": "other",
+        "status": "entered",
+        "entry_date": "2026-05-01",
+        "exit_date": null,
+        "user": null,
+        "created_at": "2026-06-22T01:49:32.755Z"
+      }
+    },
+    {
+      "model": "resources.consultant",
+      "pk": 24,
+      "fields": {
+        "project": 2,
+        "name": "刘珍汉",
+        "gender": "male",
+        "age": null,
+        "rank": "consultant",
+        "status": "entered",
+        "entry_date": "2026-06-12",
+        "exit_date": null,
+        "user": 11,
+        "created_at": "2026-06-20T03:29:57.734Z"
+      }
+    },
+    {
+      "model": "resources.consultant",
+      "pk": 23,
+      "fields": {
+        "project": 2,
+        "name": "孟庆丰",
+        "gender": "male",
+        "age": null,
+        "rank": "senior",
+        "status": "exited",
+        "entry_date": "2026-05-12",
+        "exit_date": "2026-06-10",
+        "user": 12,
+        "created_at": "2026-06-20T03:29:27.764Z"
+      }
+    },
+    {
+      "model": "resources.consultant",
+      "pk": 22,
+      "fields": {
+        "project": 2,
+        "name": "季哲宁",
+        "gender": "female",
+        "age": null,
+        "rank": "assistant",
+        "status": "entered",
+        "entry_date": "2026-06-12",
+        "exit_date": null,
+        "user": 13,
+        "created_at": "2026-06-20T03:28:43.614Z"
+      }
+    },
+    {
+      "model": "resources.consultant",
+      "pk": 21,
+      "fields": {
+        "project": 2,
+        "name": "鞠璧尘",
+        "gender": "female",
+        "age": null,
+        "rank": "assistant",
+        "status": "entered",
+        "entry_date": "2026-05-15",
+        "exit_date": null,
+        "user": 18,
+        "created_at": "2026-06-20T03:28:15.529Z"
+      }
+    },
+    {
+      "model": "resources.consultant",
+      "pk": 20,
+      "fields": {
+        "project": 2,
+        "name": "倪艺文",
+        "gender": "female",
+        "age": null,
+        "rank": "assistant",
+        "status": "entered",
+        "entry_date": "2026-05-11",
+        "exit_date": null,
+        "user": 10,
+        "created_at": "2026-06-20T03:27:27.422Z"
+      }
+    },
+    {
+      "model": "resources.consultant",
+      "pk": 19,
+      "fields": {
+        "project": 2,
+        "name": "关锋",
+        "gender": "male",
+        "age": null,
+        "rank": "consultant",
+        "status": "entered",
+        "entry_date": "2026-05-11",
+        "exit_date": null,
+        "user": 8,
+        "created_at": "2026-06-20T03:27:03.187Z"
+      }
+    },
+    {
+      "model": "resources.consultant",
+      "pk": 18,
+      "fields": {
+        "project": 2,
+        "name": "曹攀",
+        "gender": "male",
+        "age": null,
+        "rank": "senior",
+        "status": "entered",
+        "entry_date": "2026-05-25",
+        "exit_date": null,
+        "user": 14,
+        "created_at": "2026-06-20T03:26:38.970Z"
+      }
+    },
+    {
+      "model": "resources.consultant",
+      "pk": 17,
+      "fields": {
+        "project": 2,
+        "name": "何峰",
+        "gender": "male",
+        "age": 53,
+        "rank": "director",
+        "status": "entered",
+        "entry_date": "2026-05-25",
+        "exit_date": null,
+        "user": 6,
+        "created_at": "2026-06-20T03:26:03.603Z"
+      }
+    },
+    {
+      "model": "resources.consultant",
+      "pk": 16,
+      "fields": {
+        "project": 2,
+        "name": "程新玲",
+        "gender": "female",
+        "age": null,
+        "rank": "senior",
+        "status": "entered",
+        "entry_date": "2026-05-01",
+        "exit_date": null,
+        "user": 9,
+        "created_at": "2026-06-20T03:25:34.601Z"
+      }
+    },
+    {
+      "model": "resources.consultant",
+      "pk": 15,
+      "fields": {
+        "project": 2,
+        "name": "王明玉",
+        "gender": "male",
+        "age": 53,
+        "rank": "director",
+        "status": "entered",
+        "entry_date": "2026-05-01",
+        "exit_date": null,
+        "user": 16,
+        "created_at": "2026-06-20T03:25:12.331Z"
+      }
+    }
+  ],
+  "communications.CommType": [
+    {
+      "model": "communications.commtype",
+      "pk": 2,
+      "fields": {
+        "name": "定期会议",
+        "description": "定期召开的各类会议，如周例会、月例会等",
+        "is_active": true,
+        "project": 2,
+        "icon": "",
+        "sort_order": 0
+      }
+    },
+    {
+      "model": "communications.commtype",
+      "pk": 3,
+      "fields": {
+        "name": "非定期会议",
+        "description": "不是定期召开的各类会议，如方案讨论会、工作碰头会等",
+        "is_active": true,
+        "project": 2,
+        "icon": "",
+        "sort_order": 0
+      }
+    },
+    {
+      "model": "communications.commtype",
+      "pk": 4,
+      "fields": {
+        "name": "电子邮件",
+        "description": "通过电子邮件发送的各类通知",
+        "is_active": true,
+        "project": 2,
+        "icon": "",
+        "sort_order": 0
+      }
+    },
+    {
+      "model": "communications.commtype",
+      "pk": 5,
+      "fields": {
+        "name": "微信",
+        "description": "通过微信办公群发送的各类通知（不允许在群内发送文件）",
+        "is_active": true,
+        "project": 2,
+        "icon": "",
+        "sort_order": 0
+      }
+    },
+    {
+      "model": "communications.commtype",
+      "pk": 6,
+      "fields": {
+        "name": "钉钉",
+        "description": "通过钉钉办公群发送的各类通知",
+        "is_active": true,
+        "project": 2,
+        "icon": "",
+        "sort_order": 0
+      }
+    },
+    {
+      "model": "communications.commtype",
+      "pk": 7,
+      "fields": {
+        "name": "线上会议",
+        "description": "通过腾讯会议发起的线上会议",
+        "is_active": true,
+        "project": 2,
+        "icon": "",
+        "sort_order": 0
+      }
+    }
+  ],
+  "communications.CommRecord": [
+    {
+      "model": "communications.commrecord",
+      "pk": 1,
+      "fields": {
+        "comm_type": 3,
+        "project": 2,
+        "subject": "讨论信贷专题报告框架",
+        "content": "",
+        "conclusion": "补充业务内容",
+        "initiator": 3,
+        "comm_date": "2026-06-15T02:00:00Z",
+        "duration_minutes": 50,
+        "location": "科技大厦5楼办公室",
+        "attachments": [
+          {
+            "name": "【辽宁农商】科技发展战略规划（2026-2030年）咨询项目_信贷系统专题报告_结构-2026061601.docx",
+            "url": "/media/comm_attachments/2026/06/22/30f18a31bb3a4e28b1d12e19cd83b576.docx",
+            "size": 40874
+          }
+        ],
+        "created_at": "2026-06-22T02:14:05.174Z",
+        "participants": [
+          4,
+          7,
+          8,
+          3,
+          12
+        ]
+      }
+    }
+  ],
+  "documents.Document": [
+    {
+      "model": "documents.document",
+      "pk": 4,
+      "fields": {
+        "project": 2,
+        "doc_type": "report",
+        "title": "信贷系统专题报告_结构-2026061601",
+        "version": "V0.1",
+        "file_format": "DOCX",
+        "file_size": "39.9 KB",
+        "upload_time": "2026-06-22T06:35:06.096Z",
+        "uploader": 2,
+        "archive_status": "unarchived",
+        "file": "documents/辽宁农商科技发展战略规划2026-2030年咨询项目_信贷系统专题报告_结构-2026061601_j2ZNrpM.docx",
+        "created_at": "2026-06-22T06:35:17.715Z",
+        "updated_at": "2026-06-22T06:42:42.078Z"
+      }
+    }
+  ],
+  "work_management.Equipment": [
+    {
+      "model": "work_management.equipment",
+      "pk": 1,
+      "fields": {
+        "name": "",
+        "code": "",
+        "type": "computer",
+        "specs": "联想台式机",
+        "quantity": 2,
+        "status": "in_use",
+        "project": 2,
+        "notes": "",
+        "borrower": null,
+        "borrow_date": null,
+        "return_date": null,
+        "created_at": "2026-06-22T02:30:56.400Z",
+        "updated_at": "2026-06-22T02:30:56.400Z"
+      }
+    }
+  ],
+  "work_management.Leave": [
+    {
+      "model": "work_management.leave",
+      "pk": 1,
+      "fields": {
+        "project": 2,
+        "applicant": 6,
+        "type": "personal",
+        "start_date": "2026-06-18T00:30:00Z",
+        "end_date": "2026-06-18T09:00:00Z",
+        "duration_days": null,
+        "status": "approved",
+        "approver": 3,
+        "is_cancelled": true,
+        "notes": "",
+        "created_at": "2026-06-22T02:59:47.157Z",
+        "updated_at": "2026-06-22T02:59:56.722Z"
+      }
+    }
+  ],
+  "work_management.Timesheet": [
+    {
+      "model": "work_management.timesheet",
+      "pk": 2,
+      "fields": {
+        "project": 2,
+        "reporter": 6,
+        "start_date": "2026-06-01",
+        "end_date": "2026-06-30",
+        "type": "workday",
+        "status": "normal",
+        "approval_status": "approved",
+        "approver": 3,
+        "created_at": "2026-06-22T03:53:37.818Z",
+        "updated_at": "2026-06-22T03:53:37.818Z"
+      }
+    }
+  ],
+  "work_management.TimesheetDetail": [
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 31,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-01",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 32,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-02",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 33,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-03",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 34,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-04",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 35,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-05",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 36,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-06",
+        "type": "holiday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 37,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-07",
+        "type": "holiday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 38,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-08",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 39,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-09",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 40,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-10",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 41,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-11",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 42,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-12",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 43,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-13",
+        "type": "holiday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 44,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-14",
+        "type": "holiday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 45,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-15",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 46,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-16",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 47,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-17",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 48,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-18",
+        "type": "leave",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 49,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-19",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 50,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-20",
+        "type": "holiday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 51,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-21",
+        "type": "holiday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 52,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-22",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 53,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-23",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 54,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-24",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 55,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-25",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 56,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-26",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 57,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-27",
+        "type": "holiday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 58,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-28",
+        "type": "holiday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 59,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-29",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    },
+    {
+      "model": "work_management.timesheetdetail",
+      "pk": 60,
+      "fields": {
+        "timesheet": 2,
+        "date": "2026-06-30",
+        "type": "workday",
+        "hours": "8.0",
+        "description": ""
+      }
+    }
+  ],
+  "notifications.Notification": [
+    {
+      "model": "notifications.notification",
+      "pk": 39,
+      "fields": {
+        "project": null,
+        "recipient": 16,
+        "type": "task_updated",
+        "title": "任务更新: 吴涛行长访谈",
+        "content": "吴涛行长访谈",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "task",
+        "related_id": 4,
+        "created_at": "2026-06-23T05:32:11.554Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 38,
+      "fields": {
+        "project": null,
+        "recipient": 16,
+        "type": "task_updated",
+        "title": "任务更新: 吴涛行长访谈",
+        "content": "吴涛行长访谈",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "task",
+        "related_id": 4,
+        "created_at": "2026-06-23T05:32:02.502Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 37,
+      "fields": {
+        "project": null,
+        "recipient": 6,
+        "type": "task_assigned",
+        "title": "新任务: 吴涛行长访谈",
+        "content": "您被分配了任务 吴涛行长访谈，截止日期 2026-06-20，优先级 中",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "task",
+        "related_id": 4,
+        "created_at": "2026-06-23T05:31:49.057Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 36,
+      "fields": {
+        "project": null,
+        "recipient": 9,
+        "type": "task_assigned",
+        "title": "新任务: 吴涛行长访谈",
+        "content": "您被分配了任务 吴涛行长访谈，截止日期 2026-06-20，优先级 中",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "task",
+        "related_id": 4,
+        "created_at": "2026-06-23T05:31:49.055Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 35,
+      "fields": {
+        "project": null,
+        "recipient": 16,
+        "type": "task_assigned",
+        "title": "新任务: 吴涛行长访谈",
+        "content": "您被分配了任务 吴涛行长访谈，截止日期 2026-06-20，优先级 中",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "task",
+        "related_id": 4,
+        "created_at": "2026-06-23T05:31:49.053Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 34,
+      "fields": {
+        "project": null,
+        "recipient": 16,
+        "type": "task_assigned",
+        "title": "新任务: 吴涛行长访谈",
+        "content": "您被分配了任务 吴涛行长访谈，截止日期 2026-06-20，优先级 中",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "task",
+        "related_id": 4,
+        "created_at": "2026-06-23T05:31:49.051Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 18,
+      "fields": {
+        "project": null,
+        "recipient": 8,
+        "type": "task_assigned",
+        "title": "任务分配: 调研任务",
+        "content": "调研任务",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "task",
+        "related_id": 3,
+        "created_at": "2026-06-22T07:37:43.003Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 17,
+      "fields": {
+        "project": null,
+        "recipient": 8,
+        "type": "task_assigned",
+        "title": "任务分配: 丹东分行调研",
+        "content": "丹东分行调研",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "task",
+        "related_id": 2,
+        "created_at": "2026-06-22T07:35:03.222Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 16,
+      "fields": {
+        "project": null,
+        "recipient": 6,
+        "type": "task_assigned",
+        "title": "任务分配: 丹东分行调研",
+        "content": "丹东分行调研",
+        "is_read": true,
+        "read_at": "2026-06-22T07:42:07.452Z",
+        "related_type": "task",
+        "related_id": 2,
+        "created_at": "2026-06-22T07:35:03.221Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 12,
+      "fields": {
+        "project": null,
+        "recipient": 6,
+        "type": "system_notice",
+        "title": "系统通知: 您的账户密码将于 7 天后过期",
+        "content": "您的账户密码将于 2026-06-29 过期，请及时修改密码，以免影响系统正常使用。",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "",
+        "related_id": null,
+        "created_at": "2026-06-22T05:57:57.433Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 8,
+      "fields": {
+        "project": null,
+        "recipient": 2,
+        "type": "system_notice",
+        "title": "系统通知: 系统将于本周末进行维护升级",
+        "content": "系统计划于 2026-06-27 22:00 至 2026-06-28 06:00 进行维护升级，期间系统将暂停访问。请提前做好工作安排。",
+        "is_read": true,
+        "read_at": "2026-06-22T06:56:52.840Z",
+        "related_type": "",
+        "related_id": null,
+        "created_at": "2026-06-22T05:50:31.309Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 7,
+      "fields": {
+        "project": 2,
+        "recipient": 2,
+        "type": "release_planned",
+        "title": "投产计划: 信贷系统 V2.1 版本计划发布",
+        "content": "信贷系统 V2.1 版本计划于 2026-07-20 投产，包含 12 项功能优化和 5 项缺陷修复。请各相关方确认发布内容。",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "",
+        "related_id": null,
+        "created_at": "2026-06-22T04:20:31.309Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 11,
+      "fields": {
+        "project": 3,
+        "recipient": 6,
+        "type": "requirement_updated",
+        "title": "需求更新: 用户权限管理模块需求变更",
+        "content": "用户权限管理模块需求已完成评审变更，新增按角色批量授权功能，请相关开发人员更新设计方案。",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "",
+        "related_id": null,
+        "created_at": "2026-06-22T03:57:57.433Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 10,
+      "fields": {
+        "project": 2,
+        "recipient": 6,
+        "type": "bug_assigned",
+        "title": "缺陷分配: 登录页面超时设置不合理",
+        "content": "缺陷登录页面超时设置不合理已分配给您处理，优先级为高，请在 3 个工作日内修复。",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "",
+        "related_id": null,
+        "created_at": "2026-06-22T01:57:57.433Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 6,
+      "fields": {
+        "project": 3,
+        "recipient": 2,
+        "type": "plan_updated",
+        "title": "计划更新: 系统设计阶段计划已调整",
+        "content": "系统设计阶段计划的结束日期从 2026-06-30 调整为 2026-07-15，请相关人员及时调整工作安排。",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "",
+        "related_id": null,
+        "created_at": "2026-06-22T00:50:31.309Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 5,
+      "fields": {
+        "project": 2,
+        "recipient": 2,
+        "type": "bug_reported",
+        "title": "缺陷报告: 需求文档部分功能描述不清晰",
+        "content": "测试人员在验收过程中发现需求文档中用户权限管理部分功能描述存在歧义，建议尽快组织评审会澄清。",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "",
+        "related_id": null,
+        "created_at": "2026-06-21T18:50:31.309Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 9,
+      "fields": {
+        "project": 3,
+        "recipient": 6,
+        "type": "task_assigned",
+        "title": "任务分配: 编写项目需求规格说明书",
+        "content": "您已被分配任务编写项目需求规格说明书，预计工时 5 人天，截止日期 2026-07-05。",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "",
+        "related_id": null,
+        "created_at": "2026-06-21T04:57:57.433Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 4,
+      "fields": {
+        "project": 3,
+        "recipient": 2,
+        "type": "task_assigned",
+        "title": "任务分配: 编制项目总体计划",
+        "content": "您已被分配任务编制项目总体计划，计划于 2026-07-01 前完成。任务属于里程碑计划项目启动阶段。",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "",
+        "related_id": null,
+        "created_at": "2026-06-19T22:50:31.309Z"
+      }
+    },
+    {
+      "model": "notifications.notification",
+      "pk": 3,
+      "fields": {
+        "project": 3,
+        "recipient": 2,
+        "type": "project_created",
+        "title": "项目创建: 海南农村商业银行新核心项目群管理项目",
+        "content": "您已被指定为项目负责人，项目编号 PROJ-2026-003。请及时关注项目启动相关安排。",
+        "is_read": false,
+        "read_at": null,
+        "related_type": "",
+        "related_id": null,
+        "created_at": "2026-06-17T03:50:31.309Z"
+      }
+    }
+  ],
+  "notifications.NotificationTemplate": [
+    {
+      "model": "notifications.notificationtemplate",
+      "pk": 1,
+      "fields": {
+        "code": "task_assigned",
+        "title_template": "新任务: {{task_name}}",
+        "content_template": "您被分配了任务 {{task_name}}，截止日期 {{due_date}}，优先级 {{priority}}",
+        "description": "任务分配通知"
+      }
+    },
+    {
+      "model": "notifications.notificationtemplate",
+      "pk": 3,
+      "fields": {
+        "code": "project_updated",
+        "title_template": "项目更新:{{name}}",
+        "content_template": "{{name}}有更新，最新状态为{{status}}",
+        "description": "项目状态更新通知"
+      }
+    }
+  ],
+  "organizations.Department": [
+    {
+      "model": "organizations.department",
+      "pk": 10,
+      "fields": {
+        "name": "业务咨询组",
+        "project": 2,
+        "parent": 5,
+        "manager": 19,
+        "sort_order": 0,
+        "is_active": true,
+        "description": "",
+        "created_at": "2026-06-19T15:29:31.704Z"
+      }
+    },
+    {
+      "model": "organizations.department",
+      "pk": 8,
+      "fields": {
+        "name": "咨询专家组",
+        "project": 2,
+        "parent": 5,
+        "manager": 17,
+        "sort_order": 0,
+        "is_active": true,
+        "description": "",
+        "created_at": "2026-06-19T15:19:09.811Z"
+      }
+    },
+    {
+      "model": "organizations.department",
+      "pk": 13,
+      "fields": {
+        "name": "应用组",
+        "project": 2,
+        "parent": 11,
+        "manager": null,
+        "sort_order": 0,
+        "is_active": true,
+        "description": "",
+        "created_at": "2026-06-19T15:34:27.846Z"
+      }
+    },
+    {
+      "model": "organizations.department",
+      "pk": 11,
+      "fields": {
+        "name": "技术咨询组",
+        "project": 2,
+        "parent": 5,
+        "manager": 18,
+        "sort_order": 0,
+        "is_active": true,
+        "description": "",
+        "created_at": "2026-06-19T15:29:48.770Z"
+      }
+    },
+    {
+      "model": "organizations.department",
+      "pk": 15,
+      "fields": {
+        "name": "流程组",
+        "project": 2,
+        "parent": 10,
+        "manager": null,
+        "sort_order": 0,
+        "is_active": true,
+        "description": "",
+        "created_at": "2026-06-19T15:35:00.915Z"
+      }
+    },
+    {
+      "model": "organizations.department",
+      "pk": 12,
+      "fields": {
+        "name": "系统组",
+        "project": 2,
+        "parent": 11,
+        "manager": null,
+        "sort_order": 0,
+        "is_active": true,
+        "description": "",
+        "created_at": "2026-06-19T15:34:08.900Z"
+      }
+    },
+    {
+      "model": "organizations.department",
+      "pk": 9,
+      "fields": {
+        "name": "质量管控组",
+        "project": 2,
+        "parent": 5,
+        "manager": 16,
+        "sort_order": 0,
+        "is_active": true,
+        "description": "",
+        "created_at": "2026-06-19T15:19:39.410Z"
+      }
+    },
+    {
+      "model": "organizations.department",
+      "pk": 14,
+      "fields": {
+        "name": "需求组",
+        "project": 2,
+        "parent": 10,
+        "manager": null,
+        "sort_order": 0,
+        "is_active": true,
+        "description": "",
+        "created_at": "2026-06-19T15:34:45.817Z"
+      }
+    },
+    {
+      "model": "organizations.department",
+      "pk": 5,
+      "fields": {
+        "name": "项目管理办公室",
+        "project": 2,
+        "parent": 2,
+        "manager": 16,
+        "sort_order": 0,
+        "is_active": true,
+        "description": "",
+        "created_at": "2026-06-19T15:08:25.355Z"
+      }
+    },
+    {
+      "model": "organizations.department",
+      "pk": 2,
+      "fields": {
+        "name": "项目领导小组",
+        "project": 2,
+        "parent": null,
+        "manager": 15,
+        "sort_order": 0,
+        "is_active": true,
+        "description": "",
+        "created_at": "2026-06-19T14:57:58.521Z"
+      }
+    },
+    {
+      "model": "organizations.department",
+      "pk": 16,
+      "fields": {
+        "name": "验收组",
+        "project": 2,
+        "parent": 9,
+        "manager": 27,
+        "sort_order": 0,
+        "is_active": true,
+        "description": "根据合同约定，检查交付成果是否达到验收标准",
+        "created_at": "2026-06-22T01:54:56.286Z"
+      }
+    }
+  ],
+  "organizations.UserOrganization": [
+    {
+      "model": "organizations.userorganization",
+      "pk": 4,
+      "fields": {
+        "project": 2,
+        "consultant": 17,
+        "name": "何峰",
+        "gender": "male",
+        "age": 53,
+        "rank": "director",
+        "project_role": "consulting_expert",
+        "department": 10,
+        "phone": "18001105005",
+        "email": "",
+        "joined_at": null
+      }
+    },
+    {
+      "model": "organizations.userorganization",
+      "pk": 7,
+      "fields": {
+        "project": 2,
+        "consultant": 24,
+        "name": "刘珍汉",
+        "gender": "male",
+        "age": null,
+        "rank": "consultant",
+        "project_role": "consulting_advisor",
+        "department": 10,
+        "phone": "",
+        "email": "",
+        "joined_at": null
+      }
+    },
+    {
+      "model": "organizations.userorganization",
+      "pk": 6,
+      "fields": {
+        "project": 2,
+        "consultant": 19,
+        "name": "关锋",
+        "gender": "male",
+        "age": null,
+        "rank": "consultant",
+        "project_role": "consulting_advisor",
+        "department": 11,
+        "phone": "",
+        "email": "",
+        "joined_at": null
+      }
+    },
+    {
+      "model": "organizations.userorganization",
+      "pk": 5,
+      "fields": {
+        "project": 2,
+        "consultant": 18,
+        "name": "曹攀",
+        "gender": "male",
+        "age": null,
+        "rank": "senior",
+        "project_role": "consulting_expert",
+        "department": 11,
+        "phone": "",
+        "email": "",
+        "joined_at": null
+      }
+    },
+    {
+      "model": "organizations.userorganization",
+      "pk": 8,
+      "fields": {
+        "project": 2,
+        "consultant": 20,
+        "name": "倪艺文",
+        "gender": "female",
+        "age": null,
+        "rank": "assistant",
+        "project_role": "consulting_assistant",
+        "department": 5,
+        "phone": "",
+        "email": "",
+        "joined_at": null
+      }
+    },
+    {
+      "model": "organizations.userorganization",
+      "pk": 10,
+      "fields": {
+        "project": 2,
+        "consultant": 22,
+        "name": "季哲宁",
+        "gender": "female",
+        "age": null,
+        "rank": "assistant",
+        "project_role": "consulting_assistant",
+        "department": 5,
+        "phone": "",
+        "email": "",
+        "joined_at": null
+      }
+    },
+    {
+      "model": "organizations.userorganization",
+      "pk": 3,
+      "fields": {
+        "project": 2,
+        "consultant": 16,
+        "name": "程新玲",
+        "gender": "female",
+        "age": 40,
+        "rank": "senior",
+        "project_role": "project_manager",
+        "department": 5,
+        "phone": "",
+        "email": "",
+        "joined_at": null
+      }
+    },
+    {
+      "model": "organizations.userorganization",
+      "pk": 11,
+      "fields": {
+        "project": null,
+        "consultant": 27,
+        "name": "行方科技人员",
+        "gender": "male",
+        "age": null,
+        "rank": "other",
+        "project_role": "other",
+        "department": 5,
+        "phone": "",
+        "email": "",
+        "joined_at": null
+      }
+    },
+    {
+      "model": "organizations.userorganization",
+      "pk": 12,
+      "fields": {
+        "project": 2,
+        "consultant": 27,
+        "name": "行方科技人员",
+        "gender": "male",
+        "age": null,
+        "rank": "other",
+        "project_role": "other",
+        "department": 5,
+        "phone": "",
+        "email": "",
+        "joined_at": null
+      }
+    },
+    {
+      "model": "organizations.userorganization",
+      "pk": 9,
+      "fields": {
+        "project": 2,
+        "consultant": 21,
+        "name": "鞠璧尘",
+        "gender": "female",
+        "age": null,
+        "rank": "assistant",
+        "project_role": "consulting_assistant",
+        "department": 5,
+        "phone": "",
+        "email": "",
+        "joined_at": null
+      }
+    },
+    {
+      "model": "organizations.userorganization",
+      "pk": 2,
+      "fields": {
+        "project": 2,
+        "consultant": 15,
+        "name": "王明玉",
+        "gender": "male",
+        "age": 53,
+        "rank": "director",
+        "project_role": "project_director",
+        "department": 2,
+        "phone": "",
+        "email": "",
+        "joined_at": null
+      }
+    }
+  ],
+  "_meta": {
+    "created_at": "2026-06-24T09:08:50.816534",
+    "version": "1.0"
+  }
+}

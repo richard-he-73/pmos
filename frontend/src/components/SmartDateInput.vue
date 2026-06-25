@@ -65,7 +65,7 @@ watch(() => props.modelValue, (val) => {
     rawInput.value = val
     if (inputRef.value) inputRef.value.value = val
   }
-})
+}, { immediate: true })
 
 function focus() { inputRef.value?.focus() }
 function select() { inputRef.value?.select() }

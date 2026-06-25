@@ -33,17 +33,17 @@ describe('API Testing Module', () => {
     const testing = await import('@/api/modules/testing')
     expect(typeof testing.getTestPlans).toBe('function')
     expect(typeof testing.getTestCases).toBe('function')
-    expect(typeof testing.getBugs).toBe('function')
-    expect(typeof testing.createBug).toBe('function')
-    expect(typeof testing.updateBug).toBe('function')
+    expect(typeof testing.getTestDefects).toBe('function')
+    expect(typeof testing.createTestDefect).toBe('function')
+    expect(typeof testing.updateTestDefect).toBe('function')
   })
 })
 
 describe('API Requirements Module', () => {
   it('exports requirement functions', async () => {
     const req = await import('@/api/modules/requirements')
-    expect(typeof req.getBusinessRequirements).toBe('function')
-    expect(typeof req.getSoftwareRequirements).toBe('function')
-    expect(typeof req.createBusinessRequirement).toBe('function')
+    expect(typeof req.getRequirements).toBe('function')
+    expect(typeof req.createRequirement).toBe('function')
+    expect(typeof req.getReqBaselines).toBe('function')
   })
 })

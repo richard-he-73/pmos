@@ -181,10 +181,17 @@
             </select>
           </div>
           <div><label class="block text-sm font-medium mb-1">评审日期</label><SmartDateInput v-model="reviewForm.review_date" /></div>
-          <div><label class="block text-sm font-medium mb-1">评审干系人</label>
-            <div class="max-h-32 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg p-2 space-y-1">
-              <label v-for="m in orgMembers" :key="m.id" class="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" :value="m.id" v-model="reviewForm.stakeholders_ids" class="rounded" />
+          <div class="relative" data-picker="stakeholder">
+            <label class="block text-sm font-medium mb-1">评审干系人</label>
+            <div @click="reviewStakePicker = !reviewStakePicker" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm cursor-pointer flex flex-wrap gap-1 min-h-[38px]">
+              <span v-if="!reviewForm.stakeholders_ids?.length" class="text-slate-400">请选择评审干系人</span>
+              <span v-for="sid in reviewForm.stakeholders_ids" :key="sid" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                {{ orgMembers.find(m=>m.id===sid)?.name || sid }}
+              </span>
+            </div>
+            <div v-if="reviewStakePicker" class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 shadow-lg p-2 space-y-1">
+              <label v-for="m in orgMembers" :key="m.id" class="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 py-1 rounded">
+                <input type="checkbox" :value="m.id" v-model="reviewForm.stakeholders_ids" class="w-4 h-4 rounded border-slate-300 text-blue-600" />
                 <span>{{ m.name }}</span>
               </label>
             </div>
@@ -214,14 +221,22 @@
           <div class="col-span-2"><label class="block text-sm font-medium mb-1">备注说明</label><textarea v-model="blForm.notes" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
         </div>
         <div class="border-t border-slate-200 dark:border-slate-700 pt-3">
-          <div class="text-sm font-medium mb-2">待纳入基线的需求（{{ blReqs.length }}）</div>
-          <div class="max-h-48 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg">
-            <label v-for="req in blReqs" :key="req.id" class="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-700/50 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30">
-              <input type="checkbox" :value="req.id" v-model="blForm.requirement_ids" class="rounded" />
-              <span class="font-medium">{{ req.name }}</span>
-              <span class="text-xs text-slate-400">{{ typeLabels[req.type] }}</span>
-            </label>
-            <div v-if="blReqs.length===0" class="flex flex-col items-center justify-center py-8 text-slate-400"><svg class="w-12 h-12 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><span class="text-xs">暂无可纳入基线的需求</span></div>
+          <div class="relative" data-picker="baseline-reqs">
+            <div class="text-sm font-medium mb-2">待纳入基线的需求（{{ blReqs.length }}）</div>
+            <div @click="baselineReqPicker = !baselineReqPicker" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm cursor-pointer flex flex-wrap gap-1 min-h-[38px]">
+              <span v-if="!blForm.requirement_ids?.length" class="text-slate-400">请选择需求</span>
+              <span v-for="rid in blForm.requirement_ids" :key="rid" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                {{ blReqs.find(r=>r.id===rid)?.name || rid }}
+              </span>
+            </div>
+            <div v-if="baselineReqPicker" class="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 shadow-lg p-2 space-y-1">
+              <label v-for="req in blReqs" :key="req.id" class="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 px-2 py-1 rounded">
+                <input type="checkbox" :value="req.id" v-model="blForm.requirement_ids" class="w-4 h-4 rounded border-slate-300 text-blue-600" />
+                <span class="font-medium">{{ req.name }}</span>
+                <span class="text-xs text-slate-400">{{ typeLabels[req.type] }}</span>
+              </label>
+              <div v-if="blReqs.length===0" class="text-xs text-slate-400 text-center py-4">暂无可纳入基线的需求</div>
+            </div>
           </div>
         </div>
         <div class="flex justify-end gap-2 mt-6">
@@ -472,6 +487,8 @@ const orgMembers = ref<any[]>([])
 const page = ref(1), pageSize = ref(10), total = ref(0)
 
 // Form state
+const reviewStakePicker = ref(false)
+const baselineReqPicker = ref(false)
 const showDetail = ref(false)
 const detailItem = ref<any>(null)
 const showForm = ref(false), editing = ref<any>(null)
