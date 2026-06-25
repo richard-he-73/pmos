@@ -1,6 +1,6 @@
-import os
 import uuid
 from datetime import datetime
+from pathlib import Path
 
 from django.conf import settings
 from django.http import JsonResponse
@@ -44,20 +44,20 @@ def upload_file(request):
     if not file:
         return JsonResponse({'error': '请选择文件'}, status=400)
 
-    ext = os.path.splitext(file.name)[1].lower()
+    ext = Path(file.name).suffix.lower()
     if ext not in ('.docx', '.xlsx', '.pptx', '.pdf'):
         return JsonResponse({'error': '仅支持 docx/xlsx/pptx/pdf 格式'}, status=400)
 
     # 按日期分目录存储
     date_str = datetime.now().strftime('%Y/%m/%d')
     upload_dir = settings.MEDIA_ROOT / 'comm_attachments' / date_str
-    os.makedirs(upload_dir, exist_ok=True)
+    Path(upload_dir).mkdir(parents=True, exist_ok=True)
 
     # 生成唯一文件名
     unique_name = f"{uuid.uuid4().hex}{ext}"
     filepath = upload_dir / unique_name
 
-    with open(filepath, 'wb+') as f:
+    with Path(filepath).open('wb+') as f:
         for chunk in file.chunks():
             f.write(chunk)
 

@@ -177,6 +177,7 @@ import { getProjects, createProject, updateProject, deleteProject } from '@/api/
 import type { Project } from '@/api/modules/projects'
 import { useProjectStore } from '@/stores/project'
 import Pagination from '@/components/Pagination.vue'
+import request from '@/api/request'
 import SmartDateInput from '@/components/SmartDateInput.vue'
 
 const router = useRouter()
@@ -274,6 +275,6 @@ function viewDetail(p: Project) { router.push('/projects/' + p.id) }
 
 onMounted(async () => {
   await fetchData()
-  try { const r = await fetch('/api/v1/users/'); users.value = await r.json() } catch {}
+  try { const r = await request.get('/users/'); users.value = r.data.results ?? r.data ?? [] } catch {}
 })
 </script>

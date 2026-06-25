@@ -28,6 +28,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useProjectStore } from '@/stores/project'
+import { getProjectOverview } from '@/api/modules/statistics'
 import Pagination from '@/components/Pagination.vue'
 const items = ref<any[]>([])
 const projectStore = useProjectStore()
@@ -35,16 +36,32 @@ const loading = ref(true)
 const page = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
-const columns: { k: string; t: string }[] = []
+const columns: { k: string; t: string }[] = [
+  { k: 'status', t: '项目状态' },
+  { k: 'count', t: '项目数量' },
+]
 
 async function load() {
   loading.value = true
   try {
-    const r = await fetch('/api/v1/statistics/project_overview/?project=' + (projectStore.activeProjectId || ''))
-    const d = await r.json()
-    items.value = d.results ?? []
+    const r = await getProjectOverview({ project: projectStore.activeProjectId || undefined })
+    const d = r.data
+    // API returns { total, by_status: [{ status, count }] }
+    total.value = d.total
+    items.value = d.by_status?.map((s: any) => ({
+      id: s.status,
+      status: statusLabels[s.status] || s.status,
+      count: s.count,
+    })) ?? []
   } catch {}
   finally { loading.value = false }
+}
+
+const statusLabels: Record<string, string> = {
+  planning: '计划中',
+  active: '进行中',
+  pending_acceptance: '待验收',
+  closed: '已结项',
 }
 
 onMounted(load)

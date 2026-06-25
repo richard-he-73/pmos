@@ -12,8 +12,11 @@ export interface ProjectStats {
   test_cases: { total: number }
 }
 
-export function getProjectOverview() {
-  return request.get<StatsOverview>('/statistics/project_overview/')
+export function getProjectOverview(params?: { project?: number | string }) {
+  const url = params?.project
+    ? `/statistics/project_overview/?project=${params.project}`
+    : '/statistics/project_overview/'
+  return request.get<StatsOverview>(url)
 }
 
 export function getProjectDetailStats(projectId: number) {
