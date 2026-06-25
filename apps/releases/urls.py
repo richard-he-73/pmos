@@ -4,8 +4,7 @@ from . import views
 
 router = DefaultRouter()
 router.register(r'release-drills', views.ReleaseDrillViewSet)
-router.register(r'release-deployments', views.ReleaseDeploymentViewSet)
-router.register(r'release-steps', views.ReleaseStepViewSet)
+router.register(r'release-plans', views.ReleasePlanViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

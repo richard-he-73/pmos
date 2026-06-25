@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from .models import ReleaseDrill, ReleaseDeployment, ReleaseStep
-from .serializers import ReleaseDrillSerializer, ReleaseDeploymentSerializer, ReleaseStepSerializer
+from .models import ReleaseDrill, ReleasePlan
+from .serializers import ReleaseDrillSerializer, ReleasePlanSerializer
 
 
 class ReleaseDrillViewSet(viewsets.ModelViewSet):
@@ -12,28 +12,22 @@ class ReleaseDrillViewSet(viewsets.ModelViewSet):
         project_id = self.request.query_params.get('project')
         if project_id:
             qs = qs.filter(project_id=project_id)
+        scenario = self.request.query_params.get('scenario')
+        if scenario:
+            qs = qs.filter(scenario=scenario)
         return qs
 
 
-class ReleaseDeploymentViewSet(viewsets.ModelViewSet):
-    queryset = ReleaseDeployment.objects.all()
-    serializer_class = ReleaseDeploymentSerializer
+class ReleasePlanViewSet(viewsets.ModelViewSet):
+    queryset = ReleasePlan.objects.all()
+    serializer_class = ReleasePlanSerializer
 
     def get_queryset(self):
-        qs = ReleaseDeployment.objects.all()
+        qs = ReleasePlan.objects.all()
         project_id = self.request.query_params.get('project')
         if project_id:
             qs = qs.filter(project_id=project_id)
-        return qs
-
-
-class ReleaseStepViewSet(viewsets.ModelViewSet):
-    queryset = ReleaseStep.objects.all()
-    serializer_class = ReleaseStepSerializer
-
-    def get_queryset(self):
-        qs = ReleaseStep.objects.all()
-        project_id = self.request.query_params.get('project')
-        if project_id:
-            qs = qs.filter(project_id=project_id)
+        release_type = self.request.query_params.get('release_type')
+        if release_type:
+            qs = qs.filter(release_type=release_type)
         return qs

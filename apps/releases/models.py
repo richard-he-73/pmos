@@ -5,124 +5,119 @@ from django.conf import settings
 class ReleaseDrill(models.Model):
     """投产演练"""
 
-    class Status(models.TextChoices):
-        PLANNED = 'planned', '待演练'
-        IN_PROGRESS = 'in_progress', '演练中'
-        COMPLETED = 'completed', '已完成'
-        FAILED = 'failed', '演练失败'
+    class TargetEnvironmentChoices(models.TextChoices):
+        TEST = 'test', '测试环境'
+        PRE_PROD = 'pre_prod', '预发布环境'
+        GRAY_RELEASE = 'gray_release', '生产灰度环境'
+        OTHER = 'other', '其他环境'
 
-    name = models.CharField('演练名称', max_length=200)
+    class ScenarioChoices(models.TextChoices):
+        NORMAL_DEPLOY = 'normal_deploy', '正常部署'
+        SERVICE_DOWN = 'service_down', '服务宕机'
+        ROLLBACK = 'rollback', '异常回滚'
+        BUSINESS_VERIFY = 'business_verify', '业务验证'
+        MONITOR_ALERT = 'monitor_alert', '监控告警'
+        OTHER = 'other', '其他'
+
+    class ConclusionChoices(models.TextChoices):
+        PASS = 'pass', '通过'
+        CONDITIONAL_PASS = 'conditional_pass', '条件通过'
+        FAIL = 'fail', '不通过'
+        PENDING = 'pending', '待判定'
+
     project = models.ForeignKey(
         'projects.Project', on_delete=models.CASCADE,
-        related_name='release_drills', verbose_name='所属项目',
+        null=True, blank=True, related_name='release_drills',
+        verbose_name='所属项目',
     )
-    planned_date = models.DateTimeField('计划演练时间')
-    actual_date = models.DateTimeField('实际演练时间', null=True, blank=True)
-    status = models.CharField(
-        '状态', max_length=20, choices=Status.choices, default=Status.PLANNED,
+    name = models.CharField('演练名称', max_length=300)
+    description = models.TextField('演练描述', blank=True, default='')
+    target_environment = models.CharField(
+        '目标环境', max_length=20, choices=TargetEnvironmentChoices.choices,
+        default=TargetEnvironmentChoices.TEST,
     )
-    checklist = models.JSONField('检查项', blank=True, default=list)
-    participants = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, blank=True,
-        related_name='drill_participations', verbose_name='参与人',
+    scenario = models.CharField(
+        '演练场景', max_length=20, choices=ScenarioChoices.choices,
+        default=ScenarioChoices.NORMAL_DEPLOY,
     )
-    result = models.TextField('演练结果', blank=True)
-    notes = models.TextField('备注', blank=True)
-    created_by = models.ForeignKey(
+    steps = models.TextField('演练步骤', blank=True, default='')
+    prerequisites = models.TextField('前置条件', blank=True, default='')
+    expected_results = models.TextField('预期结果', blank=True, default='')
+    criteria = models.TextField('判定标准', blank=True, default='')
+    assignee = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, related_name='created_drills', verbose_name='创建人',
+        null=True, blank=True, related_name='drill_assignees',
+        verbose_name='负责人',
     )
+    stakeholders = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, blank=True,
+        related_name='drill_stakeholders', verbose_name='干系人',
+    )
+    conclusion = models.CharField(
+        '演练结论', max_length=20, choices=ConclusionChoices.choices,
+        default=ConclusionChoices.PENDING,
+    )
+    notes = models.TextField('备注说明', blank=True, default='')
+    attachment = models.FileField('附件', upload_to='drill_attachments/', blank=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
 
     class Meta:
         verbose_name = '投产演练'
         verbose_name_plural = '投产演练'
-        ordering = ['-planned_date']
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.name
 
 
-class ReleaseDeployment(models.Model):
-    """投产指挥"""
+class ReleasePlan(models.Model):
+    """投产计划"""
 
-    class Status(models.TextChoices):
-        PENDING = 'pending', '待执行'
-        IN_PROGRESS = 'in_progress', '进行中'
-        COMPLETED = 'completed', '已完成'
-        ROLLED_BACK = 'rolled_back', '已回滚'
-        CANCELLED = 'cancelled', '已取消'
+    class ReleaseTypeChoices(models.TextChoices):
+        REGULAR = 'regular', '常规发布'
+        HOTFIX = 'hotfix', '紧急修复'
+        NON_FUNCTIONAL = 'non_functional', '非功能变更'
+        INFRASTRUCTURE = 'infrastructure', '基础设施变更'
 
-    name = models.CharField('投产名称', max_length=200)
+    class TargetEnvironmentChoices(models.TextChoices):
+        PRE_PROD = 'pre_prod', '预发布环境'
+        GRAY_RELEASE = 'gray_release', '生产灰度环境'
+        PRODUCTION = 'production', '生产环境'
+
     project = models.ForeignKey(
         'projects.Project', on_delete=models.CASCADE,
-        related_name='release_deployments', verbose_name='所属项目',
+        null=True, blank=True, related_name='release_plans',
+        verbose_name='所属项目',
     )
-    version = models.CharField('版本号', max_length=50, blank=True)
-    planned_date = models.DateTimeField('计划投产时间')
-    actual_date = models.DateTimeField('实际投产时间', null=True, blank=True)
-    status = models.CharField(
-        '状态', max_length=20, choices=Status.choices, default=Status.PENDING,
+    name = models.CharField('计划名称', max_length=300)
+    release_type = models.CharField(
+        '发布类型', max_length=20, choices=ReleaseTypeChoices.choices,
+        default=ReleaseTypeChoices.REGULAR,
     )
-    commander = models.ForeignKey(
+    target_environment = models.CharField(
+        '目标环境', max_length=20, choices=TargetEnvironmentChoices.choices,
+        default=TargetEnvironmentChoices.PRODUCTION,
+    )
+    content = models.TextField('上线内容', blank=True, default='')
+    assignee = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='commanded_deployments',
-        verbose_name='指挥人',
+        null=True, blank=True, related_name='plan_assignees',
+        verbose_name='负责人',
     )
-    rollback_plan = models.TextField('回滚方案', blank=True)
-    result = models.TextField('投产结果', blank=True)
-    notes = models.TextField('备注', blank=True)
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, related_name='created_deployments', verbose_name='创建人',
+    stakeholders = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, blank=True,
+        related_name='plan_stakeholders', verbose_name='干系人',
     )
+    notes = models.TextField('备注说明', blank=True, default='')
+    attachment = models.FileField('附件', upload_to='plan_attachments/', blank=True)
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     updated_at = models.DateTimeField('更新时间', auto_now=True)
 
     class Meta:
-        verbose_name = '投产指挥'
-        verbose_name_plural = '投产指挥'
-        ordering = ['-planned_date']
+        verbose_name = '投产计划'
+        verbose_name_plural = '投产计划'
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.name
-
-
-class ReleaseStep(models.Model):
-    """投产步骤"""
-
-    class Status(models.TextChoices):
-        PENDING = 'pending', '待执行'
-        RUNNING = 'running', '执行中'
-        SUCCESS = 'success', '成功'
-        FAILED = 'failed', '失败'
-        SKIPPED = 'skipped', '已跳过'
-
-    deployment = models.ForeignKey(
-        ReleaseDeployment, on_delete=models.CASCADE,
-        related_name='steps', verbose_name='所属投产',
-    )
-    name = models.CharField('步骤名称', max_length=200)
-    description = models.TextField('步骤说明', blank=True)
-    order = models.IntegerField('执行顺序', default=0)
-    status = models.CharField(
-        '状态', max_length=20, choices=Status.choices, default=Status.PENDING,
-    )
-    executor = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='release_steps',
-        verbose_name='执行人',
-    )
-    duration_minutes = models.IntegerField('预计时长(分钟)', null=True, blank=True)
-    output = models.TextField('执行输出', blank=True)
-    started_at = models.DateTimeField('开始时间', null=True, blank=True)
-    completed_at = models.DateTimeField('完成时间', null=True, blank=True)
-
-    class Meta:
-        verbose_name = '投产步骤'
-        verbose_name_plural = '投产步骤'
-        ordering = ['deployment', 'order']
-
-    def __str__(self):
-        return f'{self.deployment.name} - {self.name}'
