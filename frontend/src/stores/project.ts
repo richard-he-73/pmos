@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import request from '@/api/request'
+import type { UserInfo } from '@/api/modules/auth'
 
 export const useProjectStore = defineStore('project', () => {
   // 优先从 sessionStorage 恢复，保证页面刷新时立即可用
@@ -18,7 +19,7 @@ export const useProjectStore = defineStore('project', () => {
     })
   }
 
-  function loadFromUser(user: any) {
+  function loadFromUser(user: UserInfo) {
     if (user?.active_project) {
       activeProjectId.value = user.active_project
       activeProjectName.value = user.active_project_name || ''

@@ -4,7 +4,7 @@ from django.http import JsonResponse
 
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from apps.system.views import backup_list, backup_detail
+from apps.system.views import BackupListView, BackupDetailView
 
 
 def api_root(request):
@@ -38,6 +38,6 @@ urlpatterns = [
     path('api/v1/', include('apps.organizations.urls')),
     path('api/v1/', include('apps.releases.urls')),
     # 数据备份
-    path('api/v1/system/backup/', backup_list, name='backup-list'),
-    path('api/v1/system/backup/<path:filename>/', backup_detail, name='backup-detail'),
+    path('api/v1/system/backup/', BackupListView.as_view(), name='backup-list'),
+    path('api/v1/system/backup/<path:filename>/', BackupDetailView.as_view(), name='backup-detail'),
 ]

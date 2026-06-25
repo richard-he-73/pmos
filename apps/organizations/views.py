@@ -6,6 +6,36 @@ from .models import Department, UserOrganization
 from .serializers import DepartmentSerializer, UserOrganizationSerializer
 
 
+def _build_dept_order():
+    """构建部门先序遍历排序：父→子，同级按拼音"""
+    all_depts = list(Department.objects.all())
+    children = {}
+    root = []
+    for d in all_depts:
+        if d.parent_id is None:
+            root.append(d)
+        else:
+            children.setdefault(d.parent_id, []).append(d)
+
+    def py_key(d):
+        return ''.join(lazy_pinyin(d.name)) if d.name else ''
+
+    root.sort(key=py_key)
+    for pid in children:
+        children[pid].sort(key=py_key)
+
+    order_list = []
+
+    def dfs(nodes):
+        for d in nodes:
+            order_list.append(d)
+            if d.id in children:
+                dfs(children[d.id])
+
+    dfs(root)
+    return order_list
+
+
 class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
@@ -19,29 +49,8 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        # 先序遍历：父→子→孙紧随其后，同级按拼音排序
-        all_depts = list(queryset)
-        children = {}
-        root = []
-        for d in all_depts:
-            if d.parent_id is None:
-                root.append(d)
-            else:
-                children.setdefault(d.parent_id, []).append(d)
-
-        def py_key(d):
-            return ''.join(lazy_pinyin(d.name)) if d.name else ''
-        root.sort(key=py_key)
-        for pid in children:
-            children[pid].sort(key=py_key)
-        # 先序（深度优先）遍历
-        sorted_list = []
-        def dfs(nodes):
-            for d in nodes:
-                sorted_list.append(d)
-                if d.id in children:
-                    dfs(children[d.id])
-        dfs(root)
+        # 先序遍历确保树形显示顺序
+        sorted_list = [d for d in _build_dept_order() if d in list(queryset)]
         page = self.paginate_queryset(sorted_list)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -61,26 +70,7 @@ class UserOrganizationViewSet(viewsets.ModelViewSet):
             qs = qs.filter(project_id=project_id)
 
         # 部门层级排序（与 DepartmentViewSet 先序遍历一致）
-        all_depts = list(Department.objects.all())
-        children = {}
-        root = []
-        for d in all_depts:
-            if d.parent_id is None:
-                root.append(d)
-            else:
-                children.setdefault(d.parent_id, []).append(d)
-        def py_key(d):
-            return ''.join(lazy_pinyin(d.name)) if d.name else ''
-        root.sort(key=py_key)
-        for pid in children:
-            children[pid].sort(key=py_key)
-        dept_order_list = []
-        def dfs(nodes):
-            for d in nodes:
-                dept_order_list.append(d.id)
-                if d.id in children:
-                    dfs(children[d.id])
-        dfs(root)
+        dept_order_list = [d.id for d in _build_dept_order()]
         dept_order = Case(
             *[When(department_id=id, then=Value(i)) for i, id in enumerate(dept_order_list)],
             default=Value(9999),

@@ -17,6 +17,8 @@ export interface UserInfo {
   is_active: boolean
   date_joined: string
   last_login: string | null
+  active_project: number | null
+  active_project_name: string
 }
 
 export function login(data: LoginData) {

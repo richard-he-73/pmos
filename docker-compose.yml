@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: pmos
       POSTGRES_USER: pmos
-      POSTGRES_PASSWORD: pmos
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pmos}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
