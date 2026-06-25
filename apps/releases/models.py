@@ -85,6 +85,10 @@ class ReleasePlan(models.Model):
         GRAY_RELEASE = 'gray_release', '生产灰度环境'
         PRODUCTION = 'production', '生产环境'
 
+    class DeploymentMethodChoices(models.TextChoices):
+        COLD_DEPLOY = 'cold_deploy', '停机冷部署'
+        ONLINE_DEPLOY = 'online_deploy', '联机热部署'
+
     project = models.ForeignKey(
         'projects.Project', on_delete=models.CASCADE,
         null=True, blank=True, related_name='release_plans',
@@ -99,6 +103,13 @@ class ReleasePlan(models.Model):
         '目标环境', max_length=20, choices=TargetEnvironmentChoices.choices,
         default=TargetEnvironmentChoices.PRODUCTION,
     )
+    related_system = models.CharField('关联系统', max_length=200, blank=True, default='')
+    deployment_method = models.CharField(
+        '部署方式', max_length=20, choices=DeploymentMethodChoices.choices,
+        default=DeploymentMethodChoices.COLD_DEPLOY,
+    )
+    planned_start_time = models.DateTimeField('计划开始时间', null=True, blank=True)
+    expected_end_time = models.DateTimeField('预期结束时间', null=True, blank=True)
     content = models.TextField('上线内容', blank=True, default='')
     assignee = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,

@@ -67,6 +67,10 @@ export interface ReleasePlan {
   name: string
   release_type: 'regular' | 'hotfix' | 'non_functional' | 'infrastructure'
   target_environment: 'pre_prod' | 'gray_release' | 'production'
+  related_system: string
+  deployment_method: 'cold_deploy' | 'online_deploy'
+  planned_start_time: string | null
+  expected_end_time: string | null
   content: string
   assignee: number | null
   assignee_name?: string
@@ -91,6 +95,11 @@ export const PLAN_ENV_LABELS: Record<string, string> = {
   pre_prod: '预发布环境',
   gray_release: '生产灰度环境',
   production: '生产环境',
+}
+
+export const DEPLOY_METHOD_LABELS: Record<string, string> = {
+  cold_deploy: '停机冷部署',
+  online_deploy: '联机热部署',
 }
 
 // ── API 函数 ──

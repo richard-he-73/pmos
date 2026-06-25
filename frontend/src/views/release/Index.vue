@@ -35,7 +35,7 @@
                 </div>
               </td>
             </tr>
-            <tr v-if="drillItems.length===0"><td colspan="6" class="py-16 text-center text-slate-400"><svg class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><span class="text-sm">暂无演练数据</span></td></tr>
+            <tr v-if="drillItems.length===0"><td colspan="8" class="py-16 text-center text-slate-400"><svg class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><span class="text-sm">暂无演练数据</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -50,6 +50,8 @@
             <th class="text-left py-3 px-3 font-medium">计划名称</th>
             <th class="text-left py-3 px-3 font-medium hidden sm:table-cell">发布类型</th>
             <th class="text-left py-3 px-3 font-medium hidden sm:table-cell">目标环境</th>
+            <th class="text-left py-3 px-3 font-medium hidden sm:table-cell">部署方式</th>
+            <th class="text-left py-3 px-3 font-medium hidden lg:table-cell">开始时间</th>
             <th class="text-left py-3 px-3 font-medium hidden md:table-cell">负责人</th>
             <th class="text-left py-3 px-3 font-medium">创建时间</th>
             <th class="text-right py-3 px-3 font-medium">操作</th>
@@ -59,6 +61,8 @@
               <td class="py-3 px-3 font-medium">{{ r.name }}</td>
               <td class="py-3 px-3 hidden sm:table-cell">{{ PLAN_TYPE_LABELS[r.release_type] || r.release_type }}</td>
               <td class="py-3 px-3 hidden sm:table-cell">{{ PLAN_ENV_LABELS[r.target_environment] || r.target_environment }}</td>
+              <td class="py-3 px-3 hidden sm:table-cell">{{ DEPLOY_METHOD_LABELS[r.deployment_method] || r.deployment_method }}</td>
+              <td class="py-3 px-3 hidden lg:table-cell text-xs text-slate-400">{{ formatDT(r.planned_start_time) }}</td>
               <td class="py-3 px-3 hidden md:table-cell">{{ r.assignee_name || '—' }}</td>
               <td class="py-3 px-3 text-xs text-slate-400">{{ r.created_at?.slice(0,10) }}</td>
               <td class="py-3 px-3 text-right whitespace-nowrap">
@@ -69,7 +73,7 @@
                 </div>
               </td>
             </tr>
-            <tr v-if="planItems.length===0"><td colspan="6" class="py-16 text-center text-slate-400"><svg class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><span class="text-sm">暂无计划数据</span></td></tr>
+            <tr v-if="planItems.length===0"><td colspan="8" class="py-16 text-center text-slate-400"><svg class="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><span class="text-sm">暂无计划数据</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -179,6 +183,14 @@
               <option v-for="(l,k) in PLAN_ENV_LABELS" :key="k" :value="k">{{ l }}</option>
             </select>
           </div>
+          <div class="col-span-2"><label class="block text-sm font-medium mb-1">关联系统</label><input v-model="planForm.related_system" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
+          <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">部署方式</label>
+            <select v-model="planForm.deployment_method" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
+              <option v-for="(l,k) in DEPLOY_METHOD_LABELS" :key="k" :value="k">{{ l }}</option>
+            </select>
+          </div>
+          <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">计划开始时间</label><input v-model="planForm.planned_start_time" type="datetime-local" @focus="($event.target as HTMLInputElement).showPicker?.()" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
+          <div class="col-span-2 sm:col-span-1"><label class="block text-sm font-medium mb-1">预期结束时间</label><input v-model="planForm.expected_end_time" type="datetime-local" @focus="($event.target as HTMLInputElement).showPicker?.()" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none" /></div>
           <div class="col-span-2"><label class="block text-sm font-medium mb-1">上线内容</label><textarea v-model="planForm.content" rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none"></textarea></div>
           <div><label class="block text-sm font-medium mb-1">负责人</label>
             <select v-model="planForm.assignee" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm outline-none">
@@ -221,6 +233,8 @@
           <div class="col-span-2"><span class="text-slate-400 block text-xs mb-0.5">计划名称</span><span class="font-medium">{{ planDetailItem.name }}</span></div>
           <div><span class="text-slate-400 block text-xs mb-0.5">发布类型</span><span>{{ PLAN_TYPE_LABELS[planDetailItem.release_type] }}</span></div>
           <div><span class="text-slate-400 block text-xs mb-0.5">目标环境</span><span>{{ PLAN_ENV_LABELS[planDetailItem.target_environment] }}</span></div>
+          <div><span class="text-slate-400 block text-xs mb-0.5">部署方式</span><span>{{ DEPLOY_METHOD_LABELS[planDetailItem.deployment_method] || planDetailItem.deployment_method }}</span></div>
+          <div><span class="text-slate-400 block text-xs mb-0.5">关联系统</span><span>{{ planDetailItem.related_system || "—" }}</span></div>
           <div class="col-span-2"><span class="text-slate-400 block text-xs mb-0.5">上线内容</span><span class="whitespace-pre-wrap">{{ planDetailItem.content || '—' }}</span></div>
           <div><span class="text-slate-400 block text-xs mb-0.5">负责人</span><span>{{ planDetailItem.assignee_name || '—' }}</span></div>
           <div><span class="text-slate-400 block text-xs mb-0.5">干系人</span><span>{{ (planDetailItem.stakeholder_names||[]).join('、') || '—' }}</span></div>
@@ -248,7 +262,7 @@ import {
   getReleaseDrills, createReleaseDrill, updateReleaseDrill, deleteReleaseDrill,
   getReleasePlans, createReleasePlan, updateReleasePlan, deleteReleasePlan,
   DRILL_ENV_LABELS, DRILL_SCENARIO_LABELS, DRILL_CONCLUSION_LABELS,
-  PLAN_TYPE_LABELS, PLAN_ENV_LABELS,
+  PLAN_TYPE_LABELS, PLAN_ENV_LABELS, DEPLOY_METHOD_LABELS,
   drillConclusionClass,
 } from '@/api/modules/releases'
 import type { ReleaseDrill, ReleasePlan } from '@/api/modules/releases'
@@ -407,7 +421,7 @@ const planDetailItem = ref<ReleasePlan | null>(null)
 const defaultPlanForm = {
   project: null as number | null,
   name: '',
-  release_type: 'regular', target_environment: 'production',
+  release_type: 'regular', target_environment: 'production', related_system: '', deployment_method: 'cold_deploy', planned_start_time: '', expected_end_time: '',
   content: '',
   assignee: null as number | null,
   notes: '',
